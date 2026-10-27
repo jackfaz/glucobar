@@ -4,6 +4,13 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.8.2] - 2026-10-27
+
+### Fixed
+- The value on the taskbar no longer flickers when you click an empty part of the taskbar or
+  close a window: GlucoBar now gets back on top as soon as Windows changes the window in
+  front, instead of at the next check half a second later (thanks for the report on Reddit).
+
 ## [0.8.1] - 2026-10-27
 
 ### Added
@@ -199,6 +206,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.8.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.2
 [0.8.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.1
 [0.8.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.0
 [0.7.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.7.2

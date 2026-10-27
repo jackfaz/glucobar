@@ -175,7 +175,7 @@ jobs:
           # (un sito Nightscout finto basta ad avviarlo senza chiedere l'account)
           function Running { $null -ne (Get-Process GlucoBar -ErrorAction SilentlyContinue) }
           New-Item -ItemType Directory -Force "$env:APPDATA\GlucoBar" | Out-Null
-          '{"source": "nightscout", "email": "https://glucobar-test.invalid", "elements": ["window"], "language": "en"}' |
+          '{"source": "nightscout", "email": "https://glucobar-test.invalid", "elements": ["taskbar", "window"], "language": "en"}' |
               Set-Content "$env:APPDATA\GlucoBar\config.json"
           Start-Process "$dir\GlucoBar.exe"
           Start-Sleep -Seconds 8
@@ -183,7 +183,9 @@ jobs:
           & $gb stop
           $code = $LASTEXITCODE
           Start-Sleep -Seconds 1
-          Get-Content "$env:APPDATA\GlucoBar\glucobar.log" -ErrorAction SilentlyContinue | Select-Object -Last 6
+          $log = Get-Content "$env:APPDATA\GlucoBar\glucobar.log" -ErrorAction SilentlyContinue
+          $log | Select-Object -Last 8
+          Check (-not ($log -match "ritorno sopra la barra|ERRORE")) "nessun errore del valore sulla barra"
           Check ($code -eq 0 -and -not (Running)) "glucobar stop chiude GlucoBar"
           Start-Process "$dir\GlucoBar.exe"
           Start-Sleep -Seconds 8

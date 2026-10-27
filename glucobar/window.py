@@ -1,4 +1,6 @@
-"""Vista "finestrella": sempre in primo piano, con valore, freccia e grafico delle ultime ore."""
+"""Vista "finestrella": sempre in primo piano, con valore, freccia e grafico delle ultime ore.
+Si sposta trascinandola e si ridimensiona dall'angolo in basso a destra: testo e grafico
+crescono insieme, nelle stesse proporzioni."""
 
 import time
 import tkinter as tk
@@ -9,10 +11,13 @@ from .sources import TREND_ARROWS
 from .ui_common import BG, DIM, FG, FONT, RED, age_minutes, bind_right_click, color_for, \
     fmt_value, is_stale
 
+GRIP = "#4a4d55"
+
 
 class WindowView:
     WIDTH, HEIGHT = 190, 112
     SPARK_HOURS = 3
+    MIN_SCALE, MAX_SCALE = 0.8, 2.5
 
     def __init__(self, ctl):
         self.ctl = ctl
@@ -29,25 +34,22 @@ class WindowView:
         self.root.configure(bg=BG)
 
         # Il programma lavora in pixel reali: sugli schermi al 125-150% ingrandisce
-        self.s = s = max(1.0, self.root.winfo_fpixels("1i") / 96)
-        w, h = int(self.WIDTH * s), int(self.HEIGHT * s)
+        self.s = max(1.0, self.root.winfo_fpixels("1i") / 96)
+        self.k = self._clamp(self.cfg.get("window_scale") or 1.0)
+
+        self.value_lbl = tk.Label(self.root, text="…", bg=BG, fg=FG)
+        self.arrow_lbl = tk.Label(self.root, text="", bg=BG, fg=FG)
+        self.info_lbl = tk.Label(self.root, text=t("connecting"), bg=BG, fg=DIM, anchor="w")
+        self.spark = tk.Canvas(self.root, bg=BG, highlightthickness=0)
+        # angolo per ridimensionare
+        self.grip = tk.Canvas(self.root, bg=BG, highlightthickness=0, cursor="bottom_right_corner")
+
+        w, h = self.size()
         x, y = self.cfg["window_x"], self.cfg["window_y"]
         if x is None or y is None:
             x, y = self.root.winfo_screenwidth() - w - 24, 24
         self.root.geometry(f"{w}x{h}+{x}+{y}")
-
-        self.value_lbl = tk.Label(self.root, text="…", font=(FONT, 30, "bold"),
-                                  bg=BG, fg=FG)
-        self.value_lbl.place(x=12 * s, y=4 * s)
-        self.arrow_lbl = tk.Label(self.root, text="", font=(FONT, 26, "bold"),
-                                  bg=BG, fg=FG)
-        self.arrow_lbl.place(x=w - 46 * s, y=6 * s)
-        self.info_lbl = tk.Label(self.root, text=t("connecting"), font=(FONT, 9),
-                                 bg=BG, fg=DIM, anchor="w")
-        self.info_lbl.place(x=14 * s, y=52 * s, width=w - 20 * s)
-        self.spark = tk.Canvas(self.root, width=w - 24 * s, height=34 * s, bg=BG,
-                               highlightthickness=0)
-        self.spark.place(x=12 * s, y=72 * s)
+        self.layout()
 
         self.menu = tk.Menu(self.root, tearoff=0)
         self.menu.add_command(label=t("menu_refresh"), command=ctl.refresh)
@@ -61,11 +63,43 @@ class WindowView:
             wdg.bind("<ButtonRelease-1>", self._drag_end)
             bind_right_click(wdg, self._show_menu)
             wdg.bind("<Double-Button-1>", lambda e: ctl.refresh())
+        self.grip.bind("<ButtonPress-1>", self._resize_start)
+        self.grip.bind("<B1-Motion>", self._resize_move)
+        self.grip.bind("<ButtonRelease-1>", self._resize_end)
 
     def destroy(self):
         self.root.destroy()
 
-    # ---- trascinamento / menu ----
+    # ---- dimensioni ----
+    def _clamp(self, k):
+        return min(max(float(k), self.MIN_SCALE), self.MAX_SCALE)
+
+    def size(self):
+        f = self.s * self.k
+        return int(self.WIDTH * f), int(self.HEIGHT * f)
+
+    def layout(self):
+        """Posizioni e caratteri per la dimensione attuale (self.k)."""
+        f, k = self.s * self.k, self.k
+        w, h = self.size()
+        self.value_lbl.configure(font=(FONT, round(30 * k), "bold"))
+        self.value_lbl.place(x=12 * f, y=4 * f)
+        self.arrow_lbl.configure(font=(FONT, round(26 * k), "bold"))
+        self.arrow_lbl.place(x=w - 46 * f, y=6 * f)
+        self.info_lbl.configure(font=(FONT, max(7, round(9 * k))))
+        self.info_lbl.place(x=14 * f, y=52 * f, width=w - 20 * f)
+        self.spark.configure(width=w - 24 * f, height=34 * f)
+        self.spark.place(x=12 * f, y=72 * f)
+        g = int(11 * self.s)
+        self.grip.configure(width=g, height=g)
+        self.grip.place(x=w - g, y=h - g)
+        self.grip.delete("all")
+        for i in (3, 6, 9):   # tre trattini diagonali, come il pannello
+            d = i * self.s
+            self.grip.create_line(g - d, g - 1, g - 1, g - d, fill=GRIP)
+        self.render()
+
+    # ---- trascinamento / ridimensionamento / menu ----
     def _drag_start(self, e):
         self._dx = e.x_root - self.root.winfo_x()
         self._dy = e.y_root - self.root.winfo_y()
@@ -75,6 +109,24 @@ class WindowView:
 
     def _drag_end(self, _e):
         self.cfg["window_x"], self.cfg["window_y"] = self.root.winfo_x(), self.root.winfo_y()
+        save_config(self.cfg)
+
+    def _resize_start(self, _e):
+        self._origin = (self.root.winfo_rootx(), self.root.winfo_rooty())
+
+    def _resize_move(self, e):
+        # la larghezza decide la scala; l'altezza segue, per non deformare il grafico
+        left, top = self._origin
+        k = self._clamp((e.x_root - left) / (self.WIDTH * self.s))
+        if abs(k - self.k) < 0.02:
+            return
+        self.k = k
+        w, h = self.size()
+        self.root.geometry(f"{w}x{h}+{left}+{top}")
+        self.layout()
+
+    def _resize_end(self, _e):
+        self.cfg["window_scale"] = round(self.k, 2)
         save_config(self.cfg)
 
     def _show_menu(self, e):
@@ -113,6 +165,7 @@ class WindowView:
         pts = sorted((m for m in self.ctl.history if m["time"] >= t0 and m["mgdl"]),
                      key=lambda m: m["time"])
         lo_v, hi_v = 40, 300
+        f = self.s * self.k
 
         def y(v):
             v = min(max(v, lo_v), hi_v)
@@ -129,7 +182,7 @@ class WindowView:
         coords = []
         for m in pts:
             coords += [x(m["time"]), y(m["mgdl"])]
-        cv.create_line(*coords, fill="#c9ccd1", width=1.5 * self.s, smooth=True)
-        lx, ly, r = coords[-2], coords[-1], 3 * self.s
+        cv.create_line(*coords, fill="#c9ccd1", width=1.5 * f, smooth=True)
+        lx, ly, r = coords[-2], coords[-1], 3 * f
         col = color_for(self.cfg, pts[-1]["mgdl"])
         cv.create_oval(lx - r, ly - r, lx + r, ly + r, fill=col, outline=col)

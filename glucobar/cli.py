@@ -97,6 +97,8 @@ SETTINGS = {
     "taskbar_offset": _int(-3000, 3000),
     "taskbar_transparent": _bool,
     "taskbar_bg": _color,
+    "taskbar_scale": _float(0.7, 1.25),
+    "window_scale": _float(0.8, 2.5),
     "desktop_hours": lambda raw: _choice(3, 6, 12)(raw),
     "desktop_alpha": _float(0.3, 1.0),
     "desktop_locked": _bool,

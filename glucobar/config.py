@@ -49,12 +49,14 @@ DEFAULT_CONFIG = {
     # finestrella
     "window_x": None,
     "window_y": None,
+    "window_scale": 1.0,        # dimensione (si cambia trascinando l'angolo in basso a destra)
     # barra delle applicazioni
     "taskbar_monitor": 1,       # 1 = principale, 2 = secondo monitor, ...
     "taskbar_side": "right",    # "right" = vicino all'orologio
     "taskbar_offset": 0,        # spostamento extra in pixel
     "taskbar_bg": None,         # es. "#202020" per forzare il colore di sfondo
     "taskbar_transparent": True,
+    "taskbar_scale": 1.0,       # dimensione del valore sulla barra (0.85 - 1.25)
     # pannello sullo sfondo
     "desktop_x": None,
     "desktop_y": None,

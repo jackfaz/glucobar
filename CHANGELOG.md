@@ -4,6 +4,14 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.8.1] - 2026-10-27
+
+### Added
+- The small window can be resized by dragging its bottom-right corner: the value, the arrow
+  and the chart grow together (`window_scale`).
+- The value on the taskbar has a *Size* menu (small, normal, large, extra large) in its
+  right-click menu (`taskbar_scale`).
+
 ## [0.8.0] - 2026-10-27
 
 ### Added
@@ -191,6 +199,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.8.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.1
 [0.8.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.0
 [0.7.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.7.2
 [0.7.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.7.1

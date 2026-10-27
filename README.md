@@ -164,8 +164,9 @@ in GlucoBar instead: it works the same way.
 - Taskbar mode on a second monitor: enable *Settings → Personalization → Taskbar → Taskbar
   behaviors → Show my taskbar on all displays*, then right-click the value → *Move to the other
   monitor*.
-- Desktop panel: drag to move, drag the bottom-right corner to resize, right-click for the
-  chart period and to lock it in place.
+- Desktop panel and small window: drag to move, drag the bottom-right corner to resize. On
+  the panel, right-click for the chart period and to lock it in place.
+- Value on the taskbar: right-click → *Size* to make it smaller or larger.
 
 ## Terminal
 
@@ -188,7 +189,7 @@ If GlucoBar is running, it applies the new settings within two seconds.
 Silent install with your choices (handy for scripts and winget):
 
 ```text
-GlucoBar-Setup-0.8.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
+GlucoBar-Setup-0.8.1.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
 ```
 
 ## Settings
@@ -209,6 +210,8 @@ GlucoBar-Setup-0.8.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `taskbar_offset` | 0 | Extra pixels (negative = left) |
 | `taskbar_bg` | auto | Your taskbar colour, e.g. `#202020`, if you see a halo around the digits |
 | `taskbar_transparent` | true | `false` for a solid background |
+| `taskbar_scale` | 1.0 | Size of the value on the taskbar, 0.85–1.25 (also from the right-click menu → *Size*) |
+| `window_scale` | 1.0 | Size of the small window, 0.8–2.5 (also by dragging its bottom-right corner) |
 | `desktop_hours` | 12 | Desktop panel chart period: 3, 6 or 12 |
 | `desktop_alpha` | 0.92 | Desktop panel opacity (1 = solid) |
 
@@ -255,12 +258,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.8.0 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.8.1 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow*, tick *release* to publish the version written in `glucobar/__init__.py`
-(pushing a tag like `v0.8.0` works too). The mode previews are made with
+(pushing a tag like `v0.8.1` works too). The mode previews are made with
 `tools/compose_previews.py`.
 
 ## Credits and trademarks

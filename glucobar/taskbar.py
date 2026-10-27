@@ -145,6 +145,10 @@ def windows_above(hwnd, limit=400):
     return above
 
 
+SIZES = ((0.85, "size_small"), (1.0, "size_normal"), (1.12, "size_large"), (1.25, "size_xlarge"))
+MAX_SCALE = 1.25
+
+
 class TaskbarView:
     def __init__(self, ctl):
         self.ctl = ctl
@@ -188,6 +192,12 @@ class TaskbarView:
         self.menu.add_command(label=t("menu_unit"), command=ctl.toggle_unit)
         self.menu.add_command(label=t("menu_side"), command=self.toggle_side)
         self.menu.add_command(label=t("menu_monitor"), command=self.next_monitor)
+        sizes = tk.Menu(self.menu, tearoff=0)
+        self.scale_var = tk.DoubleVar(master=self.menu, value=float(self.cfg["taskbar_scale"]))
+        for scale, key in SIZES:
+            sizes.add_radiobutton(label=t(key), value=scale, variable=self.scale_var,
+                                  command=lambda v=scale: self.set_scale(v))
+        self.menu.add_cascade(label=t("menu_size"), menu=sizes)
         self.menu.add_separator()
         ctl.add_common_menu(self.menu)
 
@@ -213,11 +223,19 @@ class TaskbarView:
         return user32.GetParent(self.root.winfo_id())
 
     def layout_for(self, height):
-        """Caratteri e dimensioni in proporzione all'altezza della barra."""
-        self.value_lbl.configure(font=(FONT, -int(height * 0.42), "bold"))
-        self.arrow_lbl.configure(font=(FONT, -int(height * 0.36), "bold"))
-        self.info_lbl.configure(font=(FONT, -int(height * 0.21)))
-        return int(height * 1.75), height
+        """Caratteri e dimensioni in proporzione all'altezza della barra e alla
+        dimensione scelta. Crescono valore e freccia; i minuti al massimo restano
+        normali, così le due righe stanno sempre nell'altezza della barra."""
+        k = min(max(float(self.cfg.get("taskbar_scale") or 1.0), 0.7), MAX_SCALE)
+        self.value_lbl.configure(font=(FONT, -int(height * 0.42 * k), "bold"))
+        self.arrow_lbl.configure(font=(FONT, -int(height * 0.36 * k), "bold"))
+        self.info_lbl.configure(font=(FONT, -int(height * 0.21 * min(k, 1.0))))
+        return int(height * 1.75 * k), height
+
+    def set_scale(self, scale):
+        self.cfg["taskbar_scale"] = scale
+        save_config(self.cfg)
+        self.reposition()
 
     def taskbar_geometry(self):
         """(left, top, right, bottom) della parte visibile della barra scelta,

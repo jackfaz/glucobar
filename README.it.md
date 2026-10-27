@@ -165,8 +165,10 @@ in GlucoBar: funziona allo stesso modo.
 - Barra sul secondo monitor: attiva *Impostazioni → Personalizzazione → Barra delle applicazioni →
   Comportamenti della barra delle applicazioni → Mostra la barra delle applicazioni su tutti gli
   schermi*, poi clic destro sul valore → *Sposta sull'altro monitor*.
-- Pannello sullo sfondo: trascinalo per spostarlo, trascina l'angolo in basso a destra per
-  ridimensionarlo, clic destro per il periodo del grafico e per bloccarlo.
+- Pannello sullo sfondo e finestrella: trascinali per spostarli, trascina l'angolo in basso a
+  destra per ridimensionarli. Sul pannello, clic destro per il periodo del grafico e per
+  bloccarlo.
+- Valore sulla barra: clic destro → *Dimensione* per rimpicciolirlo o ingrandirlo.
 
 ## Terminale
 
@@ -189,7 +191,7 @@ Se GlucoBar è aperto, applica le nuove impostazioni entro due secondi.
 Installazione silenziosa con le tue scelte (comoda per script e winget):
 
 ```text
-GlucoBar-Setup-0.8.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
+GlucoBar-Setup-0.8.1.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
 ```
 
 ## Impostazioni
@@ -210,6 +212,8 @@ GlucoBar-Setup-0.8.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `taskbar_offset` | 0 | Pixel di spostamento (negativo = a sinistra) |
 | `taskbar_bg` | auto | Colore della tua barra, es. `#202020`, se vedi un alone attorno alle cifre |
 | `taskbar_transparent` | true | `false` per uno sfondo pieno |
+| `taskbar_scale` | 1.0 | Dimensione del valore sulla barra, 0,85–1,25 (anche dal clic destro → *Dimensione*) |
+| `window_scale` | 1.0 | Dimensione della finestrella, 0,8–2,5 (anche trascinando l'angolo in basso a destra) |
 | `desktop_hours` | 12 | Periodo del grafico del pannello: 3, 6 o 12 |
 | `desktop_alpha` | 0.92 | Opacità del pannello (1 = pieno) |
 
@@ -259,12 +263,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: avvio senza compilare
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.8.0 installer\glucobar.iss    :: serve Inno Setup 6
+iscc /DAppVersion=0.8.1 installer\glucobar.iss    :: serve Inno Setup 6
 ```
 
 Le release le crea GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow* spunta *release* per pubblicare la versione scritta in `glucobar/__init__.py`
-(funziona anche pubblicando un tag tipo `v0.8.0`). Le anteprime delle modalità si creano con
+(funziona anche pubblicando un tag tipo `v0.8.1`). Le anteprime delle modalità si creano con
 `tools/compose_previews.py`.
 
 ## Riconoscimenti e marchi

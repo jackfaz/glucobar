@@ -23,10 +23,11 @@ from .ui_common import apply_icon, ask_credentials
 
 # Impostazioni che si possono cambiare da terminale mentre GlucoBar è aperto
 LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_minutes",
-             "refresh_seconds", "source", "dexcom_region", "email", "taskbar_monitor", "taskbar_side", "taskbar_offset",
-             "taskbar_bg", "taskbar_transparent", "desktop_hours", "desktop_alpha",
-             "desktop_locked")
-REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "desktop_alpha", "desktop_locked"}
+             "refresh_seconds", "source", "dexcom_region", "email", "taskbar_monitor",
+             "taskbar_side", "taskbar_offset", "taskbar_bg", "taskbar_transparent",
+             "taskbar_scale", "window_scale", "desktop_hours", "desktop_alpha", "desktop_locked")
+REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "desktop_alpha", "desktop_locked",
+                "window_scale"}
 ACCOUNT_KEYS = {"source", "dexcom_region", "email"}
 
 

@@ -12,6 +12,7 @@
 <p align="center">
   <a href="https://github.com/jackfaz/glucobar/releases/latest"><b>Scarica per Windows</b></a> ·
   <a href="#installazione">Installazione</a> ·
+  <a href="#mac-beta">Mac</a> ·
   <a href="#configurare-librelinkup">Configurare LibreLinkUp</a> ·
   <a href="#uso">Uso</a> ·
   <a href="#sensori">Sensori</a> ·
@@ -22,7 +23,8 @@
 GlucoBar mostra la glicemia del tuo FreeStyle Libre o Dexcom sul PC con Windows, così mentre
 lavori puoi tenerla d'occhio senza prendere il telefono. Legge l'ultimo valore da LibreLinkUp
 (il servizio di condivisione di Abbott) o da Dexcom Share, e lo mostra con la freccia di
-tendenza e da quanti minuti è stato misurato.
+tendenza e da quanti minuti è stato misurato. Funziona anche con i siti Nightscout e
+Nocturne, e c'è una [versione per Mac](#mac-beta) in beta.
 
 Puoi vederla in quattro posti, uno o più insieme: sulla barra delle applicazioni accanto
 all'orologio, come icona nell'area di notifica, in una finestrella sempre in primo piano o in
@@ -89,6 +91,35 @@ Windows può mostrare *"Windows ha protetto il PC"* perché l'installer non è a
 digitalmente: clicca *Ulteriori informazioni → Esegui comunque*. Ogni release riporta
 l'impronta SHA-256 dell'installer e il link alla sua scansione su VirusTotal, così puoi
 controllare il file prima di avviarlo.
+
+## Mac (beta)
+
+Sul Mac il valore sta nella **barra dei menu**, accanto all'orologio; cliccandoci si apre il
+menu di GlucoBar. La finestrella e il pannello sul desktop funzionano come su Windows. Serve un
+Mac con chip Apple (M1 o successivi) e macOS 11 o successivo.
+
+1. Scarica `GlucoBar-mac.dmg`:
+   https://github.com/jackfaz/glucobar/releases/latest/download/GlucoBar-mac.dmg
+2. Aprilo e trascina **GlucoBar** su **Applicazioni**.
+3. Apri GlucoBar da Applicazioni. L'app non è ancora autenticata da Apple, quindi la prima
+   volta macOS la blocca: apri **Impostazioni di Sistema → Privacy e sicurezza**, scorri fino al
+   messaggio su GlucoBar e clicca **Apri comunque** (su macOS 14 e precedenti puoi anche fare
+   Ctrl+clic sull'app → **Apri**). Serve solo la prima volta.
+4. Scegli il sensore e inserisci l'account, come su Windows.
+
+Dal menu puoi anche attivare **Apri all'accesso**. Le password stanno nel **Portachiavi** di
+macOS (voci `GlucoBar:LibreLinkUp`, `GlucoBar:Dexcom`, `GlucoBar:Nightscout`) e le impostazioni
+in `~/Library/Application Support/GlucoBar/config.json`.
+
+Il comando `glucobar` è dentro l'app. Per usarlo da qualsiasi terminale:
+
+```text
+sudo mkdir -p /usr/local/bin
+sudo ln -sf /Applications/GlucoBar.app/Contents/MacOS/glucobar-cli /usr/local/bin/glucobar
+```
+
+Per disinstallare: disattiva *Apri all'accesso*, chiudi GlucoBar, lancia `glucobar forget` se
+vuoi cancellare password e impostazioni, e sposta GlucoBar nel Cestino.
 
 ## Configurare LibreLinkUp
 
@@ -158,7 +189,7 @@ Se GlucoBar è aperto, applica le nuove impostazioni entro due secondi.
 Installazione silenziosa con le tue scelte (comoda per script e winget):
 
 ```text
-GlucoBar-Setup-0.7.2.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
+GlucoBar-Setup-0.8.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
 ```
 
 ## Impostazioni
@@ -228,12 +259,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: avvio senza compilare
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.7.2 installer\glucobar.iss    :: serve Inno Setup 6
+iscc /DAppVersion=0.8.0 installer\glucobar.iss    :: serve Inno Setup 6
 ```
 
 Le release le crea GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow* spunta *release* per pubblicare la versione scritta in `glucobar/__init__.py`
-(funziona anche pubblicando un tag tipo `v0.7.2`). Le anteprime delle modalità si creano con
+(funziona anche pubblicando un tag tipo `v0.8.0`). Le anteprime delle modalità si creano con
 `tools/compose_previews.py`.
 
 ## Riconoscimenti e marchi

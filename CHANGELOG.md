@@ -4,6 +4,21 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] - 2026-10-27
+
+### Added
+- **Mac version (beta)**, for Macs with Apple silicon and macOS 11 or later, as
+  `GlucoBar-mac.dmg`:
+  - the value and trend arrow in the **menu bar**, next to the clock, with the GlucoBar menu;
+  - the small window and the desktop panel, as on Windows;
+  - passwords in the macOS Keychain, settings in `~/Library/Application Support/GlucoBar`;
+  - *Open at login* from the menu (or `glucobar set autostart=true`);
+  - the `glucobar` command inside the app.
+
+  Built and tested by GitHub Actions on a real Mac, including a live run with the value in
+  the menu bar. The app is not notarized by Apple yet: the first time, allow it in
+  System Settings → Privacy & Security → Open Anyway.
+
 ## [0.7.2] - 2026-10-27
 
 ### Changed
@@ -176,6 +191,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.8.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.0
 [0.7.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.7.2
 [0.7.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.7.1
 [0.7.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.7.0

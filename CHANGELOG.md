@@ -10,6 +10,9 @@ uses [Semantic Versioning](https://semver.org/).
 - **Dexcom (beta)**: G6, G7 and ONE+ readings through Dexcom Share, with your own Dexcom
   account (email, phone number or user name) and the region where it was created. Tested
   against a simulated Dexcom Share server; feedback from Dexcom users is welcome.
+- The installer asks which sensor you use and shows the setup steps for it (LibreLinkUp or
+  Dexcom Share), with a link to the illustrated guide. The choice is preselected on first
+  start. Silent install: `/SENSOR=libre` or `/SENSOR=dexcom`.
 - On first start and with *Change account…*, GlucoBar asks which sensor you use.
   `glucobar setup` and `glucobar login` ask too, and `glucobar set source=dexcom
   dexcom_region=us` works from scripts.

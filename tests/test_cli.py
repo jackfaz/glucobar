@@ -73,6 +73,25 @@ class SetGetTest(IsolatedConfig):
         self.assertEqual(load_config()["unit"], "mg/dL")
 
 
+class InstallerChoicesTest(IsolatedConfig):
+    """GlucoBar.exe --set-... come lo chiama l'installer alla fine."""
+
+    def test_set_source(self):
+        from glucobar import app
+        cli.main(["set", "language=it"])
+        cfg = load_config()
+        cfg["email"] = "a@b.c"
+        config.save_config(cfg)
+        self.assertEqual(app.main(["--set-elements", "desktop", "--set-language", "de",
+                                   "--set-source", "libre"]), 0)
+        cfg = load_config()
+        self.assertEqual((cfg["elements"], cfg["language"], cfg["source"], cfg["email"]),
+                         (["desktop"], "de", "libre", "a@b.c"))   # stesso sensore: account tenuto
+        app.main(["--set-source", "dexcom"])
+        cfg = load_config()
+        self.assertEqual((cfg["source"], cfg["email"]), ("dexcom", ""))
+
+
 class FakeClient:
     """Al posto di LibreLinkUp: accetta solo la password "giusta"."""
 

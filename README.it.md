@@ -150,7 +150,7 @@ Se GlucoBar è aperto, applica le nuove impostazioni entro due secondi.
 Installazione silenziosa con le tue scelte (comoda per script e winget):
 
 ```text
-GlucoBar-Setup-0.5.2.exe /VERYSILENT /ELEMENTS=taskbar,tray /LANG=it
+GlucoBar-Setup-0.5.2.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
 ```
 
 ## Impostazioni

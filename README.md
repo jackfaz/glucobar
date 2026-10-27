@@ -149,7 +149,7 @@ If GlucoBar is running, it applies the new settings within two seconds.
 Silent install with your choices (handy for scripts and winget):
 
 ```text
-GlucoBar-Setup-0.5.2.exe /VERYSILENT /ELEMENTS=taskbar,tray /LANG=en
+GlucoBar-Setup-0.5.2.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
 ```
 
 ## Settings

@@ -3,7 +3,7 @@
 ;   pyinstaller --noconfirm --clean glucobar.spec
 ;   python tools\previews_to_bmp.py
 ; Poi: iscc /DAppVersion=0.5.2 installer\glucobar.iss
-; Installazione silenziosa con scelte: /VERYSILENT /ELEMENTS=desktop,tray /LANG=it
+; Installazione silenziosa con scelte: /VERYSILENT /ELEMENTS=desktop,tray /SENSOR=dexcom /LANG=it
 
 #ifndef AppVersion
   #define AppVersion "0.5.2"
@@ -74,6 +74,15 @@ it.LaunchNow=Avvia GlucoBar adesso
 it.RemoveSettings=Vuoi eliminare anche le impostazioni e le password (LibreLinkUp, Dexcom) salvate su questo PC?
 it.NeedOne=Scegli almeno un elemento da mostrare.
 it.PreviewHint=Spunta cosa vuoi vedere: l'anteprima mostra la tua combinazione.
+it.SensorTitle=Quale sensore usi?
+it.SensorSubtitle=GlucoBar legge la glicemia dal servizio di condivisione del sensore: va attivato una volta sola, dal telefono.
+it.Sensor_libre=FreeStyle Libre (tramite LibreLinkUp)
+it.Sensor_dexcom=Dexcom G6, G7, ONE+ (tramite Dexcom Share) · beta
+it.Steps_libre=1. Nell'app LibreLink apri il menu e tocca «App connesse».%n2. Accanto a LibreLinkUp tocca «Gestisci», poi «Aggiungi collegamento».%n3. Inserisci il tuo nome e l'email del tuo account LibreLink, poi invia l'invito.%n4. Installa l'app LibreLinkUp, tocca «Accedi» e usa la stessa email e la stessa password di LibreLink. Accetta l'invito e i termini d'uso.%n5. Al primo avvio di GlucoBar inserisci la stessa email e la stessa password.%n%nDopo puoi disinstallare LibreLinkUp dal telefono.
+it.Steps_dexcom=1. Nell'app Dexcom attiva la condivisione (Share) e invita almeno un follower.%n2. Al primo avvio di GlucoBar inserisci il tuo account Dexcom (email, telefono con prefisso o nome utente) e la password.%n3. Indica dove hai creato l'account: dall'Italia è «Fuori dagli Stati Uniti».%n%nIl supporto Dexcom è nuovo: se qualcosa non funziona, faccelo sapere su GitHub.
+it.GuideLink=Guida con le immagini
+it.GuideUrl_libre=/blob/main/README.it.md#configurare-librelinkup
+it.GuideUrl_dexcom=/blob/main/README.it.md#installazione
 en.ModeTitle=Choose what to show
 en.ModeSubtitle=You can pick more than one and change them any time by right-clicking GlucoBar.
 en.Name_taskbar=On the taskbar
@@ -90,6 +99,15 @@ en.LaunchNow=Start GlucoBar now
 en.RemoveSettings=Do you also want to delete the settings and the passwords (LibreLinkUp, Dexcom) saved on this PC?
 en.NeedOne=Please choose at least one thing to show.
 en.PreviewHint=Tick what you want to see: the preview shows your combination.
+en.SensorTitle=Which sensor do you use?
+en.SensorSubtitle=GlucoBar reads your glucose from the sensor maker's sharing service: you turn it on once, on your phone.
+en.Sensor_libre=FreeStyle Libre (via LibreLinkUp)
+en.Sensor_dexcom=Dexcom G6, G7, ONE+ (via Dexcom Share) · beta
+en.Steps_libre=1. In the LibreLink app, open the menu and tap "Connected Apps".%n2. Next to LibreLinkUp, tap "Manage", then "Add Connection".%n3. Enter your name and the email of your LibreLink account, then send the invitation.%n4. Install the LibreLinkUp app, tap "Log In" and use the same email and password as LibreLink. Accept the invitation and the terms of use.%n5. When GlucoBar starts for the first time, enter the same email and password.%n%nYou can uninstall LibreLinkUp from your phone afterwards.
+en.Steps_dexcom=1. In the Dexcom app, turn on Share and invite at least one follower.%n2. When GlucoBar starts for the first time, enter your Dexcom account (email, phone number with country code or user name) and password.%n3. Choose where the account was created: in Europe it is "Outside the United States".%n%nDexcom support is new: if something does not work, please tell us on GitHub.
+en.GuideLink=Guide with pictures
+en.GuideUrl_libre=#setting-up-librelinkup
+en.GuideUrl_dexcom=#install
 es.ModeTitle=Elige qué mostrar
 es.ModeSubtitle=Puedes elegir más de uno y cambiarlos cuando quieras con clic derecho en GlucoBar.
 es.Name_taskbar=En la barra de tareas
@@ -106,6 +124,15 @@ es.LaunchNow=Iniciar GlucoBar ahora
 es.RemoveSettings=¿Quieres borrar también los ajustes y las contraseñas (LibreLinkUp, Dexcom) guardadas en este PC?
 es.NeedOne=Elige al menos un elemento para mostrar.
 es.PreviewHint=Marca lo que quieres ver: la vista previa muestra tu combinación.
+es.SensorTitle=¿Qué sensor usas?
+es.SensorSubtitle=GlucoBar lee la glucosa del servicio para compartir datos del fabricante: se activa una sola vez, desde el móvil.
+es.Sensor_libre=FreeStyle Libre (a través de LibreLinkUp)
+es.Sensor_dexcom=Dexcom G6, G7, ONE+ (a través de Dexcom Share) · beta
+es.Steps_libre=1. En la app LibreLink abre el menú y toca «Aplicaciones conectadas».%n2. Junto a LibreLinkUp toca «Gestionar» y luego «Añadir conexión».%n3. Escribe tu nombre y el email de tu cuenta LibreLink y envía la invitación.%n4. Instala la app LibreLinkUp, toca «Iniciar sesión» y usa el mismo email y la misma contraseña que en LibreLink. Acepta la invitación y los términos de uso.%n5. La primera vez que se abra GlucoBar, escribe el mismo email y la misma contraseña.%n%nDespués puedes desinstalar LibreLinkUp del móvil.
+es.Steps_dexcom=1. En la app Dexcom activa Compartir e invita al menos a un seguidor.%n2. La primera vez que se abra GlucoBar, escribe tu cuenta Dexcom (email, teléfono con prefijo o nombre de usuario) y la contraseña.%n3. Elige dónde creaste la cuenta: en Europa es «Fuera de Estados Unidos».%n%nEl soporte de Dexcom es nuevo: si algo no funciona, cuéntanoslo en GitHub.
+es.GuideLink=Guía con imágenes (en inglés)
+es.GuideUrl_libre=#setting-up-librelinkup
+es.GuideUrl_dexcom=#install
 fr.ModeTitle=Choisissez quoi afficher
 fr.ModeSubtitle=Vous pouvez en choisir plusieurs et les changer à tout moment par clic droit sur GlucoBar.
 fr.Name_taskbar=Sur la barre des tâches
@@ -122,6 +149,15 @@ fr.LaunchNow=Lancer GlucoBar maintenant
 fr.RemoveSettings=Voulez-vous aussi supprimer les réglages et les mots de passe (LibreLinkUp, Dexcom) enregistrés sur ce PC ?
 fr.NeedOne=Choisissez au moins un élément à afficher.
 fr.PreviewHint=Cochez ce que vous voulez voir : l'aperçu montre votre combinaison.
+fr.SensorTitle=Quel capteur utilisez-vous ?
+fr.SensorSubtitle=GlucoBar lit la glycémie depuis le service de partage du fabricant : il s'active une seule fois, depuis le téléphone.
+fr.Sensor_libre=FreeStyle Libre (via LibreLinkUp)
+fr.Sensor_dexcom=Dexcom G6, G7, ONE+ (via Dexcom Share) · bêta
+fr.Steps_libre=1. Dans l'app LibreLink, ouvrez le menu et touchez « Applications connectées ».%n2. À côté de LibreLinkUp, touchez « Gérer », puis « Ajouter une connexion ».%n3. Saisissez votre nom et l'e-mail de votre compte LibreLink, puis envoyez l'invitation.%n4. Installez l'app LibreLinkUp, touchez « Se connecter » et utilisez le même e-mail et le même mot de passe que LibreLink. Acceptez l'invitation et les conditions d'utilisation.%n5. Au premier lancement de GlucoBar, saisissez le même e-mail et le même mot de passe.%n%nVous pouvez ensuite désinstaller LibreLinkUp du téléphone.
+fr.Steps_dexcom=1. Dans l'app Dexcom, activez le Partage et invitez au moins un abonné.%n2. Au premier lancement de GlucoBar, saisissez votre compte Dexcom (e-mail, téléphone avec indicatif ou nom d'utilisateur) et le mot de passe.%n3. Indiquez où le compte a été créé : en Europe, c'est « Hors des États-Unis ».%n%nLa prise en charge de Dexcom est nouvelle : si quelque chose ne fonctionne pas, dites-le-nous sur GitHub.
+fr.GuideLink=Guide en images (en anglais)
+fr.GuideUrl_libre=#setting-up-librelinkup
+fr.GuideUrl_dexcom=#install
 de.ModeTitle=Wähle, was angezeigt wird
 de.ModeSubtitle=Du kannst mehrere wählen und sie jederzeit per Rechtsklick auf GlucoBar ändern.
 de.Name_taskbar=Auf der Taskleiste
@@ -138,6 +174,15 @@ de.LaunchNow=GlucoBar jetzt starten
 de.RemoveSettings=Sollen auch die Einstellungen und die auf diesem PC gespeicherten Passwörter (LibreLinkUp, Dexcom) gelöscht werden?
 de.NeedOne=Bitte wähle mindestens ein Element aus.
 de.PreviewHint=Kreuze an, was du sehen möchtest: die Vorschau zeigt deine Auswahl.
+de.SensorTitle=Welchen Sensor verwendest du?
+de.SensorSubtitle=GlucoBar liest den Glukosewert über den Teilen-Dienst des Herstellers: Du aktivierst ihn einmal auf dem Handy.
+de.Sensor_libre=FreeStyle Libre (über LibreLinkUp)
+de.Sensor_dexcom=Dexcom G6, G7, ONE+ (über Dexcom Share) · Beta
+de.Steps_libre=1. Öffne in der LibreLink-App das Menü und tippe auf „Verbundene Apps“.%n2. Tippe neben LibreLinkUp auf „Verwalten“, dann auf „Verbindung hinzufügen“.%n3. Gib deinen Namen und die E-Mail deines LibreLink-Kontos ein und sende die Einladung.%n4. Installiere die LibreLinkUp-App, tippe auf „Anmelden“ und verwende dieselbe E-Mail und dasselbe Passwort wie bei LibreLink. Nimm die Einladung und die Nutzungsbedingungen an.%n5. Gib beim ersten Start von GlucoBar dieselbe E-Mail und dasselbe Passwort ein.%n%nDanach kannst du LibreLinkUp vom Handy deinstallieren.
+de.Steps_dexcom=1. Aktiviere in der Dexcom-App die Freigabe (Share) und lade mindestens einen Follower ein.%n2. Gib beim ersten Start von GlucoBar dein Dexcom-Konto (E-Mail, Telefonnummer mit Landesvorwahl oder Benutzername) und das Passwort ein.%n3. Wähle, wo das Konto erstellt wurde: in Europa ist das „Außerhalb der USA“.%n%nDie Dexcom-Unterstützung ist neu: Wenn etwas nicht funktioniert, sag uns bitte auf GitHub Bescheid.
+de.GuideLink=Anleitung mit Bildern (auf Englisch)
+de.GuideUrl_libre=#setting-up-librelinkup
+de.GuideUrl_dexcom=#install
 pt.ModeTitle=Escolha o que mostrar
 pt.ModeSubtitle=Pode escolher mais de um e mudá-los quando quiser com clique direito no GlucoBar.
 pt.Name_taskbar=Na barra de tarefas
@@ -154,6 +199,15 @@ pt.LaunchNow=Iniciar o GlucoBar agora
 pt.RemoveSettings=Quer apagar também as definições e as palavras-passe (LibreLinkUp, Dexcom) guardadas neste PC?
 pt.NeedOne=Escolha pelo menos um elemento para mostrar.
 pt.PreviewHint=Marque o que quer ver: a pré-visualização mostra a sua combinação.
+pt.SensorTitle=Que sensor utiliza?
+pt.SensorSubtitle=O GlucoBar lê a glicose a partir do serviço de partilha do fabricante: ativa-se uma só vez, no telemóvel.
+pt.Sensor_libre=FreeStyle Libre (através do LibreLinkUp)
+pt.Sensor_dexcom=Dexcom G6, G7, ONE+ (através do Dexcom Share) · beta
+pt.Steps_libre=1. Na app LibreLink abra o menu e toque em «Aplicações ligadas».%n2. Ao lado de LibreLinkUp toque em «Gerir» e depois em «Adicionar ligação».%n3. Introduza o seu nome e o email da sua conta LibreLink e envie o convite.%n4. Instale a app LibreLinkUp, toque em «Iniciar sessão» e use o mesmo email e a mesma palavra-passe do LibreLink. Aceite o convite e os termos de utilização.%n5. Na primeira vez que o GlucoBar abrir, introduza o mesmo email e a mesma palavra-passe.%n%nDepois pode desinstalar o LibreLinkUp do telemóvel.
+pt.Steps_dexcom=1. Na app Dexcom ative a Partilha e convide pelo menos um seguidor.%n2. Na primeira vez que o GlucoBar abrir, introduza a sua conta Dexcom (email, telemóvel com indicativo ou nome de utilizador) e a palavra-passe.%n3. Escolha onde criou a conta: na Europa é «Fora dos Estados Unidos».%n%nO suporte Dexcom é novo: se algo não funcionar, diga-nos no GitHub.
+pt.GuideLink=Guia com imagens (em inglês)
+pt.GuideUrl_libre=#setting-up-librelinkup
+pt.GuideUrl_dexcom=#install
 
 [Tasks]
 Name: "autostart"; Description: "{cm:TaskAutostart}"; GroupDescription: "{cm:GroupStartup}"
@@ -186,8 +240,8 @@ Name: "{group}\{cm:UninstallProgram,GlucoBar}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\GlucoBar"; Filename: "{app}\GlucoBar.exe"; Tasks: desktopicon
 
 [Run]
-; salva elementi e lingua scelti (anche se GlucoBar non viene avviato subito)
-Filename: "{app}\GlucoBar.exe"; Parameters: "--set-elements {code:SelectedElements} --set-language {language}"; Flags: runhidden waituntilterminated
+; salva elementi, lingua e sensore scelti (anche se GlucoBar non viene avviato subito)
+Filename: "{app}\GlucoBar.exe"; Parameters: "--set-elements {code:SelectedElements} --set-language {language} --set-source {code:SelectedSource}"; Flags: runhidden waituntilterminated
 Filename: "{app}\GlucoBar.exe"; Description: "{cm:LaunchNow}"; Flags: nowait postinstall skipifsilent
 
 [Code]
@@ -198,6 +252,10 @@ var
   ModeLayers: array of TBitmapImage;  // un ritaglio per elemento, sopra la base
   ModeDescription: TNewStaticText;
   LastClicked: Integer;
+  SensorPage: TWizardPage;
+  SensorRadios: array of TNewRadioButton;
+  SensorSteps: TNewMemo;
+  SensorLink: TNewStaticText;
 
 { Stesso ordine di ELEMENTS in glucobar/config.py }
 function ModeId(I: Integer): String;
@@ -266,6 +324,115 @@ end;
 function ScaleTo(Value, Size, Shown: Integer): Integer;
 begin
   Result := Value * Shown div Size;
+end;
+
+{ ---- pagina "Quale sensore usi?": istruzioni per il sensore scelto ---- }
+
+{ Stesso ordine di SOURCES in glucobar/sources.py }
+function SensorId(I: Integer): String;
+begin
+  if I = 1 then
+    Result := 'dexcom'
+  else
+    Result := 'libre';
+end;
+
+function SelectedSensor: Integer;
+begin
+  Result := 0;
+  if (GetArrayLength(SensorRadios) = 2) and SensorRadios[1].Checked then
+    Result := 1;
+end;
+
+procedure UpdateSensor;
+begin
+  if SensorSteps = nil then
+    Exit;
+  SensorSteps.Text := CustomMessage('Steps_' + SensorId(SelectedSensor));
+end;
+
+procedure SensorClick(Sender: TObject);
+begin
+  UpdateSensor;
+end;
+
+procedure GuideClick(Sender: TObject);
+var
+  ErrorCode: Integer;
+begin
+  ShellExec('open', '{#RepoUrl}' + CustomMessage('GuideUrl_' + SensorId(SelectedSensor)),
+            '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
+end;
+
+{ Reinstallando, propone il sensore già configurato }
+function ConfiguredSensor: Integer;
+var
+  Config: AnsiString;
+begin
+  Result := 0;
+  if LoadStringFromFile(ExpandConstant('{userappdata}\GlucoBar\config.json'), Config) then
+    if Pos('"source": "dexcom"', Config) > 0 then
+      Result := 1;
+end;
+
+procedure CreateSensorPage(After: Integer);
+var
+  I, Row, Wanted: Integer;
+  Param: String;
+begin
+  SensorPage := CreateCustomPage(After, CustomMessage('SensorTitle'),
+                                 CustomMessage('SensorSubtitle'));
+  Row := ScaleY(22);
+  SetArrayLength(SensorRadios, 2);
+  for I := 0 to 1 do
+  begin
+    SensorRadios[I] := TNewRadioButton.Create(SensorPage);
+    SensorRadios[I].Parent := SensorPage.Surface;
+    SensorRadios[I].Caption := CustomMessage('Sensor_' + SensorId(I));
+    SensorRadios[I].Left := 0;
+    SensorRadios[I].Top := I * Row;
+    SensorRadios[I].Width := SensorPage.SurfaceWidth;
+  end;
+
+  SensorLink := TNewStaticText.Create(SensorPage);
+  SensorLink.Parent := SensorPage.Surface;
+  SensorLink.Caption := CustomMessage('GuideLink');
+  SensorLink.Font.Color := clBlue;
+  SensorLink.Font.Style := [fsUnderline];
+  SensorLink.Cursor := crHand;
+  SensorLink.OnClick := @GuideClick;
+  SensorLink.Left := 0;
+  SensorLink.Top := SensorPage.SurfaceHeight - SensorLink.Height;
+
+  SensorSteps := TNewMemo.Create(SensorPage);
+  SensorSteps.Parent := SensorPage.Surface;
+  SensorSteps.Left := 0;
+  SensorSteps.Top := 2 * Row + ScaleY(6);
+  SensorSteps.Width := SensorPage.SurfaceWidth;
+  SensorSteps.Height := SensorLink.Top - SensorSteps.Top - ScaleY(6);
+  SensorSteps.ReadOnly := True;
+  SensorSteps.WordWrap := True;
+  SensorSteps.ScrollBars := ssVertical;
+
+  { da riga di comando (anche winget): /SENSOR=libre o /SENSOR=dexcom }
+  Param := Lowercase(ExpandConstant('{param:SENSOR|}'));
+  if Param = 'dexcom' then
+    Wanted := 1
+  else if Param = 'libre' then
+    Wanted := 0
+  else
+    Wanted := ConfiguredSensor;
+  SensorRadios[Wanted].Checked := True;
+  { i clic solo ora: il memo esiste già }
+  for I := 0 to 1 do
+    SensorRadios[I].OnClick := @SensorClick;
+  UpdateSensor;
+end;
+
+{ Usata da [Run]: "libre" o "dexcom" }
+function SelectedSource(Param: String): String;
+begin
+  Result := SensorId(SelectedSensor);
 end;
 
 procedure InitializeWizard;
@@ -342,6 +509,8 @@ begin
     for I := 0 to 3 do
       ModeBoxes[I].Checked := Pos(',' + ModeId(I) + ',', ',' + Elements + ',') > 0;
   UpdatePreview;
+
+  CreateSensorPage(ModePage.ID);
 end;
 
 { Almeno un elemento da mostrare }

@@ -110,7 +110,7 @@ jobs:
           # installazione silenziosa con scelte, come farà winget
           $p = Start-Process $setup.FullName -Wait -PassThru -ArgumentList `
                "/VERYSILENT", "/SUPPRESSMSGBOXES", "/CURRENTUSER", "/NORESTART", `
-               "/ELEMENTS=desktop,tray", "/LANG=de", "/LOG=$log"
+               "/ELEMENTS=desktop,tray", "/SENSOR=dexcom", "/LANG=de", "/LOG=$log"
           Get-Content $log -Tail 15
           Check ($p.ExitCode -eq 0) "installazione (codice $($p.ExitCode))"
           $dir = Join-Path $env:LOCALAPPDATA "Programs\GlucoBar"
@@ -118,6 +118,7 @@ jobs:
           $cfg = Get-Content "$env:APPDATA\GlucoBar\config.json" -Raw | ConvertFrom-Json
           Check (($cfg.elements -join ',') -eq 'tray,desktop') "/ELEMENTS salvato ($($cfg.elements -join ','))"
           Check ($cfg.language -eq 'de') "/LANG salvato ($($cfg.language))"
+          Check ($cfg.source -eq 'dexcom') "/SENSOR salvato ($($cfg.source))"
 
           # il comando "glucobar"
           $gb = "$dir\bin\glucobar.cmd"

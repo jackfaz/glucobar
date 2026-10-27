@@ -2,7 +2,7 @@
 
     GlucoBar.exe                          mostra gli elementi scelti l'ultima volta
     GlucoBar.exe --show desktop,tray      mostra questi elementi (e li ricorda)
-    GlucoBar.exe --set-elements taskbar,tray --set-language it
+    GlucoBar.exe --set-elements taskbar,tray --set-language it --set-source libre
                                           salva solo le scelte (usato dall'installer)
     GlucoBar.exe --forget                 cancella password e impostazioni
 
@@ -19,6 +19,7 @@ from . import __version__, credentials
 from .config import ELEMENTS, LOG_PATH, forget_everything, load_config, log, \
     normalize_elements, save_config, trim_log
 from .i18n import LANGUAGES, set_language, t
+from .sources import SOURCES
 
 MUTEX_NAME = "GlucoBar"   # lo stesso di AppMutex in installer/glucobar.iss
 _instance_mutex = None    # resta aperto finché il programma gira
@@ -64,14 +65,18 @@ def run(elements):
     Controller(cfg).run()
 
 
-def save_choices(elements, language):
+def save_choices(elements, language, source=None):
     cfg = load_config()
     if elements:
         cfg["elements"] = elements
     if language:
         cfg["language"] = language
+    if source and source != cfg["source"]:
+        cfg["source"] = source
+        cfg["email"] = ""   # l'account dell'altro servizio non vale più
     save_config(cfg)
-    log(f"scelte salvate: elementi={','.join(cfg['elements'])} lingua={cfg['language']}")
+    log(f"scelte salvate: elementi={','.join(cfg['elements'])} lingua={cfg['language']} "
+        f"sensore={cfg['source']}")
 
 
 def self_test():
@@ -102,6 +107,7 @@ def main(argv=None):
     parser.add_argument("--show", type=elements_arg, metavar="ELEMENTI")
     parser.add_argument("--set-elements", type=elements_arg, metavar="ELEMENTI")
     parser.add_argument("--set-language", choices=sorted(LANGUAGES) + ["auto"])
+    parser.add_argument("--set-source", choices=SOURCES)
     parser.add_argument("--version", action="version", version=f"GlucoBar {__version__}")
     parser.add_argument("--forget", action="store_true",
                         help="cancella password e impostazioni (usato dalla disinstallazione)")
@@ -113,8 +119,8 @@ def main(argv=None):
     if args.forget:
         forget_everything()
         return 0
-    if args.set_elements or args.set_language:
-        save_choices(args.set_elements, args.set_language)
+    if args.set_elements or args.set_language or args.set_source:
+        save_choices(args.set_elements, args.set_language, args.set_source)
         return 0
     if already_running():
         return 0

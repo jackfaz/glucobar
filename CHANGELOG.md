@@ -12,6 +12,8 @@ uses [Semantic Versioning](https://semver.org/).
   sites need only the address; private ones a read-only token (or the API secret). The
   installer, the first start and `glucobar setup` offer it as a third sensor
   (`/SENSOR=nightscout`, `glucobar set source=nightscout`).
+- The same option works with **Nocturne**, the successor of Nightscout from the Nightscout
+  organisation: it serves the same API and accepts its `noc_…` API tokens.
 
 ## [0.6.0] - 2026-10-27
 

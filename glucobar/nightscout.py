@@ -4,6 +4,9 @@
 API documentata (/api/v1). L'"account" è l'indirizzo del sito; se il sito non è
 pubblico serve un token di accesso in sola lettura (Admin Tools, ruolo "readable").
 Si accetta anche l'API_SECRET, mandato come SHA-1 nell'intestazione api-secret.
+
+Vale anche per Nocturne (github.com/nightscout/nocturne), il successore di Nightscout:
+ripete la stessa API v1 e accetta i suoi token noc_... nello stesso ?token=.
 """
 
 import hashlib

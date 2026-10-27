@@ -54,7 +54,7 @@ grigio se il dato è di più di 15 minuti fa. Le soglie si possono cambiare.
 |---|---|---|
 | FreeStyle Libre (Libre 2, Libre 3 e versioni Plus) | LibreLinkUp | Supportato |
 | Dexcom G6, G7, ONE+ | Dexcom Share | Beta, cerchiamo chi lo provi |
-| Qualsiasi sensore che invia i dati a Nightscout (Medtronic, Eversense, xDrip+, Juggluco, AndroidAPS, Loop, …) | Nightscout | Beta, cerchiamo chi lo provi |
+| Qualsiasi sensore che invia i dati a Nightscout o Nocturne (Medtronic, Eversense, xDrip+, Juggluco, AndroidAPS, Loop, …) | API di Nightscout | Beta, cerchiamo chi lo provi |
 | Medtronic Guardian / Simplera | CareLink | In valutazione |
 
 Il supporto per Dexcom e Nightscout è nuovo e finora è stato provato solo con server
@@ -70,17 +70,18 @@ Vorresti un altro sensore? [Apri una issue](../../issues) e dicci quale.
      LibreLink. Bastano cinque minuti: vedi [Configurare LibreLinkUp](#configurare-librelinkup).
    - **Dexcom:** nell'app **Dexcom** attiva la **condivisione (Share)** e invita almeno un
      follower. GlucoBar entra con il tuo account Dexcom, non con quello del follower.
-   - **Nightscout:** serve un sito Nightscout che riceve già le tue letture. Se non è
-     pubblico, crea un token in sola lettura: nel sito *Admin Tools → Add new Subject*, ruolo
-     **readable**, e copia il token.
+   - **Nightscout o Nocturne:** serve un sito che riceve già le tue letture. Se non è
+     pubblico, crea un token in sola lettura. Nightscout: *Admin Tools → Add new Subject*,
+     ruolo **readable**, e copia il token. Nocturne: *Settings → Connectors → API tokens →
+     Create API token*, con il permesso di lettura **Blood glucose**.
 2. Scarica `GlucoBar-Setup-x.y.z.exe` dalla pagina [Release](../../releases/latest) e avvialo.
    Non servono permessi di amministratore.
 3. Scegli la lingua dell'installazione, spunta cosa mostrare (con le anteprime) e se avviare
    GlucoBar all'accensione del PC.
 4. Al primo avvio scegli il sensore e inserisci l'account: l'email **LibreLinkUp** per
    FreeStyle Libre (la stessa di LibreLink, se hai seguito la guida qui sotto), oppure email,
-   telefono (con prefisso) o nome utente **Dexcom**, oppure indirizzo e token del tuo sito
-   **Nightscout**.
+   telefono (con prefisso) o nome utente **Dexcom**, oppure indirizzo (quello che apri nel
+   browser) e token del tuo sito **Nightscout** o **Nocturne**.
 
 Windows può mostrare *"Windows ha protetto il PC"* perché l'installer non è ancora firmato
 digitalmente: clicca *Ulteriori informazioni → Esegui comunque*. Ogni release riporta

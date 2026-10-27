@@ -54,7 +54,7 @@ the reading is more than 15 minutes old. Thresholds can be changed.
 |---|---|---|
 | FreeStyle Libre (Libre 2, Libre 3 and their Plus versions) | LibreLinkUp | Supported |
 | Dexcom G6, G7, ONE+ | Dexcom Share | Beta, testers wanted |
-| Any sensor uploading to Nightscout (Medtronic, Eversense, xDrip+, Juggluco, AndroidAPS, Loop, …) | Nightscout | Beta, testers wanted |
+| Any sensor uploading to Nightscout or Nocturne (Medtronic, Eversense, xDrip+, Juggluco, AndroidAPS, Loop, …) | Nightscout API | Beta, testers wanted |
 | Medtronic Guardian / Simplera | CareLink | Being evaluated |
 
 Dexcom and Nightscout support is new and has only been tested against simulated servers so
@@ -70,17 +70,18 @@ Would you like another sensor? [Open an issue](../../issues) and tell us which o
      account. It takes five minutes: see [Setting up LibreLinkUp](#setting-up-librelinkup).
    - **Dexcom:** in the **Dexcom** app, turn on **Share** and invite at least one follower.
      GlucoBar signs in with your own Dexcom account, not the follower's.
-   - **Nightscout:** you need a Nightscout site that already receives your readings. If it is
-     not public, create a read-only token: on the site, *Admin Tools → Add new Subject*, role
-     **readable**, and copy its token.
+   - **Nightscout or Nocturne:** you need a site that already receives your readings. If it
+     is not public, create a read-only token. Nightscout: *Admin Tools → Add new Subject*, role
+     **readable**, and copy its token. Nocturne: *Settings → Connectors → API tokens → Create
+     API token*, with read permission for **Blood glucose**.
 2. Download `GlucoBar-Setup-x.y.z.exe` from the [Releases](../../releases/latest) page and run
    it. No administrator rights needed.
 3. Choose the setup language, tick what to show (with previews) and whether to start GlucoBar
    with Windows.
 4. On first start, choose your sensor and enter the account: the **LibreLinkUp** email for
    FreeStyle Libre (the same as LibreLink, if you followed the guide below), or your
-   **Dexcom** email, phone number (with country code) or user name, or your **Nightscout** site
-   address and token.
+   **Dexcom** email, phone number (with country code) or user name, or your **Nightscout** or
+   **Nocturne** site address (the one you open in the browser) and token.
 
 Windows may show *"Windows protected your PC"* because the installer is not code-signed yet:
 click *More info → Run anyway*. Each release lists the installer's SHA-256 and a link to its

@@ -186,9 +186,9 @@ Log file: `%APPDATA%\GlucoBar\glucobar.log`.
 
 ## Code signing policy
 
-Free code signing provided by [SignPath.io](https://signpath.io), certificate by
-[SignPath Foundation](https://signpath.org). Signing starts once the application to SignPath
-Foundation is approved; until then the installer is unsigned.
+The installer is not code-signed yet. We plan to apply to the
+[SignPath Foundation](https://signpath.org) program for free code signing of open-source
+projects once GlucoBar is more widely used.
 
 - Committers and reviewers: [jackfaz](https://github.com/jackfaz)
 - Approvers: [jackfaz](https://github.com/jackfaz)

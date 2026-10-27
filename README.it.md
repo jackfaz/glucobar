@@ -190,10 +190,9 @@ GlucoBar importa da solo impostazioni e password. Poi puoi cancellare quel file.
 
 ## Firma del codice
 
-Free code signing provided by [SignPath.io](https://signpath.io), certificate by
-[SignPath Foundation](https://signpath.org): la firma digitale è offerta gratuitamente da
-SignPath.io, con un certificato di SignPath Foundation. La firma partirà quando la richiesta a
-SignPath Foundation sarà approvata; fino ad allora l'installer non è firmato.
+L'installer non è ancora firmato digitalmente. Quando GlucoBar sarà più diffuso faremo
+domanda al programma di [SignPath Foundation](https://signpath.org), che firma gratuitamente
+i progetti open source.
 
 - Chi modifica e rivede il codice: [jackfaz](https://github.com/jackfaz)
 - Chi approva le release da firmare: [jackfaz](https://github.com/jackfaz)

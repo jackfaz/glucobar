@@ -27,7 +27,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 - Each release lists the installer's SHA-256 and a link to its VirusTotal scan.
-- Code signing policy in the README, for the SignPath Foundation application.
+- Code signing policy in the README (roles and privacy), ready for a SignPath Foundation
+  application.
 
 ### Changed
 - `GlucoBar.exe` and `glucobar-cli.exe` now carry name, description and version in their file

@@ -1,0 +1,359 @@
+"""Modalità "barra": il valore appoggiato sulla barra delle applicazioni di Windows.
+
+Una finestrella senza bordi, con sfondo trasparente, sta sopra la barra a sinistra
+delle icone vicino all'orologio ed è tenuta sempre in primo piano.
+
+Perché non "dentro" la barra: su Windows 11 25H2 una finestra agganciata alla barra
+(SetParent, come fa TrafficMonitor) viene disegnata SOTTO lo sfondo semitrasparente
+della barra e non si vede.
+
+Si nasconde quando un programma è a schermo intero sullo stesso monitor.
+"""
+
+import sys
+import threading
+import time
+import tkinter as tk
+import traceback
+
+from .config import log, save_config
+from .i18n import t
+from .librelinkup import TREND_ARROWS, LibreLinkUp, fetch_safely
+from .ui_common import RED, apply_icon, age_minutes, color_for, fmt_value, is_stale
+
+IS_WIN = sys.platform == "win32"
+
+if IS_WIN:
+    import ctypes
+    import winreg
+    from ctypes import wintypes
+
+    user32 = ctypes.windll.user32
+    user32.FindWindowW.restype = wintypes.HWND
+    user32.FindWindowW.argtypes = [wintypes.LPCWSTR, wintypes.LPCWSTR]
+    user32.FindWindowExW.restype = wintypes.HWND
+    user32.FindWindowExW.argtypes = [wintypes.HWND, wintypes.HWND,
+                                     wintypes.LPCWSTR, wintypes.LPCWSTR]
+    user32.GetParent.restype = wintypes.HWND
+    user32.GetParent.argtypes = [wintypes.HWND]
+    user32.GetForegroundWindow.restype = wintypes.HWND
+    user32.GetClassNameW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+    user32.IsWindowVisible.argtypes = [wintypes.HWND]
+    user32.GetWindowRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
+    user32.GetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int]
+    user32.SetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_long]
+    user32.SetWindowPos.argtypes = [wintypes.HWND, wintypes.HWND, ctypes.c_int,
+                                    ctypes.c_int, ctypes.c_int, ctypes.c_int,
+                                    ctypes.c_uint]
+
+    class MONITORINFO(ctypes.Structure):
+        _fields_ = [("cbSize", wintypes.DWORD), ("rcMonitor", wintypes.RECT),
+                    ("rcWork", wintypes.RECT), ("dwFlags", wintypes.DWORD)]
+
+    user32.MonitorFromWindow.restype = wintypes.HMONITOR
+    user32.MonitorFromWindow.argtypes = [wintypes.HWND, wintypes.DWORD]
+    user32.GetMonitorInfoW.argtypes = [wintypes.HMONITOR, ctypes.POINTER(MONITORINFO)]
+
+    MONITOR_DEFAULTTONEAREST = 2
+    GWL_EXSTYLE = -20
+    WS_EX_TOOLWINDOW = 0x00000080
+    HWND_TOPMOST = wintypes.HWND(-1)
+    SWP_NOSIZE, SWP_NOMOVE, SWP_NOACTIVATE = 0x1, 0x2, 0x10
+
+# Finestre del desktop: se sono in primo piano non è "schermo intero"
+DESKTOP_CLASSES = {"Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd"}
+
+
+def enable_dpi_awareness():
+    """Coordinate in pixel reali, così combaciano con quelle della barra.
+    Va chiamata prima di creare qualsiasi finestra."""
+    if not IS_WIN:
+        return
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+    except Exception:
+        try:
+            user32.SetProcessDPIAware()
+        except Exception:
+            pass
+
+
+def window_rect(hwnd):
+    r = wintypes.RECT()
+    user32.GetWindowRect(hwnd, ctypes.byref(r))
+    return r.left, r.top, r.right, r.bottom
+
+
+def monitor_rect(hwnd):
+    """Rettangolo del monitor su cui si trova la finestra."""
+    info = MONITORINFO()
+    info.cbSize = ctypes.sizeof(MONITORINFO)
+    user32.GetMonitorInfoW(user32.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST),
+                           ctypes.byref(info))
+    r = info.rcMonitor
+    return r.left, r.top, r.right, r.bottom
+
+
+def all_taskbars():
+    """Barra del monitor principale seguita da quelle degli altri monitor
+    (da sinistra a destra). Le altre esistono solo se in Windows è attivo
+    "Mostra la barra delle applicazioni su tutti gli schermi"."""
+    bars = []
+    main = user32.FindWindowW("Shell_TrayWnd", None)
+    if main:
+        bars.append(main)
+    others, h = [], None
+    while True:
+        h = user32.FindWindowExW(None, h, "Shell_SecondaryTrayWnd", None)
+        if not h:
+            break
+        others.append(h)
+    others.sort(key=lambda w: window_rect(w)[0])
+    return bars + others
+
+
+def class_name(hwnd):
+    buf = ctypes.create_unicode_buffer(256)
+    user32.GetClassNameW(hwnd, buf, 256)
+    return buf.value
+
+
+def taskbar_colors():
+    """Colori di sfondo/testo simili a quelli della barra (tema chiaro o scuro)."""
+    light = False
+    if IS_WIN:
+        try:
+            key = winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
+            light = winreg.QueryValueEx(key, "SystemUsesLightTheme")[0] == 1
+        except OSError:
+            pass
+    return ("#eeeeee", "#5f6368") if light else ("#1f1f1f", "#a0a0a0")
+
+
+class TaskbarGlucose:
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.client = LibreLinkUp(cfg)
+        self.current = None
+        self.error = None
+        self.busy = False
+        self.hidden = False
+        self.last_geometry = None
+        self.screen = None   # rettangolo del monitor della barra usata
+        self._last_bars = None
+        self._last_fetch = 0
+
+        bg, dim = taskbar_colors()
+        self.bg = cfg["taskbar_bg"] or bg
+        self.dim = dim
+
+        self.root = tk.Tk()
+        self.root.title("GlucoBar")
+        apply_icon(self.root)
+        self.root.overrideredirect(True)
+        self.root.attributes("-topmost", True)
+        self.root.configure(bg=self.bg)
+        if self.cfg["taskbar_transparent"]:
+            try:
+                self.root.attributes("-transparentcolor", self.bg)
+            except tk.TclError:
+                pass  # solo Windows
+
+        self.box = tk.Frame(self.root, bg=self.bg)
+        self.box.place(relx=0.5, rely=0.5, anchor="center")
+        self.value_lbl = tk.Label(self.box, text="…", bg=self.bg, fg=self.dim)
+        self.value_lbl.grid(row=0, column=0, sticky="e")
+        self.arrow_lbl = tk.Label(self.box, text="", bg=self.bg, fg=self.dim)
+        self.arrow_lbl.grid(row=0, column=1, sticky="w")
+        self.info_lbl = tk.Label(self.box, text="", bg=self.bg, fg=self.dim)
+        self.info_lbl.grid(row=1, column=0, columnspan=2)
+        for lbl in (self.value_lbl, self.arrow_lbl, self.info_lbl):
+            lbl.configure(padx=0, pady=0, bd=0)
+
+        self.menu = tk.Menu(self.root, tearoff=0)
+        self.menu.add_command(label=t("menu_refresh"), command=self.refresh)
+        self.menu.add_command(label=t("menu_unit"), command=self.toggle_unit)
+        self.menu.add_command(label=t("menu_side"), command=self.toggle_side)
+        self.menu.add_command(label=t("menu_monitor"), command=self.next_monitor)
+        self.menu.add_separator()
+        self.menu.add_command(label=t("menu_quit"), command=self.root.destroy)
+
+        for w in (self.root, self.box, self.value_lbl, self.arrow_lbl, self.info_lbl):
+            w.bind("<Button-3>", lambda e: self.menu.tk_popup(e.x_root, e.y_root))
+            w.bind("<Double-Button-1>", lambda e: self.refresh())
+
+        self.root.update_idletasks()
+        if IS_WIN:
+            # Niente pulsante nella barra e niente Alt+Tab per questa finestra
+            hwnd = self.own_hwnd()
+            user32.SetWindowLongW(hwnd, GWL_EXSTYLE,
+                                  user32.GetWindowLongW(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW)
+        self.reposition()
+        self._tick()
+        self._keep_on_taskbar()
+
+    # ---- posizione sopra la barra ----
+    def own_hwnd(self):
+        return user32.GetParent(self.root.winfo_id())
+
+    def layout_for(self, height):
+        """Caratteri e dimensioni in proporzione all'altezza della barra."""
+        self.value_lbl.configure(font=("Segoe UI", -int(height * 0.42), "bold"))
+        self.arrow_lbl.configure(font=("Segoe UI", -int(height * 0.36), "bold"))
+        self.info_lbl.configure(font=("Segoe UI", -int(height * 0.21)))
+        return int(height * 1.75), height
+
+    def taskbar_geometry(self):
+        """(left, top, right, bottom) della parte visibile della barra scelta,
+        bordo sinistro dell'area delle icone/orologio e se la barra è visibile."""
+        if not IS_WIN:
+            sw, sh = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+            self.screen = (0, 0, sw, sh)
+            return (0, sh - 48, sw, sh), sw - 200, True
+        bars = all_taskbars()
+        if not bars:
+            return None, 0, False
+        wanted = int(self.cfg["taskbar_monitor"])
+        index = wanted - 1 if 1 <= wanted <= len(bars) else 0  # non c'è: principale
+        tb = bars[index]
+        secondary = index > 0
+        left, top, right, bottom = window_rect(tb)
+        # Sui PC touch con Windows 11 la finestra della barra è più alta di
+        # quella visibile: come TrafficMonitor, si misura il pulsante Start
+        start = user32.FindWindowExW(tb, None, "Start", None)
+        if start:
+            s_top, s_bottom = window_rect(start)[1::2]
+            if 0 < s_bottom - s_top <= bottom - top:
+                top = bottom - (s_bottom - s_top)
+        h = bottom - top
+        tray = user32.FindWindowExW(tb, None, "TrayNotifyWnd", None)
+        tray_left = window_rect(tray)[0] if tray else 0
+        if not left < tray_left < right:
+            # Le barre secondarie hanno solo l'orologio (~88 px a 100%, come
+            # TrafficMonitor); sulla principale lascia ~280 px per icone e orologio
+            tray_left = right - int(h * (100 if secondary else 280) / 48)
+        self.screen = monitor_rect(tb)
+        # barra nascosta (nascondi automaticamente) o non visibile
+        visible = bool(user32.IsWindowVisible(tb)) and top < self.screen[3] - 4
+        if (index, len(bars)) != self._last_bars:
+            self._last_bars = (index, len(bars))
+            log(f"barre trovate: {len(bars)} (monitor scelto {wanted}, uso il n. {index + 1})")
+        return (left, top, right, bottom), tray_left, visible
+
+    def reposition(self):
+        bar, tray_left, visible = self.taskbar_geometry()
+        if bar is None:
+            return False
+        left, top, right, bottom = bar
+        w, h = self.layout_for(bottom - top)
+        if self.cfg["taskbar_side"] == "right":
+            x = tray_left - w - int(h * 0.1)
+        else:
+            x = left + int(h * 0.25)
+        x += int(self.cfg["taskbar_offset"])
+        geometry = f"{w}x{h}+{x}+{top}"
+        if geometry != self.last_geometry:
+            self.root.geometry(geometry)
+            self.last_geometry = geometry
+            log(f"barra={bar} icone_da_x={tray_left} -> valore in {geometry}")
+        return visible
+
+    def fullscreen_app_active(self):
+        if not IS_WIN:
+            return False
+        fg = user32.GetForegroundWindow()
+        if not fg or fg == self.own_hwnd() or class_name(fg) in DESKTOP_CLASSES:
+            return False
+        # Schermo intero sullo stesso monitor della barra usata
+        l, t_, r, b = window_rect(fg)
+        ml, mt, mr, mb = self.screen or monitor_rect(fg)
+        return l <= ml and t_ <= mt and r >= mr and b >= mb
+
+    def _keep_on_taskbar(self):
+        try:
+            visible = self.reposition()
+            hide = not visible or self.fullscreen_app_active()
+            if hide and not self.hidden:
+                self.root.withdraw()
+                self.hidden = True
+            elif not hide and self.hidden:
+                self.root.deiconify()
+                self.hidden = False
+            if IS_WIN and not self.hidden:
+                # Se clicchi sulla barra, Windows la porta davanti: torna sopra
+                user32.SetWindowPos(self.own_hwnd(), HWND_TOPMOST, 0, 0, 0, 0,
+                                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
+        except Exception:
+            log("controllo posizione:\n" + traceback.format_exc())
+        self.root.after(500, self._keep_on_taskbar)
+
+    def toggle_side(self):
+        self.cfg["taskbar_side"] = "left" if self.cfg["taskbar_side"] == "right" else "right"
+        save_config(self.cfg)
+        self.reposition()
+
+    def next_monitor(self):
+        count = len(all_taskbars()) if IS_WIN else 1
+        current = int(self.cfg["taskbar_monitor"])
+        if not 1 <= current <= count:
+            current = 1
+        self.cfg["taskbar_monitor"] = current % max(count, 1) + 1
+        save_config(self.cfg)
+        self.reposition()
+
+    def toggle_unit(self):
+        self.cfg["unit"] = "mmol/L" if self.cfg["unit"] == "mg/dL" else "mg/dL"
+        save_config(self.cfg)
+        self.render()
+
+    # ---- dati ----
+    def refresh(self):
+        if self.busy:
+            return
+        self.busy = True
+        self._last_fetch = time.time()
+        threading.Thread(target=self._fetch_worker, daemon=True).start()
+
+    def _fetch_worker(self):
+        current, _history, err = fetch_safely(self.client)
+        self.root.after(0, self._on_data, current, err)
+
+    def _on_data(self, current, err):
+        self.busy = False
+        self.error = err
+        if err:
+            log(f"dati: {err}")
+        if current:
+            self.current = current
+        self.render()
+
+    def _tick(self):
+        if time.time() - self._last_fetch >= self.cfg["refresh_seconds"]:
+            self.refresh()
+        else:
+            self.render()
+        self.root.after(15000, self._tick)
+
+    def render(self):
+        c = self.current
+        if not c:
+            self.value_lbl.config(text="--", fg=self.dim)
+            self.arrow_lbl.config(text="")
+            self.info_lbl.config(text=t("error_short") if self.error else "…",
+                                 fg=RED if self.error else self.dim)
+            return
+        age = age_minutes(c)
+        stale = is_stale(self.cfg, c)
+        color = self.dim if stale else color_for(self.cfg, c["mgdl"])
+        self.value_lbl.config(text=fmt_value(self.cfg, c["mgdl"]), fg=color)
+        self.arrow_lbl.config(text="" if stale else " " + TREND_ARROWS.get(c["trend"], ""),
+                              fg=color)
+        info = t("now") if age == 0 else t("min_short", n=age)
+        if self.error:
+            info = "⚠ " + info
+        self.info_lbl.config(text=info, fg=RED if (stale or self.error) else self.dim)
+
+    def run(self):
+        self.root.mainloop()

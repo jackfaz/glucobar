@@ -4,6 +4,15 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Each release lists the installer's SHA-256 and a link to its VirusTotal scan.
+
+### Changed
+- `GlucoBar.exe` and `glucobar-cli.exe` now carry name, description and version in their file
+  properties.
+
 ## [0.5.1] - 2026-10-27
 
 ### Added
@@ -105,4 +114,5 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[Unreleased]: https://github.com/jackfaz/glucobar/compare/v0.5.1...HEAD
 [0.5.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.5.1

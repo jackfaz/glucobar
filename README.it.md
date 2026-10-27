@@ -71,7 +71,9 @@ Vorresti un altro sensore? [Apri una issue](../../issues) e dicci quale.
 4. Al primo avvio inserisci email e password dell'account **LibreLinkUp**.
 
 Windows può mostrare *"Windows ha protetto il PC"* perché l'installer non è ancora firmato
-digitalmente: clicca *Ulteriori informazioni → Esegui comunque*.
+digitalmente: clicca *Ulteriori informazioni → Esegui comunque*. Ogni release riporta
+l'impronta SHA-256 dell'installer e il link alla sua scansione su VirusTotal, così puoi
+controllare il file prima di avviarlo.
 
 ## Uso
 

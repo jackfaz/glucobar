@@ -70,7 +70,8 @@ Would you like another sensor? [Open an issue](../../issues) and tell us which o
 4. On first start, enter the **LibreLinkUp** email and password.
 
 Windows may show *"Windows protected your PC"* because the installer is not code-signed yet:
-click *More info → Run anyway*.
+click *More info → Run anyway*. Each release lists the installer's SHA-256 and a link to its
+VirusTotal scan, so you can check the file before running it.
 
 ## Use
 

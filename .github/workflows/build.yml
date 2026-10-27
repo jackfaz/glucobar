@@ -159,9 +159,30 @@ jobs:
           name: GlucoBar-Setup-${{ steps.version.outputs.version }}
           path: dist-installer/*.exe
 
+      # Scansione dell'installer su VirusTotal, con il link nel testo della release.
+      # Serve il secret VT_API_KEY (chiave gratuita di virustotal.com); senza, si salta.
+      - name: VirusTotal
+        id: vt
+        if: github.ref_type == 'tag' || inputs.release
+        shell: pwsh
+        env:
+          VT_API_KEY: ${{ secrets.VT_API_KEY }}
+        run: |
+          $setup = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
+          $url = python tools/virustotal.py $setup.FullName
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "VirusTotal: $url"
+          "url=$url" >> $env:GITHUB_OUTPUT
+
       - name: Release notes
         if: github.ref_type == 'tag' || inputs.release
-        run: python tools/release_notes.py ${{ steps.version.outputs.version }} release-notes.md
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
+          python tools/release_notes.py ${{ steps.version.outputs.version }} release-notes.md `
+                 $setup.FullName "${{ steps.vt.outputs.url }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content release-notes.md
 
       - name: Publish release
         if: github.ref_type == 'tag' || inputs.release

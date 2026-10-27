@@ -166,4 +166,7 @@ GlucoBar is an independent open-source project, not affiliated with or endorsed 
 FreeStyle, Libre, LibreLink and LibreLinkUp are trademarks of Abbott. The LibreLinkUp API
 details come from the work of the open-source diabetes community.
 
+GlucoBar is free and will stay free. If it is useful to you and you want to support it, you
+can [donate via PayPal](https://paypal.me/giacomofazioli).
+
 License: [MIT](LICENSE).

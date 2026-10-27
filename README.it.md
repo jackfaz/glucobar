@@ -170,4 +170,7 @@ GlucoBar è un progetto open source indipendente, non affiliato né approvato da
 FreeStyle, Libre, LibreLink e LibreLinkUp sono marchi di Abbott. I dettagli dell'API
 LibreLinkUp vengono dal lavoro della comunità open source sul diabete.
 
+GlucoBar è gratuito e lo resterà. Se ti è utile e vuoi sostenerlo, puoi
+[fare una donazione con PayPal](https://paypal.me/giacomofazioli).
+
 Licenza: [MIT](LICENSE).

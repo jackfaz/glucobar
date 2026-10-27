@@ -63,14 +63,14 @@ jobs:
                   installer\glucobar.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: GlucoBar-Setup-${{ steps.version.outputs.version }}
           path: dist-installer/*.exe
 
       - name: Publish release
         if: github.ref_type == 'tag'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dist-installer/*.exe
           generate_release_notes: true

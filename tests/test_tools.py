@@ -64,6 +64,8 @@ class ToolsTest(unittest.TestCase):
         self.assertIn(self.digest, full)
         self.assertIn("[VirusTotal](https://vt.example/x)", full)
         self.assertNotIn("[VirusTotal]", release_notes.notes(version, self.path))
+        self.assertNotIn("Pre-release", full)
+        self.assertIn("**Pre-release:**", release_notes.notes(version, self.path, "u", True))
 
 
 if __name__ == "__main__":

@@ -44,19 +44,17 @@ def load_font(size):
 
 
 def make_icon(text, color):
-    """Disegna il testo il più grande possibile dentro l'icona."""
+    """Il testo alto quanto tutta l'icona; se è troppo largo (es. "199") viene stretto
+    in orizzontale, come un carattere condensato, invece di essere rimpicciolito:
+    Windows mostra l'icona a 16-24 pixel e le cifre devono restare leggibili."""
+    font = load_font(ICON_SIZE * 2)   # disegnato grande e poi ridotto: bordi più puliti
+    left, top, right, bottom = font.getbbox(text)
+    glyphs = Image.new("RGBA", (right - left, bottom - top), (0, 0, 0, 0))
+    ImageDraw.Draw(glyphs).text((-left, -top), text, font=font, fill=color)
+    width = min(ICON_SIZE, round(glyphs.width * ICON_SIZE / glyphs.height))
+    glyphs = glyphs.resize((width, ICON_SIZE), Image.LANCZOS)
     img = Image.new("RGBA", (ICON_SIZE, ICON_SIZE), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    size = ICON_SIZE
-    while size > 8:
-        font = load_font(size)
-        left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
-        if right - left <= ICON_SIZE and bottom - top <= ICON_SIZE:
-            break
-        size -= 2
-    x = (ICON_SIZE - (right - left)) / 2 - left
-    y = (ICON_SIZE - (bottom - top)) / 2 - top
-    draw.text((x, y), text, font=font, fill=color)
+    img.paste(glyphs, ((ICON_SIZE - width) // 2, 0), glyphs)
     return img
 
 

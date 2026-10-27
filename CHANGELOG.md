@@ -4,6 +4,16 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.7.1] - 2026-10-27
+
+### Changed
+- The number in the icon next to the clock now fills the whole height of the icon, with
+  taller, narrower digits: much easier to read at taskbar size (thanks for the feedback on
+  Reddit).
+- If Microsoft Defender flags a new installer on VirusTotal (a false positive that has to be
+  reported to Microsoft), the release is published as a pre-release, so the main download
+  link keeps giving the previous version until it is cleared.
+
 ## [0.7.0] - 2026-10-27
 
 ### Added
@@ -156,6 +166,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.7.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.7.1
 [0.7.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.7.0
 [0.6.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.6.0
 [0.5.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.5.2

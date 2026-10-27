@@ -1,12 +1,13 @@
 """Carica un file su VirusTotal e stampa il link alla scansione.
 
-Uso: python tools/virustotal.py [--wait] dist-installer/GlucoBar-Setup-0.7.0.exe
+Uso: python tools/virustotal.py [--wait] dist-installer/GlucoBar-Setup-0.7.1.exe
 Serve la chiave API gratuita di VirusTotal nella variabile VT_API_KEY (in GitHub
 Actions: il secret VT_API_KEY). Senza chiave non fa nulla e non stampa nessun link.
 Il link usa l'impronta SHA-256 del file: chiunque può controllare che il file
 scaricato dalla release sia lo stesso che è stato scansionato.
 Con --wait aspetta la fine dell'analisi e riporta gli antivirus che segnalano il
-file (in GitHub Actions anche come avvisi del job, leggibili senza aprire il log).
+file (in GitHub Actions anche come avvisi del job, leggibili senza aprire il log, e
+nell'output "microsoft" del passo: true se lo segnala Windows Defender).
 """
 
 import hashlib
@@ -95,9 +96,15 @@ if __name__ == "__main__":
     analysis = upload(path, key)
     print(report_url(path))
     if should_wait:
-        lines = summary(*wait(analysis, key))
+        stats, flagged = wait(analysis, key)
+        lines = summary(stats, flagged)
         for line in lines:
             print(line, file=sys.stderr)
         if os.environ.get("GITHUB_ACTIONS"):
             print(f"::notice title=VirusTotal {os.path.basename(path)}::{' | '.join(lines)}",
                   file=sys.stderr)
+        if os.environ.get("GITHUB_OUTPUT"):
+            # Windows Defender è l'antivirus di quasi tutti gli utenti: se segnala il file,
+            # la release esce come pre-release (vedi .github/workflows/build.yml)
+            with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+                out.write(f"microsoft={'true' if 'Microsoft' in flagged else 'false'}\n")

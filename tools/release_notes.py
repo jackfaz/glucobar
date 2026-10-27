@@ -1,6 +1,7 @@
 """Stampa la sezione di CHANGELOG.md di una versione, per il testo della release.
 
 Uso: python tools/release_notes.py 0.4.0 [release-notes.md] [installer.exe] [link VirusTotal]
+                                     [true se Windows Defender segnala l'installer]
 (senza file stampa a schermo; il file è scritto in UTF-8 anche su Windows).
 Con l'installer aggiunge la sua impronta SHA-256, con il link anche la scansione.
 """
@@ -22,7 +23,7 @@ def section(changelog, version):
     return match.group(1).strip()
 
 
-def notes(version, installer=None, scan_url=None):
+def notes(version, installer=None, scan_url=None, defender_flag=False):
     with open(os.path.join(ROOT, "CHANGELOG.md"), encoding="utf-8") as f:
         text = section(f.read(), version)
     repo = os.environ.get("GITHUB_REPOSITORY", "jackfaz/glucobar")
@@ -36,11 +37,17 @@ def notes(version, installer=None, scan_url=None):
                    f"`{sha256(installer)}`\n")
     if scan_url:
         result += f"Antivirus scan of this exact file: [VirusTotal]({scan_url})\n"
+    if defender_flag:
+        result += ("\n**Pre-release:** Microsoft Defender's automatic (machine-learning) check "
+                   "flags this installer, a false positive common for Python apps packaged as "
+                   "an .exe. It stays a pre-release until Microsoft clears it; the latest "
+                   "release is the recommended download meanwhile.\n")
     return result
 
 
 if __name__ == "__main__":
-    result = notes(sys.argv[1], *(a or None for a in sys.argv[3:5]))
+    extra = [a or None for a in sys.argv[3:5]]
+    result = notes(sys.argv[1], *extra, defender_flag=sys.argv[5:6] == ["true"])
     if len(sys.argv) > 2:
         with open(sys.argv[2], "w", encoding="utf-8") as f:
             f.write(result)

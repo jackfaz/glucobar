@@ -219,7 +219,7 @@ jobs:
         run: |
           $setup = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
           python tools/release_notes.py ${{ steps.version.outputs.version }} release-notes.md `
-                 $setup.FullName "${{ steps.vt.outputs.url }}"
+                 $setup.FullName "${{ steps.vt.outputs.url }}" "${{ steps.vt.outputs.microsoft }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Get-Content release-notes.md
 
@@ -245,6 +245,10 @@ jobs:
             dist-installer/*.exe
             dist-latest/GlucoBar-Setup.exe
           body_path: release-notes.md
+          # Se Windows Defender segnala l'installer (falso positivo da segnalare a
+          # Microsoft), esce come pre-release: i link "latest" restano sulla precedente
+          prerelease: ${{ steps.vt.outputs.microsoft == 'true' }}
+          make_latest: ${{ steps.vt.outputs.microsoft == 'true' && 'false' || 'true' }}
 
       - name: winget manifest
         if: github.ref_type == 'tag' || inputs.release

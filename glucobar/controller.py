@@ -59,6 +59,8 @@ class Controller:
         self.root = tk.Tk()   # nascosta: le viste sono Toplevel figlie
         self.root.withdraw()
         apply_icon(self.root)
+        if sys.platform == "darwin":
+            self._mac_accessory()
 
         self._start_tray()
         elements = normalize_elements(cfg["elements"])
@@ -72,6 +74,16 @@ class Controller:
         # installer, disinstallazione o `glucobar stop` possono chiedere di chiudere
         self._quit_event = instance.quit_event()
         self.root.after(500, self._watch_quit)
+
+    def _mac_accessory(self):
+        """Mac: app "accessoria", come tutte quelle della barra dei menu: niente icona
+        nel Dock e niente menu File/Modifica in alto (Tkinter la renderebbe un'app
+        normale anche con LSUIElement)."""
+        try:
+            from AppKit import NSApplication
+            NSApplication.sharedApplication().setActivationPolicy_(1)   # Accessory
+        except Exception:
+            log("modalità accessoria non impostata:\n" + traceback.format_exc())
 
     # ---- da altri thread al thread di Tk ----
     def post(self, fn, *args):

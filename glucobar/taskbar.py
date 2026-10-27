@@ -11,15 +11,13 @@ Si nasconde quando un programma è a schermo intero sullo stesso monitor.
 """
 
 import sys
-import threading
-import time
 import tkinter as tk
 import traceback
 
 from .config import log, save_config
 from .i18n import t
-from .librelinkup import TREND_ARROWS, LibreLinkUp, fetch_safely
-from .ui_common import RED, apply_icon, age_minutes, color_for, fmt_value, is_stale
+from .librelinkup import TREND_ARROWS
+from .ui_common import RED, age_minutes, color_for, fmt_value, is_stale
 
 IS_WIN = sys.platform == "win32"
 
@@ -132,26 +130,22 @@ def taskbar_colors():
     return ("#eeeeee", "#5f6368") if light else ("#1f1f1f", "#a0a0a0")
 
 
-class TaskbarGlucose:
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.client = LibreLinkUp(cfg)
-        self.current = None
-        self.error = None
-        self.busy = False
+class TaskbarView:
+    def __init__(self, ctl):
+        self.ctl = ctl
+        self.cfg = ctl.cfg
+        self.alive = True
         self.hidden = False
         self.last_geometry = None
         self.screen = None   # rettangolo del monitor della barra usata
         self._last_bars = None
-        self._last_fetch = 0
 
         bg, dim = taskbar_colors()
-        self.bg = cfg["taskbar_bg"] or bg
+        self.bg = self.cfg["taskbar_bg"] or bg
         self.dim = dim
 
-        self.root = tk.Tk()
+        self.root = tk.Toplevel(ctl.root)
         self.root.title("GlucoBar")
-        apply_icon(self.root)
         self.root.overrideredirect(True)
         self.root.attributes("-topmost", True)
         self.root.configure(bg=self.bg)
@@ -173,16 +167,16 @@ class TaskbarGlucose:
             lbl.configure(padx=0, pady=0, bd=0)
 
         self.menu = tk.Menu(self.root, tearoff=0)
-        self.menu.add_command(label=t("menu_refresh"), command=self.refresh)
-        self.menu.add_command(label=t("menu_unit"), command=self.toggle_unit)
+        self.menu.add_command(label=t("menu_refresh"), command=ctl.refresh)
+        self.menu.add_command(label=t("menu_unit"), command=ctl.toggle_unit)
         self.menu.add_command(label=t("menu_side"), command=self.toggle_side)
         self.menu.add_command(label=t("menu_monitor"), command=self.next_monitor)
         self.menu.add_separator()
-        self.menu.add_command(label=t("menu_quit"), command=self.root.destroy)
+        ctl.add_common_menu(self.menu)
 
         for w in (self.root, self.box, self.value_lbl, self.arrow_lbl, self.info_lbl):
             w.bind("<Button-3>", lambda e: self.menu.tk_popup(e.x_root, e.y_root))
-            w.bind("<Double-Button-1>", lambda e: self.refresh())
+            w.bind("<Double-Button-1>", lambda e: ctl.refresh())
 
         self.root.update_idletasks()
         if IS_WIN:
@@ -191,8 +185,11 @@ class TaskbarGlucose:
             user32.SetWindowLongW(hwnd, GWL_EXSTYLE,
                                   user32.GetWindowLongW(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW)
         self.reposition()
-        self._tick()
         self._keep_on_taskbar()
+
+    def destroy(self):
+        self.alive = False
+        self.root.destroy()
 
     # ---- posizione sopra la barra ----
     def own_hwnd(self):
@@ -272,6 +269,8 @@ class TaskbarGlucose:
         return l <= ml and t_ <= mt and r >= mr and b >= mb
 
     def _keep_on_taskbar(self):
+        if not self.alive:
+            return
         try:
             visible = self.reposition()
             hide = not visible or self.fullscreen_app_active()
@@ -303,46 +302,13 @@ class TaskbarGlucose:
         save_config(self.cfg)
         self.reposition()
 
-    def toggle_unit(self):
-        self.cfg["unit"] = "mmol/L" if self.cfg["unit"] == "mg/dL" else "mg/dL"
-        save_config(self.cfg)
-        self.render()
-
-    # ---- dati ----
-    def refresh(self):
-        if self.busy:
-            return
-        self.busy = True
-        self._last_fetch = time.time()
-        threading.Thread(target=self._fetch_worker, daemon=True).start()
-
-    def _fetch_worker(self):
-        current, _history, err = fetch_safely(self.client)
-        self.root.after(0, self._on_data, current, err)
-
-    def _on_data(self, current, err):
-        self.busy = False
-        self.error = err
-        if err:
-            log(f"dati: {err}")
-        if current:
-            self.current = current
-        self.render()
-
-    def _tick(self):
-        if time.time() - self._last_fetch >= self.cfg["refresh_seconds"]:
-            self.refresh()
-        else:
-            self.render()
-        self.root.after(15000, self._tick)
-
     def render(self):
-        c = self.current
+        c, error = self.ctl.current, self.ctl.error
         if not c:
             self.value_lbl.config(text="--", fg=self.dim)
             self.arrow_lbl.config(text="")
-            self.info_lbl.config(text=t("error_short") if self.error else "…",
-                                 fg=RED if self.error else self.dim)
+            self.info_lbl.config(text=t("error_short") if error else "…",
+                                 fg=RED if error else self.dim)
             return
         age = age_minutes(c)
         stale = is_stale(self.cfg, c)
@@ -351,9 +317,6 @@ class TaskbarGlucose:
         self.arrow_lbl.config(text="" if stale else " " + TREND_ARROWS.get(c["trend"], ""),
                               fg=color)
         info = t("now") if age == 0 else t("min_short", n=age)
-        if self.error:
+        if error:
             info = "⚠ " + info
-        self.info_lbl.config(text=info, fg=RED if (stale or self.error) else self.dim)
-
-    def run(self):
-        self.root.mainloop()
+        self.info_lbl.config(text=info, fg=RED if (stale or error) else self.dim)

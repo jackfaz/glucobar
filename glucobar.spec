@@ -4,7 +4,7 @@
 
 a = Analysis(
     ["run_glucobar.py"],
-    datas=[("assets/glucobar.ico", "assets")],
+    datas=[("assets/glucobar.ico", "assets"), ("assets/glucobar.png", "assets")],
     hiddenimports=["pystray._win32"],  # pystray sceglie il backend a runtime
     excludes=["unittest", "pydoc", "pytest"],
 )

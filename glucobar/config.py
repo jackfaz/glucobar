@@ -30,7 +30,8 @@ DEFAULT_CONFIG = {
     "refresh_seconds": 60,
     "stale_minutes": 15,        # oltre questo il valore è mostrato in grigio
     "app_version": "4.16.0",    # si aggiorna da sola se il server ne chiede una più recente
-    "language": "auto",         # "auto", "it" o "en"
+    "language": "auto",         # "auto" oppure it, en, es, fr, de, pt
+    "mode": "taskbar",          # taskbar, window, desktop, tray (solo icona)
     # finestrella
     "window_x": None,
     "window_y": None,
@@ -40,6 +41,15 @@ DEFAULT_CONFIG = {
     "taskbar_offset": 0,        # spostamento extra in pixel
     "taskbar_bg": None,         # es. "#202020" per forzare il colore di sfondo
     "taskbar_transparent": True,
+    # pannello sullo sfondo
+    "desktop_x": None,
+    "desktop_y": None,
+    "desktop_w": 460,
+    "desktop_h": 300,
+    "desktop_hours": 12,        # 3, 6 o 12
+    "desktop_alpha": 0.92,      # trasparenza del pannello (1 = opaco)
+    "desktop_locked": False,    # True = non si sposta né si ridimensiona
+    "tray_hint_shown": False,   # notifica "dov'è l'icona" già mostrata
 }
 
 

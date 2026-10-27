@@ -1,0 +1,21 @@
+﻿VOR DER INSTALLATION
+
+GlucoBar zeigt auf dem PC den Glukosewert deines FreeStyle-Libre-Sensors an, gelesen
+über LibreLinkUp, den Teilen-Dienst von Abbott.
+
+• GlucoBar ist KEIN Medizinprodukt. Verwende es nicht, um Insulindosen festzulegen
+  oder eine Unterzuckerung zu behandeln: maßgeblich sind das Lesegerät oder die offizielle App.
+• Es nutzt eine inoffizielle API. Abbott kann sie jederzeit ändern und GlucoBar kann
+  ohne Vorwarnung aufhören zu funktionieren.
+• Der Wert kann einige Minuten verspätet oder gar nicht ankommen, wenn das Handy weit
+  vom Sensor entfernt oder offline ist. Alte Werte (über 15 Minuten) werden grau angezeigt.
+• GlucoBar ist ein unabhängiges Projekt, weder mit Abbott verbunden noch von Abbott
+  genehmigt. FreeStyle, Libre, LibreLink und LibreLinkUp sind Marken von Abbott.
+
+WAS DU BRAUCHST
+Ein LibreLinkUp-Konto, das deinem Sensor „folgt“: lade in der LibreLink-App eine
+E-Mail-Adresse ein (am besten eine andere als deine), dann nimm in der LibreLinkUp-App
+die Einladung und die Nutzungsbedingungen an.
+
+Das Passwort wird verschlüsselt in der Windows-Anmeldeinformationsverwaltung gespeichert
+und nur an die LibreView-Server von Abbott gesendet.

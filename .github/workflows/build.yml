@@ -51,6 +51,9 @@ jobs:
           Get-Content "$env:APPDATA\GlucoBar\glucobar.log" -ErrorAction SilentlyContinue
           if ($p.ExitCode -ne 0) { exit 1 }
 
+      - name: Installer previews
+        run: python tools/previews_to_bmp.py
+
       - name: Install Inno Setup
         run: choco install innosetup --no-progress -y
 

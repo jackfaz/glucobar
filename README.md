@@ -6,16 +6,24 @@
 
 GlucoBar reads your latest sensor value from **LibreLinkUp** (Abbott's sharing service)
 and shows it on your PC, colour-coded, with the trend arrow and how many minutes ago it
-was measured. Three modes, choose one or more during installation:
+was measured.
 
-| Mode | What it looks like |
+A **single GlucoBar icon** sits next to the clock: it shows the value and, with a right-click,
+lets you switch mode, unit and language, change account or quit. Pick the mode you like
+during installation and change it whenever you want:
+
+| On the taskbar (recommended) | Small window |
 |---|---|
-| **Taskbar** (recommended) | Value, arrow and minutes on the taskbar, next to the clock. Works on a second monitor too. Hides itself when an app is full screen. |
-| **Window** | Small borderless always-on-top window with the last 3 hours chart. Drag it anywhere. |
-| **Icon** | The number as an icon in the notification area; hover for arrow and minutes. |
+| ![Taskbar](docs/preview_taskbar.png) | ![Window](docs/preview_window.png) |
+| Value, arrow and minutes next to the clock. Works on a second monitor too; hides during full-screen videos. | Small always-on-top window with a 3-hour chart. Drag it anywhere. |
+| **Desktop panel** | **Icon only** |
+| ![Desktop panel](docs/preview_desktop.png) | ![Icon only](docs/preview_tray.png) |
+| Panel on the desktop, behind your windows: large chart (3, 6 or 12 hours), average, min, max, time in range, 15-minute change and sensor day. Move it and resize it from the bottom-right corner. | Just the coloured number in the icon; hover it for arrow and minutes. |
 
 Green = in range (70–180 mg/dL) · Orange = above 180 · Red = below 70 or above 250 ·
 Grey = reading older than 15 minutes.
+
+Languages: English, Italiano, Español, Français, Deutsch, Português.
 
 > ⚠️ **GlucoBar is not a medical device.** Do not use it to decide insulin doses or to treat
 > a hypo — always rely on your reader or the official app. It uses an **unofficial API** that
@@ -29,7 +37,7 @@ Grey = reading older than 15 minutes.
    the invitation and the terms of use. You can uninstall LibreLinkUp afterwards.
 2. Download `GlucoBar-Setup-x.y.z.exe` from the [Releases](../../releases/latest) page and run
    it. No administrator rights needed.
-3. Choose the modes you want and whether to start GlucoBar with Windows.
+3. Choose the mode (with preview) and whether to start GlucoBar with Windows.
 4. On first start, enter the **LibreLinkUp** email and password.
 
 Windows may show *"Windows protected your PC"* because the installer is not code-signed yet:
@@ -37,12 +45,15 @@ click *More info → Run anyway*.
 
 ## Use
 
-- **Right-click** the value: refresh, switch mg/dL ↔ mmol/L, move left/right or to the
-  other monitor, quit.
-- **Double-click**: refresh now.
-- Second monitor: enable *Settings → Personalization → Taskbar → Taskbar behaviors →
-  Show my taskbar on all displays*.
-- Windows 11 hides new tray icons under the **^** arrow: drag the GlucoBar icon onto the taskbar.
+- **Right-click the GlucoBar icon** next to the clock (or the value itself): refresh, mode,
+  unit, language, change account, quit. **Double-click**: refresh now.
+- Windows 11 hides new icons under the **^** arrow: drag the GlucoBar icon onto the taskbar to
+  keep it visible.
+- Taskbar mode on a second monitor: enable *Settings → Personalization → Taskbar → Taskbar
+  behaviors → Show my taskbar on all displays*, then right-click the value → *Move to the other
+  monitor*.
+- Desktop panel: drag to move, drag the bottom-right corner to resize, right-click for the
+  chart period and to lock it in place.
 
 ## Settings
 
@@ -50,15 +61,18 @@ click *More info → Run anyway*.
 
 | Key | Default | Meaning |
 |---|---|---|
+| `mode` | `taskbar` | `taskbar`, `window`, `desktop` or `tray` (icon only) |
 | `low` / `high` / `very_high` | 70 / 180 / 250 | Thresholds in mg/dL |
 | `unit` | `mg/dL` | or `mmol/L` |
 | `stale_minutes` | 15 | After this, the value turns grey |
 | `refresh_seconds` | 60 | How often to fetch |
-| `language` | `auto` | `it` or `en` |
+| `language` | `auto` | `en`, `it`, `es`, `fr`, `de`, `pt` |
 | `taskbar_monitor` | 1 | 1 = main monitor, 2 = second, … |
 | `taskbar_offset` | 0 | Extra pixels (negative = left) |
 | `taskbar_bg` | auto | Your taskbar colour, e.g. `#202020`, if you see a halo around the digits |
 | `taskbar_transparent` | true | `false` for a solid background |
+| `desktop_hours` | 12 | Desktop panel chart period: 3, 6 or 12 |
+| `desktop_alpha` | 0.92 | Desktop panel opacity (1 = solid) |
 
 Log file: `%APPDATA%\GlucoBar\glucobar.log`.
 
@@ -81,13 +95,15 @@ over the taskbar and re-asserts it every 500 ms.
 ```bat
 pip install -r requirements.txt pyinstaller
 python -m unittest discover -s tests
-python run_glucobar.py --mode taskbar        :: run without building
+python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
-iscc /DAppVersion=0.1.0 installer\glucobar.iss   :: needs Inno Setup 6
+python tools\previews_to_bmp.py
+iscc /DAppVersion=0.2.0 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): push a tag like
-`v0.1.0` and the installer is attached to a new release.
+`v0.2.0` and the installer is attached to a new release. The mode previews are made with
+`tools/compose_previews.py`.
 
 ## Credits and trademarks
 

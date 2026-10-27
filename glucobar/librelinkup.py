@@ -30,6 +30,7 @@ class LibreLinkUp:
         self.token = None
         self.account_id = None
         self.patient_id = None
+        self.connection = None   # ultima risposta completa (contiene i dati del sensore)
 
     @property
     def base_url(self):
@@ -137,6 +138,7 @@ class LibreLinkUp:
             self.patient_id = conns[0]["patientId"]
 
         data = self._get(f"/llu/connections/{self.patient_id}/graph")
+        self.connection = data["connection"]
         current = parse_measurement(data["connection"]["glucoseMeasurement"])
         history = [parse_measurement(m) for m in data.get("graphData", [])]
         history.append(current)

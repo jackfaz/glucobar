@@ -1,20 +1,20 @@
-"""Modalità "icona": il valore come icona nell'area di notifica, vicino all'orologio.
+"""L'unica icona di GlucoBar nell'area di notifica, vicino all'orologio.
 
-L'icona mostra il numero colorato; passandoci sopra col mouse compaiono freccia di
-tendenza e minuti trascorsi. Clic destro per il menu.
+Mostra il valore colorato (passandoci sopra: freccia e minuti) e fa da
+telecomando: modalità, unità, lingua, account, esci. In modalità "Solo icona"
+è l'unica cosa visibile.
 """
 
 import os
-import threading
-import time
 
 import pystray
 from PIL import Image, ImageDraw, ImageFont
 
-from .config import save_config
-from .i18n import t
-from .librelinkup import TREND_ARROWS, LibreLinkUp, fetch_safely
-from .ui_common import GREY, age_minutes, color_for, fmt_value, is_stale
+from . import i18n
+from .config import log, save_config
+from .i18n import LANGUAGES, t
+from .librelinkup import TREND_ARROWS
+from .ui_common import GREY, age_minutes, asset_path, color_for, fmt_value, is_stale
 
 ICON_SIZE = 64  # Windows la rimpicciolisce da solo
 
@@ -59,78 +59,91 @@ def make_icon(text, color):
     return img
 
 
-class TrayGlucose:
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.client = LibreLinkUp(cfg)
-        self.current = None
-        self.error = None
-        self.wake = threading.Event()
-        self.running = True
+def logo_icon():
+    try:
+        return Image.open(asset_path("glucobar.png")).resize((ICON_SIZE, ICON_SIZE))
+    except OSError:
+        return make_icon("G", GREY)
 
-        self.icon = pystray.Icon(
-            "glucobar",
-            make_icon("…", GREY),
-            "GlucoBar: " + t("connecting"),
-            menu=pystray.Menu(
-                pystray.MenuItem(t("menu_refresh"), self.on_refresh, default=True),
-                pystray.MenuItem(
-                    lambda item: t("menu_to_mmol") if self.cfg["unit"] == "mg/dL"
-                    else t("menu_to_mgdl"),
-                    self.on_toggle_unit),
-                pystray.Menu.SEPARATOR,
-                pystray.MenuItem(t("menu_quit"), self.on_quit),
-            ),
+
+class TrayIcon:
+    def __init__(self, ctl):
+        self.ctl = ctl
+        self.logo = logo_icon()
+        self.icon = pystray.Icon("glucobar", self.logo, "GlucoBar", menu=self.build_menu())
+
+    def build_menu(self):
+        ctl = self.ctl
+
+        def do(fn, *args):
+            # i clic arrivano dal thread dell'icona: li esegue il thread di Tk
+            return lambda: ctl.post(fn, *args)
+
+        def mode_item(mode):
+            return pystray.MenuItem(lambda item: t(f"mode_{mode}"), do(ctl.set_mode, mode),
+                                    checked=lambda item: ctl.cfg["mode"] == mode, radio=True)
+
+        def lang_item(code, name):
+            return pystray.MenuItem(name, do(ctl.set_language, code), radio=True,
+                                    checked=lambda item: i18n.current_language() == code)
+
+        return pystray.Menu(
+            pystray.MenuItem(lambda item: t("menu_refresh"), do(ctl.refresh), default=True),
+            pystray.MenuItem(lambda item: t("menu_mode"),
+                             pystray.Menu(*[mode_item(m) for m in
+                                            ("taskbar", "window", "desktop", "tray")])),
+            pystray.MenuItem(lambda item: t("menu_unit"), do(ctl.toggle_unit)),
+            pystray.MenuItem(lambda item: t("menu_language"),
+                             pystray.Menu(*[lang_item(c, n) for c, n in LANGUAGES.items()])),
+            pystray.MenuItem(lambda item: t("menu_account"), do(ctl.change_account)),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem(lambda item: t("menu_quit"), do(ctl.quit)),
         )
 
-    # ---- menu ----
-    def on_refresh(self, _icon=None, _item=None):
-        self.wake.set()
+    def start(self):
+        # Su Windows l'icona gira in un suo thread, accanto al ciclo di Tkinter
+        self.icon.run_detached(setup=self._setup)
 
-    def on_toggle_unit(self, _icon=None, _item=None):
-        self.cfg["unit"] = "mmol/L" if self.cfg["unit"] == "mg/dL" else "mg/dL"
-        save_config(self.cfg)
-        self.render()
-
-    def on_quit(self, _icon=None, _item=None):
-        self.running = False
-        self.wake.set()
-        self.icon.stop()
-
-    # ---- dati ----
-    def loop(self, icon):
+    def _setup(self, icon):
         icon.visible = True
-        last_fetch = 0
-        while self.running:
-            if self.wake.is_set() or time.time() - last_fetch >= self.cfg["refresh_seconds"]:
-                self.wake.clear()
-                last_fetch = time.time()
-                current, _history, self.error = fetch_safely(self.client)
-                if current:
-                    self.current = current
-            self.render()
-            self.wake.wait(15)  # aggiorna i "minuti fa" ogni 15 s
+        log("icona nell'area di notifica creata")
+        cfg = self.ctl.cfg
+        if not cfg.get("tray_hint_shown"):
+            # Windows 11 nasconde le icone nuove sotto la freccetta ^
+            try:
+                icon.notify(t("tray_hint"), "GlucoBar")
+            except Exception as e:
+                log(f"notifica non mostrata: {e}")
+            cfg["tray_hint_shown"] = True
+            self.ctl.post(save_config, cfg)
+
+    def update_menu(self):
+        try:
+            self.icon.update_menu()
+        except Exception:
+            pass
+
+    def stop(self):
+        try:
+            self.icon.stop()
+        except Exception:
+            pass
 
     def render(self):
-        c = self.current
+        ctl, cfg, c = self.ctl, self.ctl.cfg, self.ctl.current
         if not c:
-            self.icon.icon = make_icon("--", GREY)
-            self.icon.title = "GlucoBar: " + (self.error or t("connecting"))
+            self.icon.icon = self.logo
+            self.icon.title = "GlucoBar: " + (ctl.error or t("connecting"))
             return
-
         age = age_minutes(c)
-        stale = is_stale(self.cfg, c)
-        value = fmt_value(self.cfg, c["mgdl"])
+        stale = is_stale(cfg, c)
+        value = fmt_value(cfg, c["mgdl"])
         arrow = "" if stale else TREND_ARROWS.get(c["trend"], "")
-
-        self.icon.icon = make_icon(value, GREY if stale else color_for(self.cfg, c["mgdl"]))
+        self.icon.icon = make_icon(value, GREY if stale else color_for(cfg, c["mgdl"]))
         when = t("now") if age == 0 else t("min_ago", n=age)
-        title = f"{value} {arrow} {self.cfg['unit']} · {when}"
+        title = f"{value} {arrow} {cfg['unit']} · {when}"
         if stale:
             title += " · " + t("stale")
-        if self.error:
-            title += f"\n⚠ {self.error}"
+        if ctl.error:
+            title += f"\n⚠ {ctl.error}"
         self.icon.title = title[:127]  # limite di Windows per il tooltip
-
-    def run(self):
-        self.icon.run(setup=self.loop)

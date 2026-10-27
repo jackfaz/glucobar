@@ -1,0 +1,21 @@
+﻿AVANT L'INSTALLATION
+
+GlucoBar affiche sur le PC la glycémie de votre capteur FreeStyle Libre, lue via
+LibreLinkUp, le service de partage d'Abbott.
+
+• GlucoBar n'est PAS un dispositif médical. Ne l'utilisez pas pour décider des doses
+  d'insuline ni pour traiter une hypoglycémie : fiez-vous au lecteur ou à l'app officielle.
+• Il utilise une API non officielle. Abbott peut la modifier à tout moment et GlucoBar
+  peut cesser de fonctionner sans préavis.
+• La valeur peut arriver avec quelques minutes de retard, ou pas du tout si le téléphone
+  est loin du capteur ou hors ligne. Les valeurs anciennes (plus de 15 minutes) sont en gris.
+• GlucoBar est un projet indépendant, ni affilié ni approuvé par Abbott.
+  FreeStyle, Libre, LibreLink et LibreLinkUp sont des marques d'Abbott.
+
+CE QU'IL VOUS FAUT
+Un compte LibreLinkUp qui « suit » votre capteur : dans l'app LibreLink, invitez une
+adresse e-mail (de préférence différente de la vôtre), puis dans l'app LibreLinkUp
+acceptez l'invitation et les conditions d'utilisation.
+
+Le mot de passe est enregistré chiffré dans le Gestionnaire d'identification de Windows
+et n'est envoyé qu'aux serveurs LibreView d'Abbott.

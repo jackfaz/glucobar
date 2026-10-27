@@ -6,6 +6,7 @@
     glucobar get [chiave ...]     mostra le impostazioni
     glucobar login                cambia sensore o account
     glucobar start                avvia GlucoBar
+    glucobar stop                 chiude GlucoBar
     glucobar forget               cancella password e impostazioni
     glucobar report               riepilogo per le segnalazioni (copiato negli appunti)
 
@@ -17,7 +18,7 @@ import os
 import subprocess
 import sys
 
-from . import __version__, autostart, credentials, i18n, tui
+from . import __version__, autostart, credentials, i18n, instance, tui
 from .config import CONFIG_PATH, ELEMENTS, forget_everything, load_config, \
     normalize_elements, save_config
 from .i18n import LANGUAGES, t
@@ -132,17 +133,7 @@ def show_value(value):
 
 
 # ---- GlucoBar aperto? ----
-def is_running():
-    if sys.platform != "win32":
-        return False
-    import ctypes
-    kernel32 = ctypes.windll.kernel32
-    kernel32.OpenMutexW.restype = ctypes.c_void_p
-    handle = kernel32.OpenMutexW(0x00100000, False, "GlucoBar")   # SYNCHRONIZE
-    if handle:
-        kernel32.CloseHandle(ctypes.c_void_p(handle))
-        return True
-    return False
+is_running = instance.is_running
 
 
 def start_gui():
@@ -412,6 +403,17 @@ def cmd_start(_args):
     return 0
 
 
+def cmd_stop(_args):
+    if not is_running():
+        print("GlucoBar is not running")
+        return 0
+    if instance.request_quit():
+        print("GlucoBar closed")
+        return 0
+    print("GlucoBar did not close: quit it from its menu", file=sys.stderr)
+    return 1
+
+
 def cmd_report(args):
     from .report import build_report, copy_to_clipboard
     cfg = load_config()
@@ -449,6 +451,7 @@ def main(argv=None):
     p.set_defaults(func=cmd_get)
     sub.add_parser("login", help="change sensor or account").set_defaults(func=cmd_login)
     sub.add_parser("start", help="start GlucoBar").set_defaults(func=cmd_start)
+    sub.add_parser("stop", help="close GlucoBar").set_defaults(func=cmd_stop)
     sub.add_parser("forget", help="delete password and settings").set_defaults(func=cmd_forget)
     p = sub.add_parser("report", help="diagnostic report for bug reports (copied to clipboard)")
     p.add_argument("--no-copy", action="store_true", help="only print it")

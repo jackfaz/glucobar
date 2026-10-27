@@ -148,7 +148,8 @@ glucobar set unit=mmol/L low=80
 glucobar set elements=desktop,tray autostart=true
 glucobar get                   tutte le impostazioni
 glucobar login                 cambia sensore o account
-glucobar start | forget        avvia GlucoBar | cancella password e impostazioni
+glucobar start | stop          avvia GlucoBar | chiudilo
+glucobar forget                cancella password, token e impostazioni
 glucobar report                riepilogo per le segnalazioni, copiato negli appunti
 ```
 

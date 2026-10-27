@@ -5,6 +5,7 @@
     GlucoBar.exe --set-elements taskbar,tray --set-language it --set-source libre
                                           salva solo le scelte (usato dall'installer)
     GlucoBar.exe --forget                 cancella password e impostazioni
+    GlucoBar.exe --quit                   chiude la copia aperta (installer, disinstallazione)
 
 Elementi: taskbar (valore sulla barra), tray (icona vicino all'orologio),
 window (finestrella), desktop (pannello sullo sfondo).
@@ -15,27 +16,11 @@ import os
 import sys
 import traceback
 
-from . import __version__
+from . import __version__, instance
 from .config import ELEMENTS, LOG_PATH, forget_everything, load_config, log, \
     normalize_elements, save_config, trim_log
 from .i18n import LANGUAGES, set_language, t
 from .sources import SOURCES, account_ready
-
-MUTEX_NAME = "GlucoBar"   # lo stesso di AppMutex in installer/glucobar.iss
-_instance_mutex = None    # resta aperto finché il programma gira
-
-
-def already_running():
-    """Una sola copia di GlucoBar: cosa mostrare si sceglie dal menu."""
-    global _instance_mutex
-    if sys.platform != "win32":
-        return False
-    import ctypes
-    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    kernel32.CreateMutexW.restype = ctypes.c_void_p
-    _instance_mutex = kernel32.CreateMutexW(None, False, MUTEX_NAME)
-    return ctypes.get_last_error() == 183  # ERROR_ALREADY_EXISTS
-
 
 def elements_arg(text):
     """"taskbar,tray" -> ["taskbar", "tray"] (per argparse)."""
@@ -82,8 +67,8 @@ def save_choices(elements, language, source=None):
 def self_test():
     """Per la build: carica tutte le parti nell'exe (moduli mancanti = errore)."""
     try:
-        from . import (controller, desktop, dexcom, librelinkup, nightscout,  # noqa: F401
-                       notifyicon, taskbar, tray, window)
+        from . import (controller, desktop, dexcom, instance, librelinkup,  # noqa: F401
+                       nightscout, notifyicon, taskbar, tray, window)
         import pystray
         log(f"self-test ok (pystray backend {pystray.Icon.__module__})")
         return 0
@@ -112,6 +97,8 @@ def main(argv=None):
     parser.add_argument("--version", action="version", version=f"GlucoBar {__version__}")
     parser.add_argument("--forget", action="store_true",
                         help="cancella password e impostazioni (usato dalla disinstallazione)")
+    parser.add_argument("--quit", action="store_true",
+                        help="chiude GlucoBar se è aperto (usato da installer e disinstallazione)")
     parser.add_argument("--self-test", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
 
@@ -120,10 +107,13 @@ def main(argv=None):
     if args.forget:
         forget_everything()
         return 0
+    if args.quit:
+        return 0 if instance.request_quit() else 1
     if args.set_elements or args.set_language or args.set_source:
         save_choices(args.set_elements, args.set_language, args.set_source)
         return 0
-    if already_running():
+    # Una sola copia di GlucoBar: cosa mostrare si sceglie dal menu
+    if instance.already_running():
         return 0
     trim_log()
     log(f"GlucoBar {__version__} avvio (Python {sys.version.split()[0]})")

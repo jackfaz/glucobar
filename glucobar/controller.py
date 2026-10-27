@@ -13,7 +13,7 @@ import time
 import tkinter as tk
 import traceback
 
-from . import i18n
+from . import i18n, instance
 from .config import ELEMENTS, log, normalize_elements, peek_config, save_config
 from .i18n import LANGUAGES, t
 from .sources import fetch_safely, make_client
@@ -67,6 +67,9 @@ class Controller:
         self.root.after(100, self._drain_calls)
         self._tick()
         self.root.after(2000, self._watch_config)
+        # installer, disinstallazione o `glucobar stop` possono chiedere di chiudere
+        self._quit_event = instance.quit_event()
+        self.root.after(500, self._watch_quit)
 
     # ---- da altri thread al thread di Tk ----
     def post(self, fn, *args):
@@ -221,6 +224,15 @@ class Controller:
             lang_var.set(i18n.current_language())
         menu.configure(postcommand=sync)
         menu._vars = (show_vars, lang_var)   # tenute vive insieme al menu
+
+    def _watch_quit(self):
+        if not self.root:
+            return
+        if instance.quit_requested(self._quit_event):
+            log("chiusura richiesta da fuori (installer o glucobar stop)")
+            self.quit()
+            return
+        self.root.after(500, self._watch_quit)
 
     # ---- modifiche da terminale (glucobar set / setup) ----
     def _watch_config(self):

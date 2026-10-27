@@ -147,7 +147,8 @@ glucobar set unit=mmol/L low=80
 glucobar set elements=desktop,tray autostart=true
 glucobar get                   all settings
 glucobar login                 change sensor or account
-glucobar start | forget        start GlucoBar | delete password and settings
+glucobar start | stop          start GlucoBar | close it
+glucobar forget                delete passwords, tokens and settings
 glucobar report                diagnostic summary for bug reports, copied to the clipboard
 ```
 

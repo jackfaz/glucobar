@@ -41,8 +41,8 @@ LicenseFile=..\LICENSE
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
-; Stesso nome del mutex creato da glucobar/app.py
-AppMutex=GlucoBar
+; Niente AppMutex: invece di chiedere all'utente di chiudere GlucoBar, l'installer e la
+; disinstallazione lo chiudono da soli (vedi CloseGlucoBar più sotto)
 CloseApplications=yes
 ; chiede sempre la lingua all'avvio: diventa anche la lingua di GlucoBar
 ShowLanguageDialog=yes
@@ -261,6 +261,8 @@ Name: "{autodesktop}\GlucoBar"; Filename: "{app}\GlucoBar.exe"; Tasks: desktopic
 ; salva elementi, lingua e sensore scelti (anche se GlucoBar non viene avviato subito)
 Filename: "{app}\GlucoBar.exe"; Parameters: "--set-elements {code:SelectedElements} --set-language {language} --set-source {code:SelectedSource}"; Flags: runhidden waituntilterminated
 Filename: "{app}\GlucoBar.exe"; Description: "{cm:LaunchNow}"; Flags: nowait postinstall skipifsilent
+; aggiornamento silenzioso (es. winget): riapre GlucoBar se era aperto
+Filename: "{app}\GlucoBar.exe"; Flags: nowait; Check: ReopenAfterSilentUpdate
 
 [Code]
 var
@@ -270,6 +272,7 @@ var
   ModeLayers: array of TBitmapImage;  // un ritaglio per elemento, sopra la base
   ModeDescription: TNewStaticText;
   LastClicked: Integer;
+  WasRunning: Boolean;   // GlucoBar era aperto ed è stato chiuso per installare
   SensorPage: TWizardPage;
   SensorRadios: array of TNewRadioButton;
   SensorSteps: TNewMemo;
@@ -599,6 +602,39 @@ begin
   end;
 end;
 
+{ GlucoBar aperto: prima gli chiede di chiudersi da solo (l'icona sparisce subito
+  dall'orologio), poi, se non risponde (es. una versione senza --quit), lo chiude }
+procedure CloseGlucoBar;
+var
+  ResultCode: Integer;
+begin
+  if not CheckForMutexes('GlucoBar') then
+    Exit;
+  WasRunning := True;
+  if FileExists(ExpandConstant('{app}\GlucoBar.exe')) then
+    Exec(ExpandConstant('{app}\GlucoBar.exe'), '--quit', '', SW_HIDE,
+         ewWaitUntilTerminated, ResultCode);
+  if CheckForMutexes('GlucoBar') then
+  begin
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM GlucoBar.exe', '', SW_HIDE,
+         ewWaitUntilTerminated, ResultCode);
+    Sleep(500);
+  end;
+end;
+
+{ Installazione o aggiornamento: chiude GlucoBar prima di sostituire i file }
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  CloseGlucoBar;
+  Result := '';
+end;
+
+{ Usata da [Run] }
+function ReopenAfterSilentUpdate: Boolean;
+begin
+  Result := WizardSilent and WasRunning;
+end;
+
 { Avvio con Windows tolto se, reinstallando, non è più spuntato }
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
@@ -610,6 +646,9 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   ResultCode: Integer;
 begin
+  { prima di tutto: GlucoBar aperto bloccherebbe la rimozione dei file }
+  if CurUninstallStep = usUninstall then
+    CloseGlucoBar;
   { Si chiede PRIMA di rimuovere i file: così è GlucoBar stesso a cancellare
     password (Gestione credenziali), impostazioni e il file della prima versione }
   if (CurUninstallStep = usUninstall) and not UninstallSilent then

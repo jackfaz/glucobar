@@ -171,10 +171,29 @@ jobs:
           Check (-not (Test-Path "$env:APPDATA\GlucoBar")) "impostazioni cancellate"
           Check (-not (Test-Path "$env:USERPROFILE\.glicemia_widget.json")) "file della prima versione cancellato"
 
+          # GlucoBar aperto: "glucobar stop" lo chiude, e la disinstallazione anche
+          # (un sito Nightscout finto basta ad avviarlo senza chiedere l'account)
+          function Running { $null -ne (Get-Process GlucoBar -ErrorAction SilentlyContinue) }
+          New-Item -ItemType Directory -Force "$env:APPDATA\GlucoBar" | Out-Null
+          '{"source": "nightscout", "email": "https://glucobar-test.invalid", "elements": ["window"], "language": "en"}' |
+              Set-Content "$env:APPDATA\GlucoBar\config.json"
+          Start-Process "$dir\GlucoBar.exe"
+          Start-Sleep -Seconds 8
+          Check (Running) "GlucoBar avviato"
+          & $gb stop
+          $code = $LASTEXITCODE
+          Start-Sleep -Seconds 1
+          Get-Content "$env:APPDATA\GlucoBar\glucobar.log" -ErrorAction SilentlyContinue | Select-Object -Last 6
+          Check ($code -eq 0 -and -not (Running)) "glucobar stop chiude GlucoBar"
+          Start-Process "$dir\GlucoBar.exe"
+          Start-Sleep -Seconds 8
+          Check (Running) "GlucoBar riaperto prima della disinstallazione"
+
           # disinstallazione: niente resti in PATH e avvio automatico
           $u = Start-Process "$dir\unins000.exe" -Wait -PassThru -ArgumentList `
                "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"
           Check ($u.ExitCode -eq 0) "disinstallazione (codice $($u.ExitCode))"
+          Check (-not (Running)) "la disinstallazione chiude GlucoBar"
           Start-Sleep -Seconds 3
           Check (-not (Test-Path "$dir\GlucoBar.exe")) "file rimossi"
           $path = (Get-ItemProperty HKCU:\Environment).Path

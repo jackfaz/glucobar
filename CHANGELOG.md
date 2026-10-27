@@ -4,6 +4,16 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- Uninstalling or updating GlucoBar while it is running no longer asks you to close it:
+  the installer closes it by itself (the icon disappears from the clock right away), and a
+  silent update (e.g. winget) opens it again afterwards.
+
+### Added
+- `glucobar stop` closes GlucoBar from a terminal.
+
 ## [0.7.1] - 2026-10-27
 
 ### Changed
@@ -166,6 +176,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[Unreleased]: https://github.com/jackfaz/glucobar/compare/v0.7.1...HEAD
 [0.7.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.7.1
 [0.7.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.7.0
 [0.6.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.6.0

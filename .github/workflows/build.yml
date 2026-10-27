@@ -180,6 +180,12 @@ jobs:
           Start-Process "$dir\GlucoBar.exe"
           Start-Sleep -Seconds 8
           Check (Running) "GlucoBar avviato"
+          # cambiare la finestra in primo piano (aprire e chiudere un'app) non deve
+          # bloccarlo: 0.8.2 si fermava qui, dentro l'avviso di Windows
+          $np = Start-Process notepad -PassThru
+          Start-Sleep -Seconds 2
+          Stop-Process -Id $np.Id
+          Start-Sleep -Seconds 2
           & $gb stop
           $code = $LASTEXITCODE
           Start-Sleep -Seconds 1

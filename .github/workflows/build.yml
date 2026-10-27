@@ -2,11 +2,17 @@ name: Build installer
 
 # - Tag "v*" (es. v0.1.0): compila l'installer e lo pubblica nelle Release.
 # - "Run workflow" manuale: compila l'installer e lo lascia tra gli artifact,
-#   utile per provarlo prima di pubblicare.
+#   utile per provarlo prima di pubblicare. Spuntando "release" pubblica anche la
+#   versione scritta in glucobar/__init__.py (il tag v... lo crea GitHub).
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      release:
+        description: "Publish a release for the version in glucobar/__init__.py"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -139,25 +145,28 @@ jobs:
           path: dist-installer/*.exe
 
       - name: Release notes
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' || inputs.release
         run: python tools/release_notes.py ${{ steps.version.outputs.version }} release-notes.md
 
       - name: Publish release
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' || inputs.release
         uses: softprops/action-gh-release@v3
         with:
+          tag_name: v${{ steps.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: GlucoBar ${{ steps.version.outputs.version }}
           files: dist-installer/*.exe
           body_path: release-notes.md
 
       - name: winget manifest
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' || inputs.release
         shell: pwsh
         run: |
           $setup = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
           python tools/winget_manifest.py ${{ steps.version.outputs.version }} $setup.FullName winget
 
       - uses: actions/upload-artifact@v7
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' || inputs.release
         with:
           name: winget-manifest-${{ steps.version.outputs.version }}
           path: winget/

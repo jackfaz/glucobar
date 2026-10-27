@@ -18,6 +18,7 @@ uses [Semantic Versioning](https://semver.org/).
   restarting.
 - Silent install with choices, e.g. `/VERYSILENT /ELEMENTS=desktop,tray /LANG=it`.
 - winget manifest generated for each release.
+- Releases can be published from the Actions page (*Run workflow* → *release*).
 
 ### Changed
 - Installer: nothing is ticked at first, and the preview shows exactly the ticked elements

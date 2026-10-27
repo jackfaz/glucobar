@@ -158,8 +158,9 @@ python tools\previews_to_bmp.py
 iscc /DAppVersion=0.5.0 installer\glucobar.iss    :: serve Inno Setup 6
 ```
 
-Le release le crea GitHub Actions (`.github/workflows/build.yml`): pubblica un tag tipo `v0.5.0`
-e l'installer viene allegato a una nuova release. Le anteprime delle modalità si creano con
+Le release le crea GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
+Run workflow* spunta *release* per pubblicare la versione scritta in `glucobar/__init__.py`
+(funziona anche pubblicando un tag tipo `v0.5.0`). Le anteprime delle modalità si creano con
 `tools/compose_previews.py`.
 
 ## Riconoscimenti e marchi

@@ -59,6 +59,7 @@ DEFAULT_CONFIG = {
     "desktop_alpha": 0.92,      # trasparenza del pannello (1 = opaco)
     "desktop_locked": False,    # True = non si sposta né si ridimensiona
     "tray_hint_shown": False,   # notifica "dov'è l'icona" già mostrata
+    "tray_promoted": False,     # icona già resa visibile accanto all'orologio (una volta sola)
 }
 
 

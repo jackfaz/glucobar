@@ -18,6 +18,8 @@ uses [Semantic Versioning](https://semver.org/).
   dexcom_region=us` works from scripts.
 
 ### Changed
+- Windows 11: the icon next to the clock is now shown on the taskbar right away, instead of
+  under the ^ arrow (once: if you move it back under the arrow, it stays there).
 - LibreLinkUp: the README has a step-by-step guide, and the installer and the app now say
   that the LibreLinkUp account can be the same as your LibreLink account (sharing with
   yourself), which is the simplest setup.

@@ -52,6 +52,7 @@ class Controller:
         self._last_fetch = 0
         self.views = {}      # elemento -> vista aperta (taskbar, window, desktop)
         self.tray = None
+        self._promoting = False   # tentativi in corso di mettere l'icona accanto all'orologio
         self._calls = queue.Queue()
 
         self.root = tk.Tk()   # nascosta: le viste sono Toplevel figlie
@@ -94,6 +95,31 @@ class Controller:
             log("icona nell'area di notifica non disponibile:\n" + traceback.format_exc())
             self.tray = None
 
+    PROMOTE_DELAYS = (2, 3, 5, 10, 20, 30)   # secondi tra un tentativo e l'altro
+
+    def promote_tray(self, attempt=0):
+        """Mette l'icona accanto all'orologio, una volta sola (vedi notifyicon.py).
+        La voce di Windows compare qualche secondo dopo l'icona: riprova per un po'."""
+        from . import notifyicon
+        if attempt == 0:
+            if self._promoting:
+                return   # c'è già una serie di tentativi in corso
+            self._promoting = True
+        if self.cfg.get("tray_promoted") or not self.tray or not self.root:
+            self._promoting = False
+            return
+        if notifyicon.promote("GlucoBar.exe"):
+            self.cfg["tray_promoted"] = True
+            save_config(self.cfg)
+            self._promoting = False
+            log("icona resa visibile accanto all'orologio")
+        elif attempt < len(self.PROMOTE_DELAYS):
+            self.root.after(self.PROMOTE_DELAYS[attempt] * 1000, self.promote_tray, attempt + 1)
+        else:
+            self._promoting = False
+            log("icona non trovata nelle impostazioni di Windows: resta sotto la freccetta ^")
+            self.tray.show_hint()
+
     def available(self, element):
         return element != "tray" or self.tray is not None
 
@@ -115,6 +141,8 @@ class Controller:
             # nascosta, non fermata: si può riaccendere dal menu degli altri elementi
             self.tray.set_visible("tray" in elements)
             self.tray.update_menu()
+            if "tray" in elements and self.tray.ready:
+                self.promote_tray()
         save_config(self.cfg)
         log(f"elementi mostrati: {', '.join(elements)}")
         self.render()

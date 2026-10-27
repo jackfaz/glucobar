@@ -111,14 +111,21 @@ class TrayIcon:
         icon.visible = "tray" in cfg["elements"]
         self.ready = True
         log("icona nell'area di notifica creata")
-        if icon.visible and not cfg.get("tray_hint_shown"):
+        if icon.visible:
             # Windows 11 nasconde le icone nuove sotto la freccetta ^
-            try:
-                icon.notify(t("tray_hint"), "GlucoBar")
-            except Exception as e:
-                log(f"notifica non mostrata: {e}")
-            cfg["tray_hint_shown"] = True
-            self.ctl.post(save_config, cfg)
+            self.ctl.post(self.ctl.promote_tray)
+
+    def show_hint(self):
+        """Spiega dov'è l'icona, se non è riuscito a metterla accanto all'orologio."""
+        cfg = self.ctl.cfg
+        if cfg.get("tray_hint_shown"):
+            return
+        try:
+            self.icon.notify(t("tray_hint"), "GlucoBar")
+        except Exception as e:
+            log(f"notifica non mostrata: {e}")
+        cfg["tray_hint_shown"] = True
+        save_config(cfg)
 
     def set_visible(self, visible):
         if not self.ready:

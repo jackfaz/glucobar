@@ -99,4 +99,5 @@ if __name__ == "__main__":
         for line in lines:
             print(line, file=sys.stderr)
         if os.environ.get("GITHUB_ACTIONS"):
-            print(f"::notice title=VirusTotal::{' | '.join(lines)}", file=sys.stderr)
+            print(f"::notice title=VirusTotal {os.path.basename(path)}::{' | '.join(lines)}",
+                  file=sys.stderr)

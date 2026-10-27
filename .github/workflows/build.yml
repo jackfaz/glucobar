@@ -194,6 +194,18 @@ jobs:
           "VirusTotal: $url"
           "url=$url" >> $env:GITHUB_OUTPUT
 
+      # Solo per le prove: quale dei due eseguibili fa scattare gli antivirus
+      - name: VirusTotal (executables)
+        if: inputs.scan
+        shell: pwsh
+        env:
+          VT_API_KEY: ${{ secrets.VT_API_KEY }}
+        run: |
+          foreach ($exe in "GlucoBar.exe", "glucobar-cli.exe") {
+            python tools/virustotal.py --wait "dist\GlucoBar\$exe"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
       - name: Release notes
         if: github.ref_type == 'tag' || inputs.release
         shell: pwsh

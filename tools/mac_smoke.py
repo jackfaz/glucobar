@@ -28,7 +28,7 @@ def notice(title, text):
     print(f"::notice title={title}::{text}", flush=True)
 
 
-def photo(title, box_of):
+def photo(title, box_of, max_width):
     """Screenshot ritagliato (box_of: dimensioni -> rettangolo), in un avviso del job."""
     from PIL import Image
     path = "/tmp/glucobar-shot.png"
@@ -37,13 +37,17 @@ def photo(title, box_of):
         return
     img = Image.open(path).convert("RGB")
     img = img.crop(box_of(*img.size))
-    img.thumbnail((900, 900))
-    for quality in (80, 60, 40):
+    img.thumbnail((max_width, 900))
+    for quality in (75, 55, 35):
         buf = io.BytesIO()
         img.save(buf, "JPEG", quality=quality)
-        if buf.tell() < 45_000:
+        if buf.tell() < 11_000:
             break
-    notice(title, base64.b64encode(buf.getvalue()).decode())
+    # un avviso tiene al massimo 4096 caratteri: in più pezzi, da rimettere insieme
+    data = base64.b64encode(buf.getvalue()).decode()
+    chunks = [data[i:i + 4000] for i in range(0, len(data), 4000)]
+    for n, chunk in enumerate(chunks, 1):
+        notice(f"{title} {n}/{len(chunks)}", chunk)
 
 
 def main(app):
@@ -64,8 +68,8 @@ def main(app):
     ok = proc.poll() is None
     print("GlucoBar aperto:", ok)
     if ok:
-        photo("barra dei menu", lambda w, h: (max(0, w - 900), 0, w, max(30, h // 25)))
-        photo("schermo", lambda w, h: (0, 0, w, h))
+        photo("barra dei menu", lambda w, h: (max(0, w - 900), 0, w, max(30, h // 25)), 900)
+        photo("schermo", lambda w, h: (0, 0, w, h), 640)
         stop = subprocess.run([cli, "stop"], capture_output=True, text=True)
         print("glucobar stop:", stop.returncode, stop.stdout.strip(), stop.stderr.strip())
         time.sleep(2)

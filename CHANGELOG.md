@@ -4,7 +4,7 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.5.1] - 2026-10-27
 
 ### Added
 - `glucobar report`: a diagnostic summary for bug reports (versions, screens, settings, last
@@ -105,8 +105,4 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
-[0.5.0]: https://github.com/jackfaz/glucobar/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/jackfaz/glucobar/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/jackfaz/glucobar/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/jackfaz/glucobar/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.1.0
+[0.5.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.5.1

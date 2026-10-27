@@ -106,7 +106,7 @@ Se GlucoBar è aperto, applica le nuove impostazioni entro due secondi.
 Installazione silenziosa con le tue scelte (comoda per script e winget):
 
 ```text
-GlucoBar-Setup-0.5.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /LANG=it
+GlucoBar-Setup-0.5.1.exe /VERYSILENT /ELEMENTS=taskbar,tray /LANG=it
 ```
 
 ## Impostazioni
@@ -156,12 +156,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: avvio senza compilare
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.5.0 installer\glucobar.iss    :: serve Inno Setup 6
+iscc /DAppVersion=0.5.1 installer\glucobar.iss    :: serve Inno Setup 6
 ```
 
 Le release le crea GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow* spunta *release* per pubblicare la versione scritta in `glucobar/__init__.py`
-(funziona anche pubblicando un tag tipo `v0.5.0`). Le anteprime delle modalità si creano con
+(funziona anche pubblicando un tag tipo `v0.5.1`). Le anteprime delle modalità si creano con
 `tools/compose_previews.py`.
 
 ## Riconoscimenti e marchi

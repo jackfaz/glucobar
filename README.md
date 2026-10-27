@@ -105,7 +105,7 @@ If GlucoBar is running, it applies the new settings within two seconds.
 Silent install with your choices (handy for scripts and winget):
 
 ```text
-GlucoBar-Setup-0.5.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /LANG=en
+GlucoBar-Setup-0.5.1.exe /VERYSILENT /ELEMENTS=taskbar,tray /LANG=en
 ```
 
 ## Settings
@@ -152,12 +152,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.5.0 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.5.1 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow*, tick *release* to publish the version written in `glucobar/__init__.py`
-(pushing a tag like `v0.5.0` works too). The mode previews are made with
+(pushing a tag like `v0.5.1` works too). The mode previews are made with
 `tools/compose_previews.py`.
 
 ## Credits and trademarks

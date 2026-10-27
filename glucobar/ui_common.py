@@ -9,6 +9,7 @@ from tkinter import simpledialog
 from . import credentials
 from .config import save_config
 from .i18n import t
+from .sources import region_options, source_options
 
 BG = "#1e1f22"
 FG = "#f2f2f2"
@@ -54,26 +55,76 @@ def apply_icon(root):
         pass  # .ico supportato solo su Windows
 
 
+def choose(parent, title, prompt, options, default):
+    """Finestrella con una scelta tra `options` [(valore, testo)]; None se annullata."""
+    dlg = tk.Toplevel(parent)
+    dlg.title(title)
+    dlg.resizable(False, False)
+    var = tk.StringVar(master=dlg, value=default)
+    tk.Label(dlg, text=prompt, justify="left", font=("Segoe UI", 10)).pack(
+        anchor="w", padx=16, pady=(14, 6))
+    for value, label in options:
+        tk.Radiobutton(dlg, text=label, value=value, variable=var, anchor="w",
+                       font=("Segoe UI", 10)).pack(fill="x", padx=24)
+    result = []
+
+    def ok(_event=None):
+        result.append(var.get())
+        dlg.destroy()
+
+    buttons = tk.Frame(dlg)
+    buttons.pack(fill="x", padx=16, pady=(12, 14))
+    tk.Button(buttons, text=t("button_cancel"), width=10, command=dlg.destroy).pack(side="right")
+    tk.Button(buttons, text=t("button_ok"), width=10, command=ok, default="active").pack(
+        side="right", padx=(0, 6))
+    dlg.bind("<Return>", ok)
+    dlg.bind("<Escape>", lambda _event: dlg.destroy())
+    if parent.winfo_viewable():
+        dlg.transient(parent)
+    dlg.update_idletasks()
+    dlg.geometry(f"+{(dlg.winfo_screenwidth() - dlg.winfo_reqwidth()) // 2}"
+                 f"+{(dlg.winfo_screenheight() - dlg.winfo_reqheight()) // 3}")
+    dlg.attributes("-topmost", True)
+    dlg.focus_force()
+    dlg.grab_set()
+    parent.wait_window(dlg)
+    return result[0] if result else None
+
+
 def ask_credentials(cfg, parent=None):
-    """Chiede email e password LibreLinkUp. La password va nel Gestione credenziali."""
+    """Chiede sensore e account (per Dexcom anche la regione). La password va nel
+    Gestione credenziali, in una voce diversa per ogni sensore."""
     owns_root = parent is None
     if owns_root:
         parent = tk.Tk()
         parent.withdraw()
         apply_icon(parent)
     try:
-        email = simpledialog.askstring(t("cred_title"), t("cred_email"),
-                                       initialvalue=cfg.get("email", ""), parent=parent)
-        if not email:
+        source = choose(parent, t("sensor_title"), t("sensor_prompt"), source_options(),
+                        cfg.get("source", "libre"))
+        if not source:
             return False
-        password = simpledialog.askstring(t("cred_title"), t("cred_password"),
-                                          show="•", parent=parent)
+        dexcom = source == "dexcom"
+        region = cfg.get("dexcom_region", "ous")
+        if dexcom:
+            region = choose(parent, t("cred_title_dexcom"), t("dexcom_region"),
+                            region_options(), region)
+            if not region:
+                return False
+        title = t("cred_title_dexcom" if dexcom else "cred_title")
+        same_source = source == cfg.get("source", "libre")
+        email = simpledialog.askstring(title, t("cred_email_dexcom" if dexcom else "cred_email"),
+                                       initialvalue=cfg.get("email", "") if same_source else "",
+                                       parent=parent)
+        if not email or not email.strip():
+            return False
+        password = simpledialog.askstring(title, t("cred_password"), show="•", parent=parent)
         if not password:
             return False
     finally:
         if owns_root:
             parent.destroy()
-    cfg["email"] = email.strip()
-    credentials.set_password(cfg["email"], password)
+    cfg.update(source=source, dexcom_region=region, email=email.strip())
+    credentials.set_password(cfg["email"], password, source)
     save_config(cfg)
     return True

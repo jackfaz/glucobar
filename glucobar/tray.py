@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw, ImageFont
 from . import i18n
 from .config import ELEMENTS, log, save_config
 from .i18n import LANGUAGES, t
-from .librelinkup import TREND_ARROWS
+from .sources import TREND_ARROWS
 from .ui_common import GREY, age_minutes, asset_path, color_for, fmt_value, is_stale
 
 ICON_SIZE = 64  # Windows la rimpicciolisce da solo

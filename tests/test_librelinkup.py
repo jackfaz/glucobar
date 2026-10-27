@@ -88,7 +88,7 @@ class LibreLinkUpTest(unittest.TestCase):
                                "terms": False}
         self.password = "segreta"
         patcher = mock.patch.object(credentials, "get_password",
-                                    side_effect=lambda email: self.password)
+                                    side_effect=lambda email, source="libre": self.password)
         patcher.start()
         self.addCleanup(patcher.stop)
         self.cfg = {"email": "a@b.c", "region": "eu", "app_version": "4.16.0"}

@@ -5,7 +5,7 @@ import tkinter as tk
 
 from .config import save_config
 from .i18n import t
-from .librelinkup import TREND_ARROWS
+from .sources import TREND_ARROWS
 from .ui_common import BG, DIM, FG, RED, age_minutes, color_for, fmt_value, is_stale
 
 

@@ -1,21 +1,25 @@
 ﻿BEFORE YOU INSTALL
 
-GlucoBar shows the glucose reading of your FreeStyle Libre sensor on your PC,
-read through LibreLinkUp, Abbott's sharing service.
+GlucoBar shows the glucose reading of your sensor on your PC: FreeStyle Libre,
+read through LibreLinkUp (Abbott's sharing service), or Dexcom, read through
+Dexcom Share (beta).
 
 • GlucoBar is NOT a medical device. Do not use it to decide insulin doses or to
   treat a hypo: always rely on your reader or the official app.
-• It uses an unofficial API. Abbott can change it at any time and GlucoBar may
-  stop working without notice.
+• It uses unofficial APIs. Abbott and Dexcom can change them at any time and
+  GlucoBar may stop working without notice.
 • Readings may arrive a few minutes late, or not at all if the phone is away
   from the sensor or offline. Old readings (more than 15 minutes) are shown in grey.
-• GlucoBar is an independent project, not affiliated with or endorsed by Abbott.
-  FreeStyle, Libre, LibreLink and LibreLinkUp are trademarks of Abbott.
+• GlucoBar is an independent project, not affiliated with or endorsed by Abbott
+  or Dexcom. FreeStyle, Libre, LibreLink and LibreLinkUp are trademarks of Abbott.
+  Dexcom is a trademark of Dexcom, Inc.
 
 WHAT YOU NEED
-A LibreLinkUp account that "follows" your sensor: in the LibreLink app invite an
-email address (preferably a different one from yours), then accept the invitation
-and the terms of use in the LibreLinkUp app.
+• FreeStyle Libre: a LibreLinkUp account that "follows" your sensor. In the
+  LibreLink app invite an email address (preferably a different one from yours),
+  then accept the invitation and the terms of use in the LibreLinkUp app.
+• Dexcom: your Dexcom account, with Share turned on in the Dexcom app and at
+  least one follower.
 
 Your password is stored encrypted in Windows Credential Manager and is sent only
-to Abbott's LibreView servers.
+to the servers of your sensor's maker (Abbott LibreView or Dexcom Share).

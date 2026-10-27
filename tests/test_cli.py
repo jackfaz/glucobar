@@ -26,10 +26,12 @@ class IsolatedConfig(unittest.TestCase):
             mock.patch.object(cli, "CONFIG_PATH", os.path.join(tmp.name, "config.json")),
             mock.patch.object(config, "LOG_PATH", os.path.join(tmp.name, "log.txt")),
             mock.patch.object(config, "LEGACY_CONFIG_PATH", os.path.join(tmp.name, "none.json")),
+            # password per (sorgente, account), come le voci del Gestione credenziali
             mock.patch.object(credentials, "set_password",
-                              side_effect=lambda e, p: self.passwords.update({e: p})),
+                              side_effect=lambda e, p, s="libre":
+                                  self.passwords.update({(s, e): p})),
             mock.patch.object(credentials, "get_password",
-                              side_effect=lambda e: self.passwords.get(e)),
+                              side_effect=lambda e, s="libre": self.passwords.get((s, e))),
         ]
         for p in patches:
             p.start()
@@ -93,6 +95,7 @@ class WizardTest(IsolatedConfig):
             + ["down", "enter"]                          # range personalizzato
             + list("80") + ["enter"]                     # soglia bassa (vuota -> cancello)
             + ["enter"]                                  # soglia alta: default
+            + ["enter"]                                  # sensore: FreeStyle Libre
             + list("a@b.c") + ["enter"] + list("sbagliata") + ["enter"]
             + ["enter"]                                  # riprova
             + ["enter"] + list("giusta") + ["enter"])    # stessa email, password giusta
@@ -106,12 +109,43 @@ class WizardTest(IsolatedConfig):
         self.assertEqual((saved["low"], saved["high"]), (80, 180))
         self.assertEqual(saved["email"], "a@b.c")
         self.assertEqual(saved["region"], "de")          # suggerito dal server
-        self.assertEqual(self.passwords, {"a@b.c": "giusta"})
+        self.assertEqual(saved["source"], "libre")
+        self.assertEqual(self.passwords, {("libre", "a@b.c"): "giusta"})
         screen = term.out.getvalue()
         self.assertIn("Connessione non riuscita: Email o password errate", screen)
         self.assertIn("Connesso: 7.4 ↘ mmol/L", screen)
         self.assertNotIn("giusta", screen)               # la password non si vede mai
         self.assertNotIn("sbagliata", screen)
+
+    def test_dexcom_wizard(self):
+        term = FakeTerm(
+            ["enter"]                                    # lingua
+            + ["enter"]                                  # cosa mostrare: come prima
+            + ["enter"]                                  # mg/dL
+            + ["enter"]                                  # range standard
+            + ["down", "enter"]                          # sensore: Dexcom
+            + ["down", "enter"]                          # regione: Stati Uniti
+            + list("+391234567") + ["enter"]             # telefono: niente @
+            + list("giusta") + ["enter"])
+        cfg = load_config()
+        cfg["email"] = "vecchio@libre.it"
+        with mock.patch.object(cli.autostart, "gui_exe", return_value=None):
+            cli.wizard(term, cfg, client_class=FakeClient)
+        saved = load_config()
+        self.assertEqual((saved["source"], saved["dexcom_region"]), ("dexcom", "us"))
+        self.assertEqual(saved["email"], "+391234567")
+        self.assertEqual(self.passwords, {("dexcom", "+391234567"): "giusta"})
+        screen = term.out.getvalue()
+        self.assertIn("Account Dexcom", screen)
+        self.assertNotIn("vecchio@libre.it", screen)     # account Libre non riproposto
+
+    def test_set_source(self):
+        code, out, _ = self.run_cli("set", "source=dexcom", "dexcom_region=jp")
+        self.assertEqual(code, 0)
+        cfg = load_config()
+        self.assertEqual((cfg["source"], cfg["dexcom_region"]), ("dexcom", "jp"))
+        code, _out, _err = self.run_cli("set", "source=medtronic")
+        self.assertEqual(code, 2)
 
     def test_escape_saves_nothing(self):
         term = FakeTerm(["enter", "esc"])

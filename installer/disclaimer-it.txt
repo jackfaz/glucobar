@@ -1,22 +1,26 @@
 ﻿PRIMA DI INSTALLARE
 
-GlucoBar mostra sul PC la glicemia del sensore FreeStyle Libre, letta tramite
-LibreLinkUp, il servizio di condivisione di Abbott.
+GlucoBar mostra sul PC la glicemia del tuo sensore: FreeStyle Libre, letta
+tramite LibreLinkUp (il servizio di condivisione di Abbott), oppure Dexcom,
+letta tramite Dexcom Share (beta).
 
 • GlucoBar NON è un dispositivo medico. Non usarlo per decidere dosi di insulina
   o per trattare un'ipoglicemia: per questo fa fede il lettore o l'app ufficiale.
-• Usa un'API non ufficiale. Abbott può cambiarla in qualsiasi momento e GlucoBar
-  può smettere di funzionare senza preavviso.
+• Usa API non ufficiali. Abbott e Dexcom possono cambiarle in qualsiasi momento
+  e GlucoBar può smettere di funzionare senza preavviso.
 • Il dato può arrivare con qualche minuto di ritardo, o non arrivare se il
   telefono è lontano dal sensore o senza internet. Quando il dato è vecchio
   (più di 15 minuti) viene mostrato in grigio.
-• GlucoBar è un progetto indipendente, non affiliato né approvato da Abbott.
-  FreeStyle, Libre, LibreLink e LibreLinkUp sono marchi di Abbott.
+• GlucoBar è un progetto indipendente, non affiliato né approvato da Abbott o
+  Dexcom. FreeStyle, Libre, LibreLink e LibreLinkUp sono marchi di Abbott.
+  Dexcom è un marchio di Dexcom, Inc.
 
 COSA TI SERVE
-Un account LibreLinkUp che "segue" il tuo sensore: dall'app LibreLink invita
-un indirizzo email (meglio uno diverso dal tuo), poi nell'app LibreLinkUp
-accetta l'invito e i termini d'uso.
+• FreeStyle Libre: un account LibreLinkUp che "segue" il tuo sensore. Dall'app
+  LibreLink invita un indirizzo email (meglio uno diverso dal tuo), poi nell'app
+  LibreLinkUp accetta l'invito e i termini d'uso.
+• Dexcom: il tuo account Dexcom, con la condivisione (Share) attiva nell'app
+  Dexcom e almeno un follower.
 
 La password viene salvata cifrata nel Gestione credenziali di Windows e viene
-inviata solo ai server LibreView di Abbott.
+inviata solo ai server del produttore del sensore (Abbott LibreView o Dexcom Share).

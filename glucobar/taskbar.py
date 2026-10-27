@@ -16,7 +16,7 @@ import traceback
 
 from .config import log, save_config
 from .i18n import t
-from .librelinkup import TREND_ARROWS
+from .sources import TREND_ARROWS
 from .ui_common import RED, age_minutes, color_for, fmt_value, is_stale
 
 IS_WIN = sys.platform == "win32"

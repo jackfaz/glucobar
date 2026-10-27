@@ -16,16 +16,17 @@ import traceback
 from . import i18n
 from .config import ELEMENTS, log, normalize_elements, peek_config, save_config
 from .i18n import LANGUAGES, t
-from .librelinkup import LibreLinkUp, fetch_safely
+from .sources import fetch_safely, make_client
 from .ui_common import apply_icon, ask_credentials
 
 
 # Impostazioni che si possono cambiare da terminale mentre GlucoBar è aperto
 LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_minutes",
-             "refresh_seconds", "email", "taskbar_monitor", "taskbar_side", "taskbar_offset",
+             "refresh_seconds", "source", "dexcom_region", "email", "taskbar_monitor", "taskbar_side", "taskbar_offset",
              "taskbar_bg", "taskbar_transparent", "desktop_hours", "desktop_alpha",
              "desktop_locked")
 REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "desktop_alpha", "desktop_locked"}
+ACCOUNT_KEYS = {"source", "dexcom_region", "email"}
 
 
 def _view_class(element):
@@ -42,7 +43,7 @@ def _view_class(element):
 class Controller:
     def __init__(self, cfg):
         self.cfg = cfg
-        self.client = LibreLinkUp(cfg)
+        self.client = make_client(cfg)
         self.current = None
         self.history = []
         self.error = None
@@ -148,7 +149,7 @@ class Controller:
 
     def change_account(self):
         if ask_credentials(self.cfg, self.root):
-            self.client = LibreLinkUp(self.cfg)
+            self.client = make_client(self.cfg)
             self.current, self.history, self.error = None, [], None
             self.refresh()
 
@@ -212,8 +213,8 @@ class Controller:
             self.cfg[key] = saved[key]
         if "language" in changed:
             i18n.set_language(self.cfg["language"])
-        if "email" in changed:
-            self.client = LibreLinkUp(self.cfg)
+        if ACCOUNT_KEYS & set(changed):
+            self.client = make_client(self.cfg)
             self.current, self.history, self.error = None, [], None
             self.refresh()
         if "language" in changed or REBUILD_KEYS & set(changed):

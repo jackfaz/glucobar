@@ -13,7 +13,7 @@ from datetime import datetime
 from . import stats
 from .config import save_config
 from .i18n import t
-from .librelinkup import TREND_ARROWS
+from .sources import TREND_ARROWS
 from .ui_common import DIM, FG, ORANGE, RED, age_minutes, color_for, fmt_value, is_stale
 from .taskbar import IS_WIN
 
@@ -28,7 +28,7 @@ PANEL = "#15171c"
 GRID = "#2a2d35"
 BAND = "#1b3325"
 LINE = "#c9ccd1"
-HOURS_CHOICES = (3, 6, 12)  # LibreLinkUp fornisce circa 12 ore di storico
+HOURS_CHOICES = (3, 6, 12)  # LibreLinkUp fornisce circa 12 ore di storico, Dexcom 24
 
 
 class DesktopView:

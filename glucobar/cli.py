@@ -4,7 +4,7 @@
     glucobar status               glicemia attuale nel terminale
     glucobar set unit=mmol/L ...  cambia impostazioni (anche per script)
     glucobar get [chiave ...]     mostra le impostazioni
-    glucobar login                cambia account LibreLinkUp
+    glucobar login                cambia sensore o account
     glucobar start                avvia GlucoBar
     glucobar forget               cancella password e impostazioni
     glucobar report               riepilogo per le segnalazioni (copiato negli appunti)
@@ -21,7 +21,8 @@ from . import __version__, autostart, credentials, i18n, tui
 from .config import CONFIG_PATH, ELEMENTS, forget_everything, load_config, \
     normalize_elements, save_config
 from .i18n import LANGUAGES, t
-from .librelinkup import TREND_ARROWS, LibreLinkUp, fetch_safely
+from .sources import DEXCOM_REGIONS, SOURCES, TREND_ARROWS, fetch_safely, make_client, \
+    region_options, source_options
 from .ui_common import age_minutes, fmt_value
 
 
@@ -79,6 +80,8 @@ def _color(raw):
 
 
 SETTINGS = {
+    "source": _choice(*SOURCES),
+    "dexcom_region": _choice(*DEXCOM_REGIONS),
     "elements": _elements,
     "language": _choice("auto", *LANGUAGES),
     "unit": _choice("mg/dL", "mmol/L"),
@@ -172,17 +175,42 @@ def _number(lo, hi):
     return validate
 
 
-def ask_account(term, cfg, client_class=LibreLinkUp):
-    """Email e password, con prova di connessione. Ritorna (email, password o None)."""
+def ask_source(term, cfg):
+    """Sensore e, per Dexcom, regione dell'account. Cambia solo `cfg` in memoria:
+    si salva alla fine, insieme al resto."""
+    hint = t("cli_hint_select")
+    tui.message(term, "")
+    source = tui.select(term, t("sensor_prompt"), source_options(),
+                        default=SOURCES.index(cfg["source"]) if cfg["source"] in SOURCES else 0,
+                        hint=hint)
+    if source != cfg["source"]:
+        cfg["email"] = ""   # l'account di un altro servizio non va riproposto
+    cfg["source"] = source
+    if source == "dexcom":
+        region = cfg["dexcom_region"]
+        cfg["dexcom_region"] = tui.select(
+            term, t("dexcom_region"), region_options(),
+            default=DEXCOM_REGIONS.index(region) if region in DEXCOM_REGIONS else 0, hint=hint)
+
+
+def ask_account(term, cfg, client_class=None):
+    """Account del sensore scelto in `cfg`, con prova di connessione.
+    Ritorna (email, password o None)."""
+    client_class = client_class or make_client
+    source = cfg["source"]
+    dexcom = source == "dexcom"
+    if dexcom:   # Dexcom accetta anche telefono e nome utente
+        validate = lambda v: None if v.strip() else t("cli_bad_account")  # noqa: E731
+    else:
+        validate = lambda v: None if "@" in v and "." in v else t("cli_bad_email")  # noqa: E731
     email = cfg.get("email", "")
     while True:
         tui.message(term, "")
-        tui.message(term, t("cli_account"), tui.BOLD)
+        tui.message(term, t("cli_account_dexcom" if dexcom else "cli_account"), tui.BOLD)
         # al nuovo tentativo propone l'email appena scritta
-        email = tui.text(term, t("cli_email"), default=email,
-                         validate=lambda v: None if "@" in v and "." in v else t("cli_bad_email"),
-                         hint=t("cli_hint_text"))
-        saved = credentials.get_password(email)
+        email = tui.text(term, t("cli_email_dexcom" if dexcom else "cli_email"), default=email,
+                         validate=validate, hint=t("cli_hint_text")).strip()
+        saved = credentials.get_password(email, source)
         password = tui.text(term, t("cli_password"), secret=True,
                             hint=t("cli_keep_password") if saved else t("cli_hint_text"),
                             validate=lambda v: None if v or saved else t("cli_hint_text"))
@@ -204,7 +232,7 @@ def ask_account(term, cfg, client_class=LibreLinkUp):
             return email, password
 
 
-def wizard(term, cfg, client_class=LibreLinkUp, monitors=1):
+def wizard(term, cfg, client_class=None, monitors=1):
     """Tutte le domande; salva solo alla fine (Ctrl+C/Esc annulla tutto)."""
     tui.message(term, f"{tui.BOLD}GlucoBar {__version__}{tui.RESET} · {t('cli_welcome')}")
     tui.message(term, t("cli_disclaimer"), tui.DIM)
@@ -249,6 +277,7 @@ def wizard(term, cfg, client_class=LibreLinkUp, monitors=1):
     # le scelte valgono già per la prova di connessione (ma si salva solo alla fine)
     cfg.update(language=lang, elements=elements, unit=unit, low=low, high=high,
                taskbar_monitor=monitor)
+    ask_source(term, cfg)
     email, password = ask_account(term, cfg, client_class)
 
     start_with_windows = None
@@ -260,7 +289,7 @@ def wizard(term, cfg, client_class=LibreLinkUp, monitors=1):
     cfg["email"] = email
     save_config(cfg)
     if password:
-        credentials.set_password(email, password)
+        credentials.set_password(email, password, cfg["source"])
     if start_with_windows is not None:
         autostart.set_enabled(start_with_windows)
     tui.message(term, "")
@@ -300,11 +329,12 @@ def cmd_login(_args):
         return 2
     try:
         with tui.Terminal() as term:
+            ask_source(term, cfg)
             email, password = ask_account(term, cfg)
             cfg["email"] = email
             save_config(cfg)
             if password:
-                credentials.set_password(email, password)
+                credentials.set_password(email, password, cfg["source"])
             tui.message(term, f"{tui.CHECK} {t('cli_saved')}", tui.GREEN)
     except tui.Cancelled:
         print("\n" + t("cli_cancelled"))
@@ -315,10 +345,10 @@ def cmd_login(_args):
 def cmd_status(_args):
     cfg = load_config()
     i18n.set_language(cfg["language"])
-    if not cfg["email"] or not credentials.get_password(cfg["email"]):
+    if not cfg["email"] or not credentials.get_password(cfg["email"], cfg["source"]):
         print(t("cli_no_account"))
         return 1
-    current, _history, error = fetch_safely(LibreLinkUp(cfg))
+    current, _history, error = fetch_safely(make_client(cfg))
     if not current:
         print(error)
         return 1
@@ -393,7 +423,7 @@ def main(argv=None):
         sys.stdout.reconfigure(encoding="utf-8")   # accenti e frecce anche in cmd.exe
     parser = argparse.ArgumentParser(
         prog="glucobar",
-        description="GlucoBar: your FreeStyle Libre glucose on the Windows desktop.",
+        description="GlucoBar: your FreeStyle Libre or Dexcom glucose on the Windows desktop.",
         epilog="Settings: " + ", ".join(SETTINGS))
     parser.add_argument("--version", action="version", version=f"GlucoBar {__version__}")
     sub = parser.add_subparsers(dest="command", metavar="command")
@@ -406,7 +436,7 @@ def main(argv=None):
     p = sub.add_parser("get", help="show settings")
     p.add_argument("keys", nargs="*", metavar="key")
     p.set_defaults(func=cmd_get)
-    sub.add_parser("login", help="change LibreLinkUp account").set_defaults(func=cmd_login)
+    sub.add_parser("login", help="change sensor or account").set_defaults(func=cmd_login)
     sub.add_parser("start", help="start GlucoBar").set_defaults(func=cmd_start)
     sub.add_parser("forget", help="delete password and settings").set_defaults(func=cmd_forget)
     p = sub.add_parser("report", help="diagnostic report for bug reports (copied to clipboard)")

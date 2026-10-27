@@ -55,7 +55,7 @@ def run(elements):
         cfg["elements"] = elements
     set_language(cfg["language"])
 
-    if not cfg["email"] or not credentials.get_password(cfg["email"]):
+    if not cfg["email"] or not credentials.get_password(cfg["email"], cfg["source"]):
         from .ui_common import ask_credentials
         if not ask_credentials(cfg):
             return
@@ -77,7 +77,7 @@ def save_choices(elements, language):
 def self_test():
     """Per la build: carica tutte le parti nell'exe (moduli mancanti = errore)."""
     try:
-        from . import controller, desktop, taskbar, tray, window  # noqa: F401
+        from . import controller, desktop, dexcom, librelinkup, taskbar, tray, window  # noqa: F401
         import pystray
         log(f"self-test ok (pystray backend {pystray.Icon.__module__})")
         return 0

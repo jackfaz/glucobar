@@ -4,6 +4,22 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Dexcom (beta)**: G6, G7 and ONE+ readings through Dexcom Share, with your own Dexcom
+  account (email, phone number or user name) and the region where it was created. Tested
+  against a simulated Dexcom Share server; feedback from Dexcom users is welcome.
+- On first start and with *Change account…*, GlucoBar asks which sensor you use.
+  `glucobar setup` and `glucobar login` ask too, and `glucobar set source=dexcom
+  dexcom_region=us` works from scripts.
+
+### Changed
+- Each sensor service has its own entry in Windows Credential Manager
+  (`GlucoBar:LibreLinkUp`, `GlucoBar:Dexcom`); deleting everything removes both.
+- The PyInstaller bootloader is built from source in CI, and test builds can be scanned on
+  VirusTotal (*Run workflow* → *scan*), with the results shown in the build summary.
+
 ## [0.5.2] - 2026-10-27
 
 ### Added
@@ -115,5 +131,6 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[Unreleased]: https://github.com/jackfaz/glucobar/compare/v0.5.2...HEAD
 [0.5.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.5.2
 [0.5.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.5.1

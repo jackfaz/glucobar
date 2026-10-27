@@ -46,6 +46,9 @@ body:
       options:
         - FreeStyle Libre 2 / 2 Plus
         - FreeStyle Libre 3 / 3 Plus
+        - Dexcom G6
+        - Dexcom G7
+        - Dexcom ONE+
         - Other / not sure
 
   - type: textarea

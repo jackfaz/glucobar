@@ -18,10 +18,10 @@
   <a href="README.md">English</a>
 </p>
 
-GlucoBar mostra la glicemia del tuo FreeStyle Libre sul PC con Windows, così mentre lavori
-puoi tenerla d'occhio senza prendere il telefono. Legge l'ultimo valore da LibreLinkUp, il
-servizio di condivisione di Abbott, e lo mostra con la freccia di tendenza e da quanti minuti
-è stato misurato.
+GlucoBar mostra la glicemia del tuo FreeStyle Libre o Dexcom sul PC con Windows, così mentre
+lavori puoi tenerla d'occhio senza prendere il telefono. Legge l'ultimo valore da LibreLinkUp
+(il servizio di condivisione di Abbott) o da Dexcom Share, e lo mostra con la freccia di
+tendenza e da quanti minuti è stato misurato.
 
 Puoi vederla in quattro posti, uno o più insieme: sulla barra delle applicazioni accanto
 all'orologio, come icona nell'area di notifica, in una finestrella sempre in primo piano o in
@@ -29,7 +29,7 @@ un pannello più grande sul desktop, con il grafico delle ultime 12 ore e qualch
 Funziona anche sul secondo monitor e si nasconde quando un video o un gioco è a schermo intero.
 
 La password resta cifrata nel Gestione credenziali di Windows e viene inviata solo ai server
-di Abbott. GlucoBar è gratuito, open source (MIT) e disponibile in italiano, inglese,
+del produttore del sensore. GlucoBar è gratuito, open source (MIT) e disponibile in italiano, inglese,
 spagnolo, francese, tedesco e portoghese.
 
 | Sulla barra | Finestrella |
@@ -52,23 +52,31 @@ grigio se il dato è di più di 15 minuti fa. Le soglie si possono cambiare.
 | Sensore | Letto tramite | Stato |
 |---|---|---|
 | FreeStyle Libre (Libre 2, Libre 3 e versioni Plus) | LibreLinkUp | Supportato |
-| Dexcom G6, G7, ONE+ | Dexcom Share | In lavorazione |
+| Dexcom G6, G7, ONE+ | Dexcom Share | Beta, cerchiamo chi lo provi |
 | Qualsiasi sensore che invia i dati a Nightscout (Medtronic, Eversense, xDrip+, Juggluco, AndroidAPS, …) | Nightscout | Previsto |
 | Medtronic Guardian / Simplera | CareLink | In valutazione |
+
+Il supporto Dexcom è nuovo e finora è stato provato solo con un server Dexcom Share
+simulato. Se usi un Dexcom, facci sapere se funziona nelle [Discussions](../../discussions)
+o in una [issue](../../issues).
 
 Vorresti un altro sensore? [Apri una issue](../../issues) e dicci quale.
 
 ## Installazione
 
-1. **Attiva LibreLinkUp (una volta sola).** Nell'app **LibreLink** sul telefono: *Condividi →
-   App collegate → LibreLinkUp → Aggiungi* e invita un indirizzo email (meglio diverso da
-   quello di LibreLink). Installa l'app **LibreLinkUp**, accedi con quell'email, accetta
-   l'invito e i termini d'uso. Dopo puoi disinstallare LibreLinkUp.
+1. **Attiva la condivisione sul telefono (una volta sola).**
+   - **FreeStyle Libre:** nell'app **LibreLink**: *Condividi → App collegate → LibreLinkUp →
+     Aggiungi* e invita un indirizzo email (meglio diverso da quello di LibreLink). Installa
+     l'app **LibreLinkUp**, accedi con quell'email, accetta l'invito e i termini d'uso. Dopo
+     puoi disinstallare LibreLinkUp.
+   - **Dexcom:** nell'app **Dexcom** attiva la **condivisione (Share)** e invita almeno un
+     follower. GlucoBar entra con il tuo account Dexcom, non con quello del follower.
 2. Scarica `GlucoBar-Setup-x.y.z.exe` dalla pagina [Release](../../releases/latest) e avvialo.
    Non servono permessi di amministratore.
 3. Scegli la lingua dell'installazione, spunta cosa mostrare (con le anteprime) e se avviare
    GlucoBar all'accensione del PC.
-4. Al primo avvio inserisci email e password dell'account **LibreLinkUp**.
+4. Al primo avvio scegli il sensore e inserisci l'account: l'email **LibreLinkUp** per
+   FreeStyle Libre, oppure email, telefono (con prefisso) o nome utente **Dexcom**.
 
 Windows può mostrare *"Windows ha protetto il PC"* perché l'installer non è ancora firmato
 digitalmente: clicca *Ulteriori informazioni → Esegui comunque*. Ogni release riporta
@@ -98,7 +106,7 @@ glucobar status                glicemia attuale, es. "133 ↘ mg/dL · 2 min fa"
 glucobar set unit=mmol/L low=80
 glucobar set elements=desktop,tray autostart=true
 glucobar get                   tutte le impostazioni
-glucobar login                 cambia account LibreLinkUp
+glucobar login                 cambia sensore o account
 glucobar start | forget        avvia GlucoBar | cancella password e impostazioni
 glucobar report                riepilogo per le segnalazioni, copiato negli appunti
 ```
@@ -117,6 +125,8 @@ GlucoBar-Setup-0.5.2.exe /VERYSILENT /ELEMENTS=taskbar,tray /LANG=it
 
 | Chiave | Predefinito | Significato |
 |---|---|---|
+| `source` | `libre` | `libre` (LibreLinkUp) oppure `dexcom` (Dexcom Share) |
+| `dexcom_region` | `ous` | Dove è stato creato l'account Dexcom: `ous` (fuori dagli USA), `us`, `jp` |
 | `elements` | `["taskbar", "tray"]` | Cosa mostrare, in qualsiasi combinazione: `taskbar`, `tray` (icona vicino all'orologio), `window`, `desktop` |
 | `low` / `high` / `very_high` | 70 / 180 / 250 | Soglie in mg/dL |
 | `unit` | `mg/dL` | oppure `mmol/L` |
@@ -137,9 +147,10 @@ GlucoBar importa da solo impostazioni e password. Poi puoi cancellare quel file.
 
 ## Privacy
 
-- La password è salvata **cifrata nel Gestione credenziali di Windows** (voce
-  `GlucoBar:LibreLinkUp`), mai nel file delle impostazioni.
-- GlucoBar comunica **solo con i server LibreView di Abbott**. Nessuna statistica, nessun altro server.
+- La password è salvata **cifrata nel Gestione credenziali di Windows** (voci
+  `GlucoBar:LibreLinkUp` e `GlucoBar:Dexcom`), mai nel file delle impostazioni.
+- GlucoBar comunica **solo con i server del produttore del sensore**: LibreView di Abbott o
+  Dexcom Share. Nessuna statistica, nessun altro server.
 - La disinstallazione chiede se eliminare anche impostazioni e password (anche il vecchio
   `.glicemia_widget.json`). Puoi farlo anche in qualsiasi momento con `GlucoBar.exe --forget`.
 
@@ -156,8 +167,8 @@ SignPath Foundation sarà approvata; fino ad allora l'installer non è firmato.
 Vengono firmati solo gli installer compilati da GitHub Actions a partire da questo repository.
 
 GlucoBar non trasmette nessuna informazione ad altri sistemi in rete, se non su richiesta
-esplicita di chi lo installa o lo usa. L'unica connessione è verso i server LibreView di
-Abbott, con l'account LibreLinkUp inserito dall'utente.
+esplicita di chi lo installa o lo usa. Le uniche connessioni sono verso i server del
+produttore del sensore (Abbott LibreView o Dexcom Share), con l'account inserito dall'utente.
 
 ## Perché "sulla" barra e non "dentro"?
 
@@ -184,9 +195,10 @@ Run workflow* spunta *release* per pubblicare la versione scritta in `glucobar/_
 
 ## Riconoscimenti e marchi
 
-GlucoBar è un progetto open source indipendente, non affiliato né approvato da Abbott.
-FreeStyle, Libre, LibreLink e LibreLinkUp sono marchi di Abbott. I dettagli dell'API
-LibreLinkUp vengono dal lavoro della comunità open source sul diabete.
+GlucoBar è un progetto open source indipendente, non affiliato né approvato da Abbott o
+Dexcom. FreeStyle, Libre, LibreLink e LibreLinkUp sono marchi di Abbott; Dexcom è un marchio
+di Dexcom, Inc. I dettagli delle API LibreLinkUp e Dexcom Share vengono dal lavoro della
+comunità open source sul diabete (Nightscout, pydexcom e altri).
 
 GlucoBar è gratuito e lo resterà. Se ti è utile e vuoi sostenerlo, puoi
 [fare una donazione con PayPal](https://paypal.me/giacomofazioli).

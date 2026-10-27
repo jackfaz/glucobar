@@ -71,7 +71,7 @@ it.Desc_tray=Il numero colorato nell'icona vicino all'orologio; passandoci sopra
 it.TaskAutostart=Avvia GlucoBar all'accensione del PC
 it.GroupStartup=Avvio:
 it.LaunchNow=Avvia GlucoBar adesso
-it.RemoveSettings=Vuoi eliminare anche le impostazioni e la password LibreLinkUp salvata su questo PC?
+it.RemoveSettings=Vuoi eliminare anche le impostazioni e le password (LibreLinkUp, Dexcom) salvate su questo PC?
 it.NeedOne=Scegli almeno un elemento da mostrare.
 it.PreviewHint=Spunta cosa vuoi vedere: l'anteprima mostra la tua combinazione.
 en.ModeTitle=Choose what to show
@@ -87,7 +87,7 @@ en.Desc_tray=The colored number in the icon next to the clock; hover it for arro
 en.TaskAutostart=Start GlucoBar when Windows starts
 en.GroupStartup=Startup:
 en.LaunchNow=Start GlucoBar now
-en.RemoveSettings=Do you also want to delete the settings and the LibreLinkUp password saved on this PC?
+en.RemoveSettings=Do you also want to delete the settings and the passwords (LibreLinkUp, Dexcom) saved on this PC?
 en.NeedOne=Please choose at least one thing to show.
 en.PreviewHint=Tick what you want to see: the preview shows your combination.
 es.ModeTitle=Elige qué mostrar
@@ -103,7 +103,7 @@ es.Desc_tray=El número en color en el icono junto al reloj; pasa el ratón para
 es.TaskAutostart=Iniciar GlucoBar al encender el PC
 es.GroupStartup=Inicio:
 es.LaunchNow=Iniciar GlucoBar ahora
-es.RemoveSettings=¿Quieres borrar también los ajustes y la contraseña de LibreLinkUp guardada en este PC?
+es.RemoveSettings=¿Quieres borrar también los ajustes y las contraseñas (LibreLinkUp, Dexcom) guardadas en este PC?
 es.NeedOne=Elige al menos un elemento para mostrar.
 es.PreviewHint=Marca lo que quieres ver: la vista previa muestra tu combinación.
 fr.ModeTitle=Choisissez quoi afficher
@@ -119,7 +119,7 @@ fr.Desc_tray=Le chiffre en couleur dans l'icône près de l'horloge ; survolez-l
 fr.TaskAutostart=Lancer GlucoBar au démarrage de Windows
 fr.GroupStartup=Démarrage :
 fr.LaunchNow=Lancer GlucoBar maintenant
-fr.RemoveSettings=Voulez-vous aussi supprimer les réglages et le mot de passe LibreLinkUp enregistré sur ce PC ?
+fr.RemoveSettings=Voulez-vous aussi supprimer les réglages et les mots de passe (LibreLinkUp, Dexcom) enregistrés sur ce PC ?
 fr.NeedOne=Choisissez au moins un élément à afficher.
 fr.PreviewHint=Cochez ce que vous voulez voir : l'aperçu montre votre combinaison.
 de.ModeTitle=Wähle, was angezeigt wird
@@ -135,7 +135,7 @@ de.Desc_tray=Die farbige Zahl im Symbol neben der Uhr; mit der Maus darüber sie
 de.TaskAutostart=GlucoBar beim Start von Windows öffnen
 de.GroupStartup=Start:
 de.LaunchNow=GlucoBar jetzt starten
-de.RemoveSettings=Sollen auch die Einstellungen und das auf diesem PC gespeicherte LibreLinkUp-Passwort gelöscht werden?
+de.RemoveSettings=Sollen auch die Einstellungen und die auf diesem PC gespeicherten Passwörter (LibreLinkUp, Dexcom) gelöscht werden?
 de.NeedOne=Bitte wähle mindestens ein Element aus.
 de.PreviewHint=Kreuze an, was du sehen möchtest: die Vorschau zeigt deine Auswahl.
 pt.ModeTitle=Escolha o que mostrar
@@ -151,7 +151,7 @@ pt.Desc_tray=O número colorido no ícone junto ao relógio; passe o rato para v
 pt.TaskAutostart=Iniciar o GlucoBar ao ligar o PC
 pt.GroupStartup=Arranque:
 pt.LaunchNow=Iniciar o GlucoBar agora
-pt.RemoveSettings=Quer apagar também as definições e a palavra-passe LibreLinkUp guardada neste PC?
+pt.RemoveSettings=Quer apagar também as definições e as palavras-passe (LibreLinkUp, Dexcom) guardadas neste PC?
 pt.NeedOne=Escolha pelo menos um elemento para mostrar.
 pt.PreviewHint=Marque o que quer ver: a pré-visualização mostra a sua combinação.
 
@@ -424,6 +424,8 @@ begin
            SW_HIDE, ewWaitUntilTerminated, ResultCode);
       { riserva, se l'exe non partisse }
       Exec(ExpandConstant('{sys}\cmdkey.exe'), '/delete:GlucoBar:LibreLinkUp', '',
+           SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Exec(ExpandConstant('{sys}\cmdkey.exe'), '/delete:GlucoBar:Dexcom', '',
            SW_HIDE, ewWaitUntilTerminated, ResultCode);
       DelTree(ExpandConstant('{userappdata}\GlucoBar'), True, True, True);
       DeleteFile(ExpandConstant('{%USERPROFILE}\.glicemia_widget.json'));

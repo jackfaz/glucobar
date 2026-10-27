@@ -70,9 +70,9 @@ class LegacyImportTest(unittest.TestCase):
             mock.patch.object(config, "LOG_PATH", os.path.join(tmp.name, "GlucoBar", "log.txt")),
             mock.patch.object(config, "LEGACY_CONFIG_PATH", self.legacy),
             mock.patch("glucobar.credentials.set_password",
-                       side_effect=lambda e, p: self.saved_passwords.update({e: p})),
+                       side_effect=lambda e, p, s="libre": self.saved_passwords.update({e: p})),
             mock.patch("glucobar.credentials.delete_password",
-                       side_effect=lambda: self.saved_passwords.clear()),
+                       side_effect=lambda s=None: self.saved_passwords.clear()),
         ]
         for p in patches:
             p.start()

@@ -1,4 +1,5 @@
-"""Password LibreLinkUp nel Gestione credenziali di Windows (cifrata dal sistema).
+"""Password dell'account del sensore nel Gestione credenziali di Windows (cifrata
+dal sistema), una voce per servizio: LibreLinkUp e Dexcom.
 
 Su Linux/macOS, usati solo per sviluppo, finisce in un file leggibile solo dall'utente.
 """
@@ -9,7 +10,8 @@ import sys
 
 from .config import CONFIG_DIR
 
-TARGET = "GlucoBar:LibreLinkUp"
+# sorgente (vedi sources.SOURCES) -> voce nel Gestione credenziali
+TARGETS = {"libre": "GlucoBar:LibreLinkUp", "dexcom": "GlucoBar:Dexcom"}
 
 if sys.platform == "win32":
     import ctypes
@@ -45,12 +47,12 @@ if sys.platform == "win32":
     _advapi32.CredDeleteW.restype = wintypes.BOOL
     ERROR_NOT_FOUND = 1168
 
-    def set_password(email, password):
+    def set_password(email, password, source="libre"):
         blob = password.encode("utf-16-le")
         buf = ctypes.create_string_buffer(blob, len(blob))
         cred = CREDENTIALW()
         cred.Type = CRED_TYPE_GENERIC
-        cred.TargetName = TARGET
+        cred.TargetName = TARGETS[source]
         cred.UserName = email
         cred.CredentialBlobSize = len(blob)
         cred.CredentialBlob = ctypes.cast(buf, ctypes.POINTER(ctypes.c_char))
@@ -58,9 +60,9 @@ if sys.platform == "win32":
         if not _advapi32.CredWriteW(ctypes.byref(cred), 0):
             raise OSError(ctypes.get_last_error(), "CredWriteW non riuscita")
 
-    def get_password(email):
+    def get_password(email, source="libre"):
         p = ctypes.POINTER(CREDENTIALW)()
-        if not _advapi32.CredReadW(TARGET, CRED_TYPE_GENERIC, 0, ctypes.byref(p)):
+        if not _advapi32.CredReadW(TARGETS[source], CRED_TYPE_GENERIC, 0, ctypes.byref(p)):
             return None
         try:
             cred = p.contents
@@ -71,26 +73,29 @@ if sys.platform == "win32":
         finally:
             _advapi32.CredFree(p)
 
-    def delete_password():
-        """True se c'era una password e l'ha cancellata."""
-        if _advapi32.CredDeleteW(TARGET, CRED_TYPE_GENERIC, 0):
+    def _delete(source):
+        if _advapi32.CredDeleteW(TARGETS[source], CRED_TYPE_GENERIC, 0):
             return True
         if ctypes.get_last_error() == ERROR_NOT_FOUND:
             return False
         raise OSError(ctypes.get_last_error(), "CredDeleteW non riuscita")
 
 else:
-    _PATH = os.path.join(CONFIG_DIR, "credentials.json")
+    _DIR = CONFIG_DIR
 
-    def set_password(email, password):
-        os.makedirs(CONFIG_DIR, exist_ok=True)
-        with open(_PATH, "w", encoding="utf-8") as f:
+    def _path(source):
+        # "GlucoBar:LibreLinkUp" -> credentials-LibreLinkUp.json
+        return os.path.join(_DIR, f"credentials-{TARGETS[source].split(':')[-1]}.json")
+
+    def set_password(email, password, source="libre"):
+        os.makedirs(_DIR, exist_ok=True)
+        with open(_path(source), "w", encoding="utf-8") as f:
             json.dump({"email": email, "password": password}, f)
-        os.chmod(_PATH, 0o600)
+        os.chmod(_path(source), 0o600)
 
-    def get_password(email):
+    def get_password(email, source="libre"):
         try:
-            with open(_PATH, "r", encoding="utf-8") as f:
+            with open(_path(source), "r", encoding="utf-8") as f:
                 data = json.load(f)
         except (OSError, ValueError):
             return None
@@ -98,9 +103,17 @@ else:
             return None
         return data.get("password")
 
-    def delete_password():
+    def _delete(source):
         try:
-            os.remove(_PATH)
+            os.remove(_path(source))
             return True
         except FileNotFoundError:
             return False
+
+
+def delete_password(source=None):
+    """True se c'era almeno una password e l'ha cancellata (senza sorgente: tutte)."""
+    deleted = False
+    for name in [source] if source else list(TARGETS):
+        deleted = _delete(name) or deleted
+    return deleted

@@ -1,21 +1,25 @@
 ﻿ANTES DE INSTALAR
 
-GlucoBar muestra en el PC la glucosa de tu sensor FreeStyle Libre, leída a través de
-LibreLinkUp, el servicio para compartir datos de Abbott.
+GlucoBar muestra en el PC la glucosa de tu sensor: FreeStyle Libre, leída a
+través de LibreLinkUp (el servicio para compartir datos de Abbott), o Dexcom,
+leída a través de Dexcom Share (beta).
 
 • GlucoBar NO es un dispositivo médico. No lo uses para decidir dosis de insulina
   ni para tratar una hipoglucemia: para eso confía en el lector o en la app oficial.
-• Usa una API no oficial. Abbott puede cambiarla en cualquier momento y GlucoBar
-  puede dejar de funcionar sin aviso.
+• Usa APIs no oficiales. Abbott y Dexcom pueden cambiarlas en cualquier momento y
+  GlucoBar puede dejar de funcionar sin aviso.
 • El dato puede llegar con algunos minutos de retraso, o no llegar si el móvil está
   lejos del sensor o sin internet. Los datos antiguos (más de 15 minutos) se muestran en gris.
-• GlucoBar es un proyecto independiente, no afiliado ni aprobado por Abbott.
-  FreeStyle, Libre, LibreLink y LibreLinkUp son marcas de Abbott.
+• GlucoBar es un proyecto independiente, no afiliado ni aprobado por Abbott ni por
+  Dexcom. FreeStyle, Libre, LibreLink y LibreLinkUp son marcas de Abbott.
+  Dexcom es una marca de Dexcom, Inc.
 
 QUÉ NECESITAS
-Una cuenta LibreLinkUp que "siga" tu sensor: desde la app LibreLink invita una
-dirección de email (mejor una distinta de la tuya) y luego, en la app LibreLinkUp,
-acepta la invitación y los términos de uso.
+• FreeStyle Libre: una cuenta LibreLinkUp que "siga" tu sensor. Desde la app
+  LibreLink invita una dirección de email (mejor una distinta de la tuya) y luego,
+  en la app LibreLinkUp, acepta la invitación y los términos de uso.
+• Dexcom: tu cuenta Dexcom, con Compartir activado en la app Dexcom y al menos
+  un seguidor.
 
 La contraseña se guarda cifrada en el Administrador de credenciales de Windows y se
-envía solo a los servidores LibreView de Abbott.
+envía solo a los servidores del fabricante del sensor (Abbott LibreView o Dexcom Share).

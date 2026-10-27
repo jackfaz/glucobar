@@ -14,12 +14,10 @@ from datetime import datetime, timezone
 from . import credentials
 from .config import save_config
 from .i18n import t
-
-# TrendArrow di LibreLinkUp -> freccia
-TREND_ARROWS = {1: "↓", 2: "↘", 3: "→", 4: "↗", 5: "↑"}
+from .sources import TREND_ARROWS, SourceError, fetch_safely  # noqa: F401 (usati da altri)
 
 
-class LibreError(Exception):
+class LibreError(SourceError):
     pass
 
 
@@ -80,7 +78,7 @@ class LibreLinkUp:
 
     def login(self):
         self.token = None
-        password = self.password or credentials.get_password(self.cfg["email"])
+        password = self.password or credentials.get_password(self.cfg["email"], "libre")
         if not password:
             raise LibreError(t("err_no_password"))
         for _ in range(4):
@@ -145,17 +143,6 @@ class LibreLinkUp:
         history = [parse_measurement(m) for m in data.get("graphData", [])]
         history.append(current)
         return current, history
-
-
-def fetch_safely(client):
-    """(misura, storico, errore): mai eccezioni, per i thread delle interfacce."""
-    try:
-        current, history = client.fetch()
-        return current, history, None
-    except LibreError as e:
-        return None, None, str(e)
-    except Exception as e:  # risposta in formato imprevisto, ecc.
-        return None, None, t("err_generic", msg=e)
 
 
 def parse_timestamp(m):

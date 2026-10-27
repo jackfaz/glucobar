@@ -24,15 +24,19 @@ LOG_PATH = os.path.join(CONFIG_DIR, "glucobar.log")
 LEGACY_CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".glicemia_widget.json")
 
 DEFAULT_CONFIG = {
-    "email": "",                # account LibreLinkUp (la password sta in Gestione credenziali)
-    "region": "eu",             # si aggiorna da sola se il server reindirizza
+    "source": "libre",          # "libre" (LibreLinkUp) oppure "dexcom" (Dexcom Share)
+    # account del sensore: email (Dexcom anche telefono o nome utente);
+    # la password sta in Gestione credenziali, una voce per sorgente
+    "email": "",
+    "region": "eu",             # LibreLinkUp: si aggiorna da sola se il server reindirizza
+    "dexcom_region": "ous",     # Dexcom: "ous" fuori dagli USA, "us", "jp"
     "unit": "mg/dL",            # oppure "mmol/L"
     "low": 70,                  # soglie in mg/dL
     "high": 180,
     "very_high": 250,
     "refresh_seconds": 60,
     "stale_minutes": 15,        # oltre questo il valore è mostrato in grigio
-    "app_version": "4.16.0",    # si aggiorna da sola se il server ne chiede una più recente
+    "app_version": "4.16.0",    # LibreLinkUp: si aggiorna se il server ne chiede una più recente
     "language": "auto",         # "auto" oppure it, en, es, fr, de, pt
     # cosa mostrare, anche più cose insieme: taskbar (valore sulla barra),
     # tray (icona col numero vicino all'orologio), window, desktop
@@ -154,7 +158,7 @@ def _import_legacy(cfg):
         if key in legacy:
             cfg[key] = legacy[key]
     if cfg["email"] and password:
-        credentials.set_password(cfg["email"], password)
+        credentials.set_password(cfg["email"], password, "libre")
     save_config(cfg)
     # la password non resta in chiaro nel vecchio file
     legacy["imported_to_glucobar"] = True

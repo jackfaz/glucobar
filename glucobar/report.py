@@ -88,7 +88,7 @@ def in_path():
 
 def build_report(cfg, running, log_lines=40):
     yes = lambda flag: "yes" if flag else "no"  # noqa: E731
-    password = bool(cfg.get("email") and credentials.get_password(cfg["email"]))
+    password = bool(cfg.get("email") and credentials.get_password(cfg["email"], cfg["source"]))
     alignment = _registry_flag(r"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced",
                                "TaskbarAl")
     light = _registry_flag(r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
@@ -111,7 +111,8 @@ def build_report(cfg, running, log_lines=40):
                           f"opacity {cfg['desktop_alpha']}, locked {yes(cfg['desktop_locked'])}"),
         ("Account", "email and password saved" if password else
                     "email saved, password missing" if cfg.get("email") else "not set up"),
-        ("LibreLinkUp", f"region {cfg['region']}, app version {cfg['app_version']}"),
+        ("Sensor", f"Dexcom Share, region {cfg['dexcom_region']}" if cfg["source"] == "dexcom"
+                   else f"LibreLinkUp, region {cfg['region']}, app version {cfg['app_version']}"),
         ("Running", yes(running)),
         ("Start with Windows", yes(autostart.is_enabled())),
         ("glucobar in PATH", yes(in_path())),

@@ -28,7 +28,8 @@ def notes(version, installer=None, scan_url=None):
     repo = os.environ.get("GITHUB_REPOSITORY", "jackfaz/glucobar")
     result = (f"{text}\n\n---\n"
               f"GlucoBar is not a medical device. Download `GlucoBar-Setup-{version}.exe` "
-              f"below. Full history: "
+              f"below (`GlucoBar-Setup.exe` is the same file, under a name that stays the same "
+              f"in every release). Full history: "
               f"[CHANGELOG.md](https://github.com/{repo}/blob/main/CHANGELOG.md)\n")
     if installer:
         result += (f"\nSHA-256 of `{os.path.basename(installer)}`: "

@@ -74,7 +74,9 @@ Vorresti un altro sensore? [Apri una issue](../../issues) e dicci quale.
      pubblico, crea un token in sola lettura. Nightscout: *Admin Tools → Add new Subject*,
      ruolo **readable**, e copia il token. Nocturne: *Settings → Connectors → API tokens →
      Create API token*, con il permesso di lettura **Blood glucose**.
-2. Scarica `GlucoBar-Setup-x.y.z.exe` dalla pagina [Release](../../releases/latest) e avvialo.
+2. Scarica l'installer dalla pagina [Release](../../releases/latest), oppure direttamente con
+   questo link, che dà sempre l'ultima versione:
+   https://github.com/jackfaz/glucobar/releases/latest/download/GlucoBar-Setup.exe.
    Non servono permessi di amministratore.
 3. Scegli la lingua dell'installazione, spunta cosa mostrare (con le anteprime) e se avviare
    GlucoBar all'accensione del PC.
@@ -155,7 +157,7 @@ Se GlucoBar è aperto, applica le nuove impostazioni entro due secondi.
 Installazione silenziosa con le tue scelte (comoda per script e winget):
 
 ```text
-GlucoBar-Setup-0.6.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
+GlucoBar-Setup-0.7.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
 ```
 
 ## Impostazioni
@@ -225,12 +227,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: avvio senza compilare
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.6.0 installer\glucobar.iss    :: serve Inno Setup 6
+iscc /DAppVersion=0.7.0 installer\glucobar.iss    :: serve Inno Setup 6
 ```
 
 Le release le crea GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow* spunta *release* per pubblicare la versione scritta in `glucobar/__init__.py`
-(funziona anche pubblicando un tag tipo `v0.6.0`). Le anteprime delle modalità si creano con
+(funziona anche pubblicando un tag tipo `v0.7.0`). Le anteprime delle modalità si creano con
 `tools/compose_previews.py`.
 
 ## Riconoscimenti e marchi

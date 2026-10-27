@@ -4,7 +4,7 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.7.0] - 2026-10-27
 
 ### Added
 - **Nightscout (beta)**: readings from your own Nightscout site, so any sensor that uploads
@@ -14,6 +14,9 @@ uses [Semantic Versioning](https://semver.org/).
   (`/SENSOR=nightscout`, `glucobar set source=nightscout`).
 - The same option works with **Nocturne**, the successor of Nightscout from the Nightscout
   organisation: it serves the same API and accepts its `noc_…` API tokens.
+- Each release also includes `GlucoBar-Setup.exe`, the same installer under a fixed name, so
+  https://github.com/jackfaz/glucobar/releases/latest/download/GlucoBar-Setup.exe always
+  downloads the latest version.
 
 ## [0.6.0] - 2026-10-27
 
@@ -153,7 +156,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
-[Unreleased]: https://github.com/jackfaz/glucobar/compare/v0.6.0...HEAD
+[0.7.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.7.0
 [0.6.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.6.0
 [0.5.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.5.2
 [0.5.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.5.1

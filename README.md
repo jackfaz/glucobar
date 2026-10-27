@@ -74,8 +74,10 @@ Would you like another sensor? [Open an issue](../../issues) and tell us which o
      is not public, create a read-only token. Nightscout: *Admin Tools → Add new Subject*, role
      **readable**, and copy its token. Nocturne: *Settings → Connectors → API tokens → Create
      API token*, with read permission for **Blood glucose**.
-2. Download `GlucoBar-Setup-x.y.z.exe` from the [Releases](../../releases/latest) page and run
-   it. No administrator rights needed.
+2. Download the installer from the [Releases](../../releases/latest) page, or directly with
+   this link, which always gives the latest version:
+   https://github.com/jackfaz/glucobar/releases/latest/download/GlucoBar-Setup.exe.
+   No administrator rights needed.
 3. Choose the setup language, tick what to show (with previews) and whether to start GlucoBar
    with Windows.
 4. On first start, choose your sensor and enter the account: the **LibreLinkUp** email for
@@ -154,7 +156,7 @@ If GlucoBar is running, it applies the new settings within two seconds.
 Silent install with your choices (handy for scripts and winget):
 
 ```text
-GlucoBar-Setup-0.6.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
+GlucoBar-Setup-0.7.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
 ```
 
 ## Settings
@@ -221,12 +223,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.6.0 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.7.0 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow*, tick *release* to publish the version written in `glucobar/__init__.py`
-(pushing a tag like `v0.6.0` works too). The mode previews are made with
+(pushing a tag like `v0.7.0` works too). The mode previews are made with
 `tools/compose_previews.py`.
 
 ## Credits and trademarks

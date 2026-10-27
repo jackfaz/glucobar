@@ -63,6 +63,13 @@ jobs:
           $v = dist\GlucoBar\glucobar-cli.exe --version
           "glucobar-cli: $v"
           if ($LASTEXITCODE -ne 0 -or $v -notmatch "GlucoBar") { exit 1 }
+          # nome e versione nelle Proprietà dei file
+          foreach ($exe in "GlucoBar.exe", "glucobar-cli.exe") {
+            $info = (Get-Item "dist\GlucoBar\$exe").VersionInfo
+            "${exe}: $($info.ProductName) $($info.ProductVersion), $($info.FileDescription)"
+            if ($info.ProductName -ne "GlucoBar" -or
+                $info.ProductVersion -ne "${{ steps.version.outputs.version }}") { exit 1 }
+          }
 
       - name: Installer previews
         run: python tools/previews_to_bmp.py

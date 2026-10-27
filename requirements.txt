@@ -1,3 +1,6 @@
-# Solo per la modalità "icona" (area di notifica); le altre usano la libreria standard
+# Icona nell'area di notifica di Windows (le altre parti usano la libreria standard)
 pystray>=0.19
 Pillow>=10.1
+# Mac: valore nella barra dei menu (AppKit) e password nel Portachiavi
+pyobjc-framework-Cocoa>=10; sys_platform == "darwin"
+keyring>=24; sys_platform == "darwin"

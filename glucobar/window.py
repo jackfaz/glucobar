@@ -6,7 +6,8 @@ import tkinter as tk
 from .config import save_config
 from .i18n import t
 from .sources import TREND_ARROWS
-from .ui_common import BG, DIM, FG, RED, age_minutes, color_for, fmt_value, is_stale
+from .ui_common import BG, DIM, FG, FONT, RED, age_minutes, bind_right_click, color_for, \
+    fmt_value, is_stale
 
 
 class WindowView:
@@ -35,13 +36,13 @@ class WindowView:
             x, y = self.root.winfo_screenwidth() - w - 24, 24
         self.root.geometry(f"{w}x{h}+{x}+{y}")
 
-        self.value_lbl = tk.Label(self.root, text="…", font=("Segoe UI", 30, "bold"),
+        self.value_lbl = tk.Label(self.root, text="…", font=(FONT, 30, "bold"),
                                   bg=BG, fg=FG)
         self.value_lbl.place(x=12 * s, y=4 * s)
-        self.arrow_lbl = tk.Label(self.root, text="", font=("Segoe UI", 26, "bold"),
+        self.arrow_lbl = tk.Label(self.root, text="", font=(FONT, 26, "bold"),
                                   bg=BG, fg=FG)
         self.arrow_lbl.place(x=w - 46 * s, y=6 * s)
-        self.info_lbl = tk.Label(self.root, text=t("connecting"), font=("Segoe UI", 9),
+        self.info_lbl = tk.Label(self.root, text=t("connecting"), font=(FONT, 9),
                                  bg=BG, fg=DIM, anchor="w")
         self.info_lbl.place(x=14 * s, y=52 * s, width=w - 20 * s)
         self.spark = tk.Canvas(self.root, width=w - 24 * s, height=34 * s, bg=BG,
@@ -58,8 +59,7 @@ class WindowView:
             wdg.bind("<ButtonPress-1>", self._drag_start)
             wdg.bind("<B1-Motion>", self._drag_move)
             wdg.bind("<ButtonRelease-1>", self._drag_end)
-            wdg.bind("<Button-3>", self._show_menu)
-            wdg.bind("<Button-2>", self._show_menu)          # macOS
+            bind_right_click(wdg, self._show_menu)
             wdg.bind("<Double-Button-1>", lambda e: ctl.refresh())
 
     def destroy(self):

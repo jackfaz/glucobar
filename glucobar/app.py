@@ -41,6 +41,9 @@ def run(elements):
         cfg["elements"] = elements
     set_language(cfg["language"])
 
+    from . import autostart
+    autostart.refresh()   # Mac: l'app può essere stata spostata
+
     if not account_ready(cfg):
         from .ui_common import ask_credentials
         if not ask_credentials(cfg):
@@ -68,9 +71,14 @@ def self_test():
     """Per la build: carica tutte le parti nell'exe (moduli mancanti = errore)."""
     try:
         from . import (controller, desktop, dexcom, instance, librelinkup,  # noqa: F401
-                       nightscout, notifyicon, taskbar, tray, window)
-        import pystray
-        log(f"self-test ok (pystray backend {pystray.Icon.__module__})")
+                       nightscout, window)
+        if sys.platform == "darwin":
+            from . import macbar  # noqa: F401
+            log("self-test ok (barra dei menu del Mac)")
+        else:
+            from . import notifyicon, taskbar, tray  # noqa: F401
+            import pystray
+            log(f"self-test ok (pystray backend {pystray.Icon.__module__})")
         return 0
     except Exception:
         log("self-test FALLITO:\n" + traceback.format_exc())

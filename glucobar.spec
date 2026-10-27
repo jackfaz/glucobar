@@ -1,4 +1,5 @@
 # PyInstaller: pyinstaller --noconfirm --clean glucobar.spec
+# (sul Mac crea anche dist/GlucoBar.app)
 # Crea dist/GlucoBar/ con due eseguibili che condividono le librerie in _internal:
 #   GlucoBar.exe      il programma (senza console)
 #   glucobar-cli.exe  il comando da terminale (glucobar setup, status, set, ...)
@@ -36,20 +37,38 @@ def version_info(name, description):
               VarFileInfo([VarStruct("Translation", [0x0409, 1200])])])
 
 
+IS_MAC = sys.platform == "darwin"
+
 common = dict(
     datas=[("assets/glucobar.ico", "assets"), ("assets/glucobar.png", "assets")],
-    hiddenimports=["pystray._win32"],  # pystray sceglie il backend a runtime
+    # caricati a runtime: il backend di pystray (Windows); barra dei menu e Portachiavi (Mac)
+    hiddenimports=(["glucobar.macbar", "keyring.backends.macOS"] if IS_MAC
+                   else ["pystray._win32"]),
     excludes=["unittest", "pydoc", "pytest"],
 )
 app = Analysis(["run_glucobar.py"], **common)
 cli = Analysis(["run_cli.py"], **common)
 
+icon = None if IS_MAC else "assets/glucobar.ico"   # sul Mac l'icona è quella dell'app
 app_exe = EXE(PYZ(app.pure), app.scripts, [], exclude_binaries=True, name="GlucoBar",
-              icon="assets/glucobar.ico", console=False, upx=False,
+              icon=icon, console=False, upx=False,
               version=version_info("GlucoBar", "GlucoBar"))
 cli_exe = EXE(PYZ(cli.pure), cli.scripts, [], exclude_binaries=True, name="glucobar-cli",
-              icon="assets/glucobar.ico", console=True, upx=False,
+              icon=icon, console=True, upx=False,
               version=version_info("glucobar-cli", "GlucoBar command line"))
 
 coll = COLLECT(app_exe, cli_exe, app.binaries, app.datas, cli.binaries, cli.datas,
                name="GlucoBar", upx=False)
+
+if IS_MAC:
+    # dist/GlucoBar.app: il primo eseguibile (GlucoBar) è quello che si apre; glucobar-cli
+    # sta accanto in Contents/MacOS. LSUIElement: niente icona nel Dock, solo la barra
+    # dei menu
+    app_bundle = BUNDLE(coll, name="GlucoBar.app", icon="assets/glucobar.png",
+                        bundle_identifier="io.github.jackfaz.glucobar", version=VERSION,
+                        info_plist={"CFBundleName": "GlucoBar",
+                                    "CFBundleDisplayName": "GlucoBar",
+                                    "LSUIElement": True,
+                                    "LSMinimumSystemVersion": "11.0",
+                                    "NSHighResolutionCapable": True,
+                                    "NSHumanReadableCopyright": "MIT License, GlucoBar contributors"})

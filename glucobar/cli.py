@@ -21,7 +21,7 @@ import sys
 from . import __version__, autostart, credentials, i18n, instance, tui
 from .config import CONFIG_PATH, ELEMENTS, forget_everything, load_config, \
     normalize_elements, save_config
-from .i18n import LANGUAGES, t
+from .i18n import LANGUAGES, element_name, t
 from .nightscout import normalize_url
 from .sources import DEXCOM_REGIONS, SOURCES, TREND_ARROWS, account_ready, fetch_safely, \
     make_client, region_options, source_options
@@ -247,7 +247,7 @@ def wizard(term, cfg, client_class=None, monitors=1):
     i18n.set_language(lang)
     hint = t("cli_hint_select")   # da qui in poi nella lingua scelta
 
-    elements = tui.multiselect(term, t("cli_show"), [(e, t(f"mode_{e}")) for e in ELEMENTS],
+    elements = tui.multiselect(term, t("cli_show"), [(e, element_name(e)) for e in ELEMENTS],
                                selected=cfg["elements"], hint=t("cli_hint_multi"),
                                need_one=t("cli_need_one"))
     units = ["mg/dL", "mmol/L"]

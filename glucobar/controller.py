@@ -8,6 +8,7 @@ arrivano dal thread dell'icona o da quello dei dati passano per `post()`.
 """
 
 import queue
+import sys
 import threading
 import time
 import tkinter as tk
@@ -15,7 +16,7 @@ import traceback
 
 from . import i18n, instance
 from .config import ELEMENTS, log, normalize_elements, peek_config, save_config
-from .i18n import LANGUAGES, t
+from .i18n import LANGUAGES, element_name, t
 from .sources import fetch_safely, make_client
 from .ui_common import apply_icon, ask_credentials
 
@@ -62,7 +63,8 @@ class Controller:
         self._start_tray()
         elements = normalize_elements(cfg["elements"])
         if elements == ["tray"] and not self.tray:
-            elements = ["taskbar"]   # senza icona non resterebbe nulla da vedere
+            # senza icona non resterebbe nulla da vedere: barra (Windows) o finestrella (Mac)
+            elements = [e for e in ELEMENTS if e != "tray"][:1]
         self.set_elements(elements)
         self.root.after(100, self._drain_calls)
         self._tick()
@@ -91,8 +93,12 @@ class Controller:
     # ---- icona nell'area di notifica ----
     def _start_tray(self):
         try:
-            from .tray import TrayIcon
-            self.tray = TrayIcon(self)
+            if sys.platform == "darwin":
+                from .macbar import MacMenuBar   # valore nella barra dei menu
+                self.tray = MacMenuBar(self)
+            else:
+                from .tray import TrayIcon
+                self.tray = TrayIcon(self)
             self.tray.start()
         except Exception:
             log("icona nell'area di notifica non disponibile:\n" + traceback.format_exc())
@@ -104,6 +110,8 @@ class Controller:
         """Mette l'icona accanto all'orologio, una volta sola (vedi notifyicon.py).
         La voce di Windows compare qualche secondo dopo l'icona: riprova per un po'."""
         from . import notifyicon
+        if sys.platform != "win32":
+            return   # solo Windows 11 nasconde le icone nuove sotto la freccetta
         if attempt == 0:
             if self._promoting:
                 return   # c'è già una serie di tentativi in corso
@@ -202,7 +210,7 @@ class Controller:
                 continue
             var = tk.BooleanVar(master=menu, value=self.shown(element))
             show_vars.append(var)
-            show.add_checkbutton(label=t(f"mode_{element}"), variable=var,
+            show.add_checkbutton(label=element_name(element), variable=var,
                                  command=lambda e=element: self.post(self.toggle_element, e))
         langs = tk.Menu(menu, tearoff=0)
         lang_var = tk.StringVar(master=menu, value=i18n.current_language())

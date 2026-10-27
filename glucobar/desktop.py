@@ -14,7 +14,8 @@ from . import stats
 from .config import save_config
 from .i18n import t
 from .sources import TREND_ARROWS
-from .ui_common import DIM, FG, ORANGE, RED, age_minutes, color_for, fmt_value, is_stale
+from .ui_common import DIM, FG, FONT, ORANGE, RED, age_minutes, bind_right_click, color_for, \
+    fmt_value, is_stale
 from .taskbar import IS_WIN
 
 if IS_WIN:
@@ -65,7 +66,7 @@ class DesktopView:
         self.canvas.bind("<ButtonRelease-1>", self._release)
         self.canvas.bind("<Motion>", self._hover)
         self.canvas.bind("<Double-Button-1>", lambda e: ctl.refresh())
-        self.canvas.bind("<Button-3>", lambda e: self.menu.tk_popup(e.x_root, e.y_root))
+        bind_right_click(self.canvas, lambda e: self.menu.tk_popup(e.x_root, e.y_root))
 
         self.hours_var = tk.IntVar(value=int(cfg["desktop_hours"]))
         self.locked_var = tk.BooleanVar(value=bool(cfg["desktop_locked"]))
@@ -202,12 +203,12 @@ class DesktopView:
             sub, sub_color = "⚠ " + error, RED
 
         vid = cv.create_text(pad, pad - head_h * 0.08, text=value, anchor="nw", fill=color,
-                             font=("Segoe UI", f_big, "bold"))
+                             font=(FONT, f_big, "bold"))
         value_right = cv.bbox(vid)[2]
         aid = cv.create_text(value_right + 8, pad + head_h * 0.02, text=arrow, anchor="nw",
-                             fill=color, font=("Segoe UI", int(f_big * 0.75), "bold"))
+                             fill=color, font=(FONT, int(f_big * 0.75), "bold"))
         sid = cv.create_text(pad, pad + head_h * 0.74, text=sub, anchor="nw", fill=sub_color,
-                             font=("Segoe UI", f_small), width=W - 2 * pad)
+                             font=(FONT, f_small), width=W - 2 * pad)
         head_right = max(value_right, cv.bbox(aid)[2] if arrow else 0, cv.bbox(sid)[2])
 
         # --- tabella: a destra se c'è spazio, altrimenti sotto il valore ---
@@ -223,8 +224,8 @@ class DesktopView:
                 (t("desk_above"), f"{summary['above']:.0f}%", ORANGE),
             ]
         # colonne larghe quanto i testi veri (in tedesco sono più lunghi)
-        normal = tkfont.Font(root=self.root, family="Segoe UI", size=f_tiny)
-        bold = tkfont.Font(root=self.root, family="Segoe UI", size=f_tiny, weight="bold")
+        normal = tkfont.Font(root=self.root, family=FONT, size=f_tiny)
+        bold = tkfont.Font(root=self.root, family=FONT, size=f_tiny, weight="bold")
         col_w = (max((normal.measure(r[0]) for r in rows), default=0) + pad +
                  max((bold.measure(r[1]) for r in rows), default=0))
         table_w = 2 * col_w + pad
@@ -235,14 +236,14 @@ class DesktopView:
                 x = x0 + (i % 2) * (col_w + pad)
                 y = y0 + (i // 2) * line_h
                 cv.create_text(x, y, text=label, anchor="nw", fill=DIM,
-                               font=("Segoe UI", f_tiny))
+                               font=(FONT, f_tiny))
                 cv.create_text(x + col_w, y, text=val, anchor="ne", fill=col,
-                               font=("Segoe UI", f_tiny, "bold"))
+                               font=(FONT, f_tiny, "bold"))
         elif rows:
             # spazio indivisibile: si va a capo tra una voce e l'altra, non dentro
             text = "   ".join(f"{label} {val}" for label, val, _ in rows)
             tid = cv.create_text(pad, top, text=text, anchor="nw", fill=DIM,
-                                 font=("Segoe UI", f_tiny), width=W - 2 * pad)
+                                 font=(FONT, f_tiny), width=W - 2 * pad)
             top = cv.bbox(tid)[3] + 2
 
         # --- piè di pagina ---
@@ -255,7 +256,7 @@ class DesktopView:
                                                   .strftime("%H:%M")))
         foot_h = -f_tiny * 1.6
         cv.create_text(pad, H - pad, text=" · ".join(footer), anchor="sw", fill=DIM,
-                       font=("Segoe UI", f_tiny))
+                       font=(FONT, f_tiny))
         self.draw_grip(W, H)
 
         # --- grafico ---
@@ -284,9 +285,9 @@ class DesktopView:
         for v, col in ((cfg["low"], RED), (cfg["high"], ORANGE)):
             cv.create_line(left, y(v), right, y(v), fill=col, dash=(3, 3))
             cv.create_text(left - 4, y(v), text=fmt_value(cfg, v), anchor="e", fill=col,
-                           font=("Segoe UI", f_tiny))
+                           font=(FONT, f_tiny))
         cv.create_text(left - 4, y(hi_v), text=fmt_value(cfg, hi_v), anchor="ne", fill=DIM,
-                       font=("Segoe UI", f_tiny))
+                       font=(FONT, f_tiny))
 
         # griglia oraria
         step = 1 if hours <= 3 else 2 if hours <= 6 else 3
@@ -297,7 +298,7 @@ class DesktopView:
             if hour.hour % step == 0:
                 cv.create_line(x(ts), top, x(ts), bottom, fill=GRID)
                 cv.create_text(x(ts), bottom + 3, text=hour.strftime("%H:%M"), anchor="n",
-                               fill=DIM, font=("Segoe UI", f_tiny))
+                               fill=DIM, font=(FONT, f_tiny))
             ts += 3600
 
         if len(points) >= 2:

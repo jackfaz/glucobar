@@ -106,6 +106,8 @@ STRINGS = {
         "cli_cancelled": 'Annullato, nessuna modifica.',
         "cli_no_account": 'Nessun account configurato: usa «glucobar setup» o «glucobar login».',
         "cli_report_copied": 'Copiato negli appunti: incollalo nella segnalazione su GitHub (Ctrl+V). Email, nome utente e valori di glicemia sono già nascosti.',
+        "mode_tray_mac": "Nella barra dei menu",
+        "menu_autostart": "Apri all'accesso",
         "sensor_nightscout": "Nightscout o Nocturne (qualsiasi sensore collegato al tuo sito) · beta",
         "cred_title_nightscout": "GlucoBar – Nightscout",
         "cred_url_nightscout": "Indirizzo del tuo sito Nightscout o Nocturne\n(quello che apri nel browser, es. https://mionome.herokuapp.com):",
@@ -225,6 +227,8 @@ STRINGS = {
         "cli_cancelled": 'Cancelled, nothing changed.',
         "cli_no_account": 'No account set up: use “glucobar setup” or “glucobar login”.',
         "cli_report_copied": 'Copied to the clipboard: paste it into the GitHub issue (Ctrl+V). Email, user name and glucose values are already hidden.',
+        "mode_tray_mac": "In the menu bar",
+        "menu_autostart": "Open at login",
         "sensor_nightscout": "Nightscout or Nocturne (any sensor that uploads to your site) · beta",
         "cred_title_nightscout": "GlucoBar – Nightscout",
         "cred_url_nightscout": "Address of your Nightscout or Nocturne site\n(the one you open in the browser, e.g. https://yourname.herokuapp.com):",
@@ -344,6 +348,8 @@ STRINGS = {
         "cli_cancelled": 'Cancelado, sin cambios.',
         "cli_no_account": 'Ninguna cuenta configurada: usa «glucobar setup» o «glucobar login».',
         "cli_report_copied": 'Copiado al portapapeles: pégalo en el informe de GitHub (Ctrl+V). Email, nombre de usuario y valores de glucosa ya están ocultos.',
+        "mode_tray_mac": "En la barra de menús",
+        "menu_autostart": "Abrir al iniciar sesión",
         "sensor_nightscout": "Nightscout o Nocturne (cualquier sensor que suba datos a tu sitio) · beta",
         "cred_title_nightscout": "GlucoBar – Nightscout",
         "cred_url_nightscout": "Dirección de tu sitio Nightscout o Nocturne\n(la que abres en el navegador, p. ej. https://tunombre.herokuapp.com):",
@@ -463,6 +469,8 @@ STRINGS = {
         "cli_cancelled": "Annulé, rien n'a changé.",
         "cli_no_account": 'Aucun compte configuré : utilisez « glucobar setup » ou « glucobar login ».',
         "cli_report_copied": "Copié dans le presse-papiers : collez-le dans le ticket GitHub (Ctrl+V). E-mail, nom d'utilisateur et valeurs de glycémie sont déjà masqués.",
+        "mode_tray_mac": "Dans la barre des menus",
+        "menu_autostart": "Ouvrir à la connexion",
         "sensor_nightscout": "Nightscout ou Nocturne (tout capteur envoyé vers votre site) · bêta",
         "cred_title_nightscout": "GlucoBar – Nightscout",
         "cred_url_nightscout": "Adresse de votre site Nightscout ou Nocturne\n(celle que vous ouvrez dans le navigateur, par ex. https://votrenom.herokuapp.com) :",
@@ -582,6 +590,8 @@ STRINGS = {
         "cli_cancelled": 'Abgebrochen, nichts geändert.',
         "cli_no_account": 'Kein Konto eingerichtet: „glucobar setup“ oder „glucobar login“ verwenden.',
         "cli_report_copied": 'In die Zwischenablage kopiert: im GitHub-Ticket einfügen (Strg+V). E-Mail, Benutzername und Glukosewerte sind bereits ausgeblendet.',
+        "mode_tray_mac": "In der Menüleiste",
+        "menu_autostart": "Beim Anmelden öffnen",
         "sensor_nightscout": "Nightscout oder Nocturne (jeder Sensor, der zu deiner Seite hochlädt) · Beta",
         "cred_title_nightscout": "GlucoBar – Nightscout",
         "cred_url_nightscout": "Adresse deiner Nightscout- oder Nocturne-Seite\n(die du im Browser öffnest, z. B. https://deinname.herokuapp.com):",
@@ -701,6 +711,8 @@ STRINGS = {
         "cli_cancelled": 'Cancelado, nada foi alterado.',
         "cli_no_account": 'Nenhuma conta configurada: use «glucobar setup» ou «glucobar login».',
         "cli_report_copied": 'Copiado para a área de transferência: cole-o no relatório do GitHub (Ctrl+V). Email, nome de utilizador e valores de glicose já estão ocultos.',
+        "mode_tray_mac": "Na barra de menus",
+        "menu_autostart": "Abrir ao iniciar sessão",
         "sensor_nightscout": "Nightscout ou Nocturne (qualquer sensor que envie dados para o seu site) · beta",
         "cred_title_nightscout": "GlucoBar – Nightscout",
         "cred_url_nightscout": "Endereço do seu site Nightscout ou Nocturne\n(o que abre no navegador, ex. https://onome.herokuapp.com):",
@@ -737,6 +749,17 @@ _lang = None
 
 
 def detect_language():
+    if sys.platform == "darwin":
+        # un'app aperta dal Finder non ha LANG: si chiede a macOS
+        try:
+            from Foundation import NSLocale
+            preferred = [str(lang).lower() for lang in NSLocale.preferredLanguages()]
+            for name in preferred:
+                code = next((c for c in STRINGS if name.startswith(c)), None)
+                if code:
+                    return code
+        except Exception:
+            pass
     if sys.platform == "win32":
         try:
             import ctypes
@@ -759,6 +782,13 @@ def set_language(preference):
 
 def current_language():
     return _lang or detect_language()
+
+
+def element_name(element):
+    """Nome di un elemento da mostrare; sul Mac l'"icona" sta nella barra dei menu."""
+    if element == "tray" and sys.platform == "darwin":
+        return t("mode_tray_mac")
+    return t(f"mode_{element}")
 
 
 def t(key, **kwargs):

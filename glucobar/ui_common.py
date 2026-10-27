@@ -12,6 +12,10 @@ from .i18n import t
 from .nightscout import normalize_url
 from .sources import region_options, source_options
 
+# Carattere dell'interfaccia: Segoe UI su Windows (e per le anteprime generate su
+# Linux), quello di sistema sul Mac
+FONT = "Helvetica Neue" if sys.platform == "darwin" else "Segoe UI"
+
 BG = "#1e1f22"
 FG = "#f2f2f2"
 DIM = "#8a8d93"
@@ -62,11 +66,11 @@ def choose(parent, title, prompt, options, default):
     dlg.title(title)
     dlg.resizable(False, False)
     var = tk.StringVar(master=dlg, value=default)
-    tk.Label(dlg, text=prompt, justify="left", font=("Segoe UI", 10)).pack(
+    tk.Label(dlg, text=prompt, justify="left", font=(FONT, 10)).pack(
         anchor="w", padx=16, pady=(14, 6))
     for value, label in options:
         tk.Radiobutton(dlg, text=label, value=value, variable=var, anchor="w",
-                       font=("Segoe UI", 10)).pack(fill="x", padx=24)
+                       font=(FONT, 10)).pack(fill="x", padx=24)
     result = []
 
     def ok(_event=None):
@@ -90,6 +94,15 @@ def choose(parent, title, prompt, options, default):
     dlg.grab_set()
     parent.wait_window(dlg)
     return result[0] if result else None
+
+
+def bind_right_click(widget, callback):
+    """Clic destro: Button-3 su Windows e Linux; sul Mac Button-2 e Ctrl+clic."""
+    if sys.platform == "darwin":
+        widget.bind("<Button-2>", callback)
+        widget.bind("<Control-Button-1>", callback)
+    else:
+        widget.bind("<Button-3>", callback)
 
 
 def ask_credentials(cfg, parent=None):

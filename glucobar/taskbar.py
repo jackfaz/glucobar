@@ -17,7 +17,7 @@ import traceback
 from .config import log, save_config
 from .i18n import t
 from .sources import TREND_ARROWS
-from .ui_common import RED, age_minutes, color_for, fmt_value, is_stale
+from .ui_common import FONT, RED, age_minutes, bind_right_click, color_for, fmt_value, is_stale
 
 IS_WIN = sys.platform == "win32"
 
@@ -192,7 +192,7 @@ class TaskbarView:
         ctl.add_common_menu(self.menu)
 
         for w in (self.root, self.box, self.value_lbl, self.arrow_lbl, self.info_lbl):
-            w.bind("<Button-3>", lambda e: self.menu.tk_popup(e.x_root, e.y_root))
+            bind_right_click(w, lambda e: self.menu.tk_popup(e.x_root, e.y_root))
             w.bind("<Double-Button-1>", lambda e: ctl.refresh())
 
         self.root.update_idletasks()
@@ -214,9 +214,9 @@ class TaskbarView:
 
     def layout_for(self, height):
         """Caratteri e dimensioni in proporzione all'altezza della barra."""
-        self.value_lbl.configure(font=("Segoe UI", -int(height * 0.42), "bold"))
-        self.arrow_lbl.configure(font=("Segoe UI", -int(height * 0.36), "bold"))
-        self.info_lbl.configure(font=("Segoe UI", -int(height * 0.21)))
+        self.value_lbl.configure(font=(FONT, -int(height * 0.42), "bold"))
+        self.arrow_lbl.configure(font=(FONT, -int(height * 0.36), "bold"))
+        self.info_lbl.configure(font=(FONT, -int(height * 0.21)))
         return int(height * 1.75), height
 
     def taskbar_geometry(self):

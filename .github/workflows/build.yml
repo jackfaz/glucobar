@@ -281,3 +281,69 @@ jobs:
         with:
           name: winget-manifest-${{ steps.version.outputs.version }}
           path: winget/
+
+  # Mac (beta): GlucoBar.app in un .dmg, con il valore nella barra dei menu. Dopo la
+  # build di Windows, che crea la release: qui si aggiunge solo il .dmg
+  macos:
+    runs-on: macos-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt "pyinstaller>=6.10,<7"
+
+      - name: Tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Version
+        id: version
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then v="${GITHUB_REF_NAME#v}"
+          else v=$(python -c "import glucobar; print(glucobar.__version__)"); fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Build GlucoBar.app
+        run: |
+          pyinstaller --noconfirm --clean glucobar.spec
+          # firma "ad-hoc": senza, i Mac con chip Apple non aprono l'app
+          codesign --force --deep --sign - dist/GlucoBar.app
+          codesign --verify --deep --strict dist/GlucoBar.app
+
+      # Come su Windows: tutte le parti caricate, poi l'app vera con un sito Nightscout
+      # finto (foto della barra dei menu negli avvisi del job) e "glucobar stop"
+      - name: Smoke test
+        run: |
+          app=dist/GlucoBar.app/Contents/MacOS
+          if ! "$app/GlucoBar" --self-test; then
+            cat "$HOME/Library/Application Support/GlucoBar/glucobar.log"; exit 1
+          fi
+          "$app/glucobar-cli" --version
+          python tools/mac_smoke.py dist/GlucoBar.app
+
+      - name: Disk image
+        run: |
+          v=${{ steps.version.outputs.version }}
+          mkdir -p dmg dist-mac
+          cp -R dist/GlucoBar.app dmg/
+          ln -s /Applications dmg/Applications   # trascina GlucoBar su Applicazioni
+          hdiutil create -volname GlucoBar -srcfolder dmg -ov -format UDZO "dist-mac/GlucoBar-$v-mac.dmg"
+          # nome fisso: .../releases/latest/download/GlucoBar-mac.dmg
+          cp "dist-mac/GlucoBar-$v-mac.dmg" dist-mac/GlucoBar-mac.dmg
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: GlucoBar-${{ steps.version.outputs.version }}-mac
+          path: dist-mac/GlucoBar-${{ steps.version.outputs.version }}-mac.dmg
+
+      - name: Add to the release
+        if: github.ref_type == 'tag' || inputs.release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "v${{ steps.version.outputs.version }}" dist-mac/*.dmg --clobber

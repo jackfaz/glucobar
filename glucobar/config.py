@@ -7,13 +7,18 @@ import time
 
 APP_NAME = "GlucoBar"
 
-# Elementi che si possono mostrare, anche insieme
-ELEMENTS = ("taskbar", "tray", "window", "desktop")
+IS_MAC = sys.platform == "darwin"
+
+# Elementi che si possono mostrare, anche insieme. Sul Mac non c'è la barra delle
+# applicazioni: "tray" è il valore nella barra dei menu, in alto a destra
+ELEMENTS = ("tray", "window", "desktop") if IS_MAC else ("taskbar", "tray", "window", "desktop")
 
 
 def _config_dir():
     if sys.platform == "win32":
         return os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), APP_NAME)
+    if IS_MAC:
+        return os.path.join(os.path.expanduser("~"), "Library", "Application Support", APP_NAME)
     return os.path.join(os.path.expanduser("~"), ".config", "glucobar")
 
 
@@ -40,7 +45,7 @@ DEFAULT_CONFIG = {
     "language": "auto",         # "auto" oppure it, en, es, fr, de, pt
     # cosa mostrare, anche più cose insieme: taskbar (valore sulla barra),
     # tray (icona col numero vicino all'orologio), window, desktop
-    "elements": ["taskbar", "tray"],
+    "elements": ["tray"] if IS_MAC else ["taskbar", "tray"],
     # finestrella
     "window_x": None,
     "window_y": None,
@@ -92,7 +97,7 @@ def save_config(cfg):
 def normalize_elements(elements):
     """Elementi validi, senza doppioni, nell'ordine di ELEMENTS; mai vuoto."""
     chosen = [e for e in ELEMENTS if e in (elements or [])]
-    return chosen or ["taskbar"]
+    return chosen or [ELEMENTS[0]]
 
 
 def peek_config():

@@ -1,7 +1,8 @@
-"""Password dell'account del sensore nel Gestione credenziali di Windows (cifrata
-dal sistema), una voce per servizio: LibreLinkUp, Dexcom e Nightscout (il token).
+"""Password dell'account del sensore nel Gestione credenziali di Windows o nel
+Portachiavi del Mac (cifrate dal sistema), una voce per servizio: LibreLinkUp, Dexcom
+e Nightscout (il token).
 
-Su Linux/macOS, usati solo per sviluppo, finisce in un file leggibile solo dall'utente.
+Su Linux, usato solo per sviluppo, finisce in un file leggibile solo dall'utente.
 """
 
 import json
@@ -80,6 +81,36 @@ if sys.platform == "win32":
         if ctypes.get_last_error() == ERROR_NOT_FOUND:
             return False
         raise OSError(ctypes.get_last_error(), "CredDeleteW non riuscita")
+
+elif sys.platform == "darwin":
+    # Portachiavi di macOS (tramite keyring): una voce per servizio, con dentro
+    # account e password, così "cambia account" sostituisce quella vecchia
+    _ACCOUNT = "GlucoBar"
+
+    def _keychain():
+        from keyring.backends import macOS
+        return macOS.Keyring()
+
+    def set_password(email, password, source="libre"):
+        _keychain().set_password(TARGETS[source], _ACCOUNT,
+                                 json.dumps({"email": email, "password": password}))
+
+    def get_password(email, source="libre"):
+        try:
+            data = json.loads(_keychain().get_password(TARGETS[source], _ACCOUNT) or "{}")
+        except Exception:
+            return None
+        if data.get("email", "").lower() != (email or "").lower():
+            return None
+        return data.get("password")
+
+    def _delete(source):
+        from keyring.errors import PasswordDeleteError
+        try:
+            _keychain().delete_password(TARGETS[source], _ACCOUNT)
+            return True
+        except PasswordDeleteError:
+            return False
 
 else:
     _DIR = CONFIG_DIR

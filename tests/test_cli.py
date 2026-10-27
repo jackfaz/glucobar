@@ -1,0 +1,124 @@
+import contextlib
+import io
+import json
+import os
+import tempfile
+import time
+import unittest
+from unittest import mock
+
+from glucobar import cli, config, credentials, i18n, tui
+from glucobar.config import DEFAULT_CONFIG, load_config
+from glucobar.librelinkup import LibreError
+from tests.test_tui import FakeTerm
+
+
+class IsolatedConfig(unittest.TestCase):
+    """Impostazioni e password in una cartella temporanea."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.passwords = {}
+        patches = [
+            mock.patch.object(config, "CONFIG_DIR", tmp.name),
+            mock.patch.object(config, "CONFIG_PATH", os.path.join(tmp.name, "config.json")),
+            mock.patch.object(cli, "CONFIG_PATH", os.path.join(tmp.name, "config.json")),
+            mock.patch.object(config, "LOG_PATH", os.path.join(tmp.name, "log.txt")),
+            mock.patch.object(config, "LEGACY_CONFIG_PATH", os.path.join(tmp.name, "none.json")),
+            mock.patch.object(credentials, "set_password",
+                              side_effect=lambda e, p: self.passwords.update({e: p})),
+            mock.patch.object(credentials, "get_password",
+                              side_effect=lambda e: self.passwords.get(e)),
+        ]
+        for p in patches:
+            p.start()
+            self.addCleanup(p.stop)
+        i18n.set_language("it")
+
+    def run_cli(self, *argv):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = cli.main(list(argv))
+        return code, out.getvalue(), err.getvalue()
+
+
+class SetGetTest(IsolatedConfig):
+    def test_parse_assignments(self):
+        cfg = dict(DEFAULT_CONFIG)
+        self.assertEqual(cli.parse_assignments(["unit=mmol/l", "low=80", "elements=desktop,tray",
+                                                "desktop_hours=6", "taskbar_bg=auto"], cfg),
+                         {"unit": "mmol/L", "low": 80, "elements": ["tray", "desktop"],
+                          "desktop_hours": 6, "taskbar_bg": None})
+        for wrong in (["colore=rosso"], ["low=abc"], ["low=10"], ["elements=orologio"],
+                      ["low=190"], ["unit"]):
+            with self.assertRaises(ValueError, msg=wrong):
+                cli.parse_assignments(wrong, cfg)
+
+    def test_set_then_get(self):
+        code, out, _ = self.run_cli("set", "unit=mmol/L", "high=200", "language=de")
+        self.assertEqual(code, 0)
+        self.assertIn("unit = mmol/L", out)
+        cfg = load_config()
+        self.assertEqual((cfg["unit"], cfg["high"], cfg["language"]), ("mmol/L", 200, "de"))
+        code, out, _ = self.run_cli("get", "high", "elements")
+        self.assertEqual(out.split("\n")[:2], ["high = 200", "elements = taskbar,tray"])
+
+    def test_set_rejects_and_changes_nothing(self):
+        code, _out, err = self.run_cli("set", "unit=mmol/L", "low=999")
+        self.assertEqual(code, 2)
+        self.assertIn("low", err)
+        self.assertEqual(load_config()["unit"], "mg/dL")
+
+
+class FakeClient:
+    """Al posto di LibreLinkUp: accetta solo la password "giusta"."""
+
+    def __init__(self, cfg, save=None, password=None):
+        self.cfg, self.password = cfg, password
+
+    def fetch(self):
+        if self.password != "giusta":
+            raise LibreError("Email o password errate")
+        self.cfg["region"] = "de"
+        return {"mgdl": 133, "trend": 2, "time": time.time()}, []
+
+
+class WizardTest(IsolatedConfig):
+    def test_full_wizard(self):
+        term = FakeTerm(
+            ["enter"]                                    # lingua: italiano (già scelta)
+            + ["down", "down", "space", "enter"]         # aggiunge "finestrella"
+            + ["down", "enter"]                          # mmol/L
+            + ["down", "enter"]                          # range personalizzato
+            + list("80") + ["enter"]                     # soglia bassa (vuota -> cancello)
+            + ["enter"]                                  # soglia alta: default
+            + list("a@b.c") + ["enter"] + list("sbagliata") + ["enter"]
+            + ["enter"]                                  # riprova
+            + ["enter"] + list("giusta") + ["enter"])    # stessa email, password giusta
+        cfg = load_config()
+        cfg["low"] = 70
+        with mock.patch.object(cli.autostart, "gui_exe", return_value=None):
+            cli.wizard(term, cfg, client_class=FakeClient)
+        saved = load_config()
+        self.assertEqual(saved["elements"], ["taskbar", "tray", "window"])
+        self.assertEqual(saved["unit"], "mmol/L")
+        self.assertEqual((saved["low"], saved["high"]), (80, 180))
+        self.assertEqual(saved["email"], "a@b.c")
+        self.assertEqual(saved["region"], "de")          # suggerito dal server
+        self.assertEqual(self.passwords, {"a@b.c": "giusta"})
+        screen = term.out.getvalue()
+        self.assertIn("Connessione non riuscita: Email o password errate", screen)
+        self.assertIn("Connesso: 7.4 ↘ mmol/L", screen)
+        self.assertNotIn("giusta", screen)               # la password non si vede mai
+        self.assertNotIn("sbagliata", screen)
+
+    def test_escape_saves_nothing(self):
+        term = FakeTerm(["enter", "esc"])
+        with self.assertRaises(tui.Cancelled):
+            cli.wizard(term, load_config(), client_class=FakeClient)
+        self.assertFalse(os.path.exists(config.CONFIG_PATH))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -2,10 +2,11 @@
 ; Prima servono l'exe e le anteprime:
 ;   pyinstaller --noconfirm --clean glucobar.spec
 ;   python tools\previews_to_bmp.py
-; Poi: iscc /DAppVersion=0.4.0 installer\glucobar.iss
+; Poi: iscc /DAppVersion=0.5.0 installer\glucobar.iss
+; Installazione silenziosa con scelte: /VERYSILENT /ELEMENTS=desktop,tray /LANG=it
 
 #ifndef AppVersion
-  #define AppVersion "0.4.0"
+  #define AppVersion "0.5.0"
 #endif
 #ifndef RepoUrl
   #define RepoUrl "https://github.com/"
@@ -43,6 +44,8 @@ AppMutex=GlucoBar
 CloseApplications=yes
 ; chiede sempre la lingua all'avvio: diventa anche la lingua di GlucoBar
 ShowLanguageDialog=yes
+; il comando "glucobar" va nel PATH dell'utente: avvisa i terminali nuovi
+ChangesEnvironment=yes
 
 [Languages]
 Name: "it"; MessagesFile: "compiler:Languages\Italian.isl"; InfoBeforeFile: "disclaimer-it.txt"
@@ -150,6 +153,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\dist\GlucoBar\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; il comando "glucobar" da terminale (richiama glucobar-cli.exe)
+Source: "glucobar.cmd"; DestDir: "{app}\bin"; Flags: ignoreversion
 ; anteprime della pagina "Scegli la modalità" (non vengono installate)
 Source: "build\previews\*.bmp"; Flags: dontcopy
 
@@ -158,12 +163,19 @@ Source: "build\previews\*.bmp"; Flags: dontcopy
 Type: files; Name: "{group}\GlucoBar - *.lnk"
 Type: files; Name: "{userstartup}\GlucoBar - *.lnk"
 Type: files; Name: "{autodesktop}\GlucoBar - *.lnk"
+; 0.2.0-0.4.0: avvio automatico con un collegamento (ora è nel registro, vedi [Registry])
+Type: files; Name: "{userstartup}\GlucoBar.lnk"
+
+[Registry]
+; avvio con Windows: la stessa voce che gestisce "glucobar set autostart=..."
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "GlucoBar"; ValueData: """{app}\GlucoBar.exe"""; Tasks: autostart; Flags: uninsdeletevalue
+; "glucobar" in ogni terminale nuovo
+Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\bin"; Check: NeedsAddPath(ExpandConstant('{app}\bin'))
 
 [Icons]
 Name: "{group}\GlucoBar"; Filename: "{app}\GlucoBar.exe"
 Name: "{group}\{cm:UninstallProgram,GlucoBar}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\GlucoBar"; Filename: "{app}\GlucoBar.exe"; Tasks: desktopicon
-Name: "{userstartup}\GlucoBar"; Filename: "{app}\GlucoBar.exe"; Tasks: autostart
 
 [Run]
 ; salva elementi e lingua scelti (anche se GlucoBar non viene avviato subito)
@@ -216,6 +228,7 @@ end;
 procedure InitializeWizard;
 var
   I, ListWidth, Gap: Integer;
+  Elements: String;
 begin
   ModePage := CreateCustomPage(wpInfoBefore, CustomMessage('ModeTitle'),
                                CustomMessage('ModeSubtitle'));
@@ -261,6 +274,11 @@ begin
     ModePreview e ModeDescription (crearli dopo dava "Could not call proc") }
   ModeBoxes[0].Checked := True;
   ModeBoxes[1].Checked := True;
+  { Da riga di comando (anche winget): /ELEMENTS=desktop,tray }
+  Elements := Lowercase(ExpandConstant('{param:ELEMENTS|}'));
+  if Elements <> '' then
+    for I := 0 to 3 do
+      ModeBoxes[I].Checked := Pos(',' + ModeId(I) + ',', ',' + Elements + ',') > 0;
   ShowPreview(0);
 end;
 
@@ -294,6 +312,40 @@ begin
         Result := Result + ',';
       Result := Result + ModeId(I);
     end;
+  if Result = '' then
+    Result := 'taskbar,tray';   { /ELEMENTS sbagliato: i predefiniti }
+end;
+
+// [Registry]: aggiunge {app}\bin al PATH solo se non c'è già
+function NeedsAddPath(Dir: String): Boolean;
+var
+  Path: String;
+begin
+  if not RegQueryStringValue(HKCU, 'Environment', 'Path', Path) then
+    Result := True
+  else
+    Result := Pos(';' + Uppercase(Dir) + ';', ';' + Uppercase(Path) + ';') = 0;
+end;
+
+procedure RemoveFromPath(Dir: String);
+var
+  Path: String;
+begin
+  if RegQueryStringValue(HKCU, 'Environment', 'Path', Path) then
+  begin
+    StringChangeEx(Path, ';' + Dir, '', True);
+    StringChangeEx(Path, Dir + ';', '', True);
+    if CompareText(Path, Dir) = 0 then
+      Path := '';
+    RegWriteExpandStringValue(HKCU, 'Environment', 'Path', Path);
+  end;
+end;
+
+{ Avvio con Windows tolto se, reinstallando, non è più spuntato }
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if (CurStep = ssPostInstall) and not WizardIsTaskSelected('autostart') then
+    RegDeleteValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run', 'GlucoBar');
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
@@ -314,4 +366,6 @@ begin
       DelTree(ExpandConstant('{userappdata}\GlucoBar'), True, True, True);
       DeleteFile(ExpandConstant('{%USERPROFILE}\.glicemia_widget.json'));
     end;
+  if CurUninstallStep = usPostUninstall then
+    RemoveFromPath(ExpandConstant('{app}\bin'));
 end;

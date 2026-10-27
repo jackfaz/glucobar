@@ -4,6 +4,27 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-10-27
+
+### Added
+- **`glucobar` command** in any terminal (the installer adds it to your PATH):
+  - `glucobar setup`: interactive setup with arrow keys and checkboxes: language, what to
+    show, unit, target range, monitor, LibreLinkUp account with a live connection test,
+    start with Windows. Nothing is saved until the end; Esc cancels.
+  - `glucobar status`: the current reading in the terminal.
+  - `glucobar set key=value …` / `glucobar get`: change or show settings, for scripts too.
+  - `glucobar login`, `glucobar start`, `glucobar forget`.
+- A running GlucoBar picks up settings changed from the terminal within two seconds, without
+  restarting.
+- Silent install with choices, e.g. `/VERYSILENT /ELEMENTS=desktop,tray /LANG=it`.
+- winget manifest generated for each release.
+
+### Changed
+- "Start with Windows" now uses the registry `Run` entry instead of a Startup-folder
+  shortcut, so it can also be switched with `glucobar set autostart=true|false`.
+- The build now also tests the `glucobar` command, PATH and autostart after a silent install,
+  and checks that uninstalling removes them.
+
 ## [0.4.0] - 2026-10-27
 
 ### Added
@@ -72,6 +93,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.5.0]: https://github.com/jackfaz/glucobar/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/jackfaz/glucobar/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jackfaz/glucobar/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jackfaz/glucobar/compare/v0.1.0...v0.2.0

@@ -78,6 +78,28 @@ click *More info → Run anyway*.
 - Desktop panel: drag to move, drag the bottom-right corner to resize, right-click for the
   chart period and to lock it in place.
 
+## Terminal
+
+The installer adds the `glucobar` command to every new terminal:
+
+```text
+glucobar setup                 interactive setup: ↑/↓ to choose, Space to tick, Enter to confirm
+glucobar status                current reading, e.g. "133 ↘ mg/dL · 2 min ago"
+glucobar set unit=mmol/L low=80
+glucobar set elements=desktop,tray autostart=true
+glucobar get                   all settings
+glucobar login                 change LibreLinkUp account
+glucobar start | forget        start GlucoBar | delete password and settings
+```
+
+If GlucoBar is running, it applies the new settings within two seconds.
+
+Silent install with your choices (handy for scripts and winget):
+
+```text
+GlucoBar-Setup-0.5.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /LANG=en
+```
+
 ## Settings
 
 `%APPDATA%\GlucoBar\config.json`:
@@ -122,11 +144,11 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.4.0 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.5.0 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): push a tag like
-`v0.4.0` and the installer is attached to a new release. The mode previews are made with
+`v0.5.0` and the installer is attached to a new release. The mode previews are made with
 `tools/compose_previews.py`.
 
 ## Credits and trademarks

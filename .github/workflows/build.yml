@@ -53,6 +53,10 @@ jobs:
           $p = Start-Process dist\GlucoBar\GlucoBar.exe -ArgumentList "--self-test" -Wait -PassThru
           Get-Content "$env:APPDATA\GlucoBar\glucobar.log" -ErrorAction SilentlyContinue
           if ($p.ExitCode -ne 0) { exit 1 }
+          # il comando da terminale (ha la console: PowerShell lo aspetta da solo)
+          $v = dist\GlucoBar\glucobar-cli.exe --version
+          "glucobar-cli: $v"
+          if ($LASTEXITCODE -ne 0 -or $v -notmatch "GlucoBar") { exit 1 }
 
       - name: Installer previews
         run: python tools/previews_to_bmp.py
@@ -74,36 +78,60 @@ jobs:
       - name: Installer test (install, check, uninstall)
         shell: pwsh
         run: |
+          function Check($ok, $msg) { if (-not $ok) { throw $msg } else { "ok: $msg" } }
           $setup = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
           $log = Join-Path $env:RUNNER_TEMP "setup.log"
+          # installazione silenziosa con scelte, come farà winget
           $p = Start-Process $setup.FullName -Wait -PassThru -ArgumentList `
-               "/VERYSILENT", "/SUPPRESSMSGBOXES", "/CURRENTUSER", "/NORESTART", "/LOG=$log"
-          Get-Content $log -Tail 25
-          if ($p.ExitCode -ne 0) { throw "installazione fallita (codice $($p.ExitCode))" }
+               "/VERYSILENT", "/SUPPRESSMSGBOXES", "/CURRENTUSER", "/NORESTART", `
+               "/ELEMENTS=desktop,tray", "/LANG=de", "/LOG=$log"
+          Get-Content $log -Tail 15
+          Check ($p.ExitCode -eq 0) "installazione (codice $($p.ExitCode))"
           $dir = Join-Path $env:LOCALAPPDATA "Programs\GlucoBar"
-          if (-not (Test-Path "$dir\GlucoBar.exe")) { throw "GlucoBar.exe non installato" }
+          Check (Test-Path "$dir\GlucoBar.exe") "GlucoBar.exe installato"
           $cfg = Get-Content "$env:APPDATA\GlucoBar\config.json" -Raw | ConvertFrom-Json
-          "elementi salvati: $($cfg.elements -join ',')   lingua: $($cfg.language)"
-          if (($cfg.elements -join ',') -ne 'taskbar,tray') { throw "scelte non salvate" }
+          Check (($cfg.elements -join ',') -eq 'tray,desktop') "/ELEMENTS salvato ($($cfg.elements -join ','))"
+          Check ($cfg.language -eq 'de') "/LANG salvato ($($cfg.language))"
+
+          # il comando "glucobar"
+          $gb = "$dir\bin\glucobar.cmd"
+          & $gb set unit=mmol/L low=80
+          Check ($LASTEXITCODE -eq 0) "glucobar set"
+          $out = & $gb get unit low | Out-String
+          Check ($out -match "unit = mmol/L" -and $out -match "low = 80") "glucobar get"
+          & $gb set low=999 2>$null
+          Check ($LASTEXITCODE -eq 2) "glucobar set rifiuta valori sbagliati"
+          & $gb status | Out-Null
+          Check ($LASTEXITCODE -eq 1) "glucobar status senza account"
+          $path = (Get-ItemProperty HKCU:\Environment).Path
+          Check ($path -like "*$dir\bin*") "bin nel PATH dell'utente"
+          $run = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+          Check ((Get-ItemProperty $run).GlucoBar -like "*GlucoBar.exe*") "avvio con Windows attivo"
+          & $gb set autostart=false | Out-Null
+          Check ($null -eq (Get-ItemProperty $run).GlucoBar) "glucobar set autostart=false"
+          & $gb set autostart=true | Out-Null
+          Check ($null -ne (Get-ItemProperty $run).GlucoBar) "glucobar set autostart=true"
 
           # "Cancella tutto" deve cancellare davvero la password (0.3.0: tornava
           # dal file in chiaro della prima versione)
           cmdkey /generic:GlucoBar:LibreLinkUp /user:test@example.com /pass:segreta | Out-Null
           '{"email": "test@example.com", "password": "in-chiaro"}' |
               Set-Content "$env:USERPROFILE\.glicemia_widget.json"
-          $f = Start-Process "$dir\GlucoBar.exe" -ArgumentList "--forget" -Wait -PassThru
-          if ($f.ExitCode -ne 0) { throw "--forget fallito (codice $($f.ExitCode))" }
+          & $gb forget | Out-Null
           $left = cmdkey /list:GlucoBar:LibreLinkUp | Out-String
-          if ($left -match "test@example.com") { throw "password ancora nel Gestione credenziali" }
-          if (Test-Path "$env:APPDATA\GlucoBar") { throw "impostazioni non cancellate" }
-          if (Test-Path "$env:USERPROFILE\.glicemia_widget.json") { throw "file della prima versione non cancellato" }
-          "--forget ok: password, impostazioni e vecchio file cancellati"
+          Check ($left -notmatch "test@example.com") "password tolta dal Gestione credenziali"
+          Check (-not (Test-Path "$env:APPDATA\GlucoBar")) "impostazioni cancellate"
+          Check (-not (Test-Path "$env:USERPROFILE\.glicemia_widget.json")) "file della prima versione cancellato"
+
+          # disinstallazione: niente resti in PATH e avvio automatico
           $u = Start-Process "$dir\unins000.exe" -Wait -PassThru -ArgumentList `
                "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"
-          if ($u.ExitCode -ne 0) { throw "disinstallazione fallita (codice $($u.ExitCode))" }
+          Check ($u.ExitCode -eq 0) "disinstallazione (codice $($u.ExitCode))"
           Start-Sleep -Seconds 3
-          if (Test-Path "$dir\GlucoBar.exe") { throw "GlucoBar.exe ancora presente dopo la disinstallazione" }
-          "installazione e disinstallazione ok"
+          Check (-not (Test-Path "$dir\GlucoBar.exe")) "file rimossi"
+          $path = (Get-ItemProperty HKCU:\Environment).Path
+          Check ($path -notlike "*$dir\bin*") "bin tolto dal PATH"
+          Check ($null -eq (Get-ItemProperty $run).GlucoBar) "avvio con Windows tolto"
 
       - uses: actions/upload-artifact@v7
         with:
@@ -120,3 +148,16 @@ jobs:
         with:
           files: dist-installer/*.exe
           body_path: release-notes.md
+
+      - name: winget manifest
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
+          python tools/winget_manifest.py ${{ steps.version.outputs.version }} $setup.FullName winget
+
+      - uses: actions/upload-artifact@v7
+        if: github.ref_type == 'tag'
+        with:
+          name: winget-manifest-${{ steps.version.outputs.version }}
+          path: winget/

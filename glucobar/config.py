@@ -90,6 +90,19 @@ def normalize_elements(elements):
     return chosen or ["taskbar"]
 
 
+def peek_config():
+    """Impostazioni salvate così come sono, senza importazioni né pulizie
+    (per accorgersi delle modifiche fatte da `glucobar set` o `glucobar setup`)."""
+    cfg = dict(DEFAULT_CONFIG)
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            cfg.update(json.load(f))
+    except (OSError, ValueError):
+        return None
+    cfg["elements"] = normalize_elements(cfg["elements"])
+    return cfg
+
+
 def load_config():
     cfg = dict(DEFAULT_CONFIG)
     if os.path.exists(CONFIG_PATH):

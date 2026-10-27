@@ -14,10 +14,18 @@ import tkinter as tk
 import traceback
 
 from . import i18n
-from .config import ELEMENTS, log, normalize_elements, save_config
+from .config import ELEMENTS, log, normalize_elements, peek_config, save_config
 from .i18n import LANGUAGES, t
 from .librelinkup import LibreLinkUp, fetch_safely
 from .ui_common import apply_icon, ask_credentials
+
+
+# Impostazioni che si possono cambiare da terminale mentre GlucoBar è aperto
+LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_minutes",
+             "refresh_seconds", "email", "taskbar_monitor", "taskbar_side", "taskbar_offset",
+             "taskbar_bg", "taskbar_transparent", "desktop_hours", "desktop_alpha",
+             "desktop_locked")
+REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "desktop_alpha", "desktop_locked"}
 
 
 def _view_class(element):
@@ -56,6 +64,7 @@ class Controller:
         self.set_elements(elements)
         self.root.after(100, self._drain_calls)
         self._tick()
+        self.root.after(2000, self._watch_config)
 
     # ---- da altri thread al thread di Tk ----
     def post(self, fn, *args):
@@ -183,6 +192,39 @@ class Controller:
             lang_var.set(i18n.current_language())
         menu.configure(postcommand=sync)
         menu._vars = (show_vars, lang_var)   # tenute vive insieme al menu
+
+    # ---- modifiche da terminale (glucobar set / setup) ----
+    def _watch_config(self):
+        if not self.root:
+            return
+        try:
+            saved = peek_config()
+            changed = [k for k in LIVE_KEYS if saved and saved.get(k) != self.cfg.get(k)]
+            if changed:
+                self.apply_external(saved, changed)
+        except Exception:
+            log("rilettura impostazioni:\n" + traceback.format_exc())
+        self.root.after(2000, self._watch_config)
+
+    def apply_external(self, saved, changed):
+        log(f"impostazioni cambiate da fuori: {', '.join(changed)}")
+        for key in changed:
+            self.cfg[key] = saved[key]
+        if "language" in changed:
+            i18n.set_language(self.cfg["language"])
+        if "email" in changed:
+            self.client = LibreLinkUp(self.cfg)
+            self.current, self.history, self.error = None, [], None
+            self.refresh()
+        if "language" in changed or REBUILD_KEYS & set(changed):
+            self.rebuild_views()
+        elif "elements" in changed:
+            self.set_elements(self.cfg["elements"])
+        else:
+            for view in self.views.values():
+                if hasattr(view, "reposition"):
+                    view.reposition()
+            self.render()
 
     # ---- dati ----
     def refresh(self):

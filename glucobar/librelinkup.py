@@ -24,9 +24,11 @@ class LibreError(Exception):
 
 
 class LibreLinkUp:
-    def __init__(self, cfg, save=save_config):
+    def __init__(self, cfg, save=save_config, password=None):
+        """`password`: per provare credenziali non ancora salvate (glucobar setup)."""
         self.cfg = cfg
         self.save = save
+        self.password = password
         self.token = None
         self.account_id = None
         self.patient_id = None
@@ -78,7 +80,7 @@ class LibreLinkUp:
 
     def login(self):
         self.token = None
-        password = credentials.get_password(self.cfg["email"])
+        password = self.password or credentials.get_password(self.cfg["email"])
         if not password:
             raise LibreError(t("err_no_password"))
         for _ in range(4):

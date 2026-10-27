@@ -79,6 +79,28 @@ digitalmente: clicca *Ulteriori informazioni → Esegui comunque*.
 - Pannello sullo sfondo: trascinalo per spostarlo, trascina l'angolo in basso a destra per
   ridimensionarlo, clic destro per il periodo del grafico e per bloccarlo.
 
+## Terminale
+
+L'installer aggiunge il comando `glucobar` a ogni nuovo terminale:
+
+```text
+glucobar setup                 configurazione guidata: ↑/↓ per scegliere, Spazio per spuntare, Invio
+glucobar status                glicemia attuale, es. "133 ↘ mg/dL · 2 min fa"
+glucobar set unit=mmol/L low=80
+glucobar set elements=desktop,tray autostart=true
+glucobar get                   tutte le impostazioni
+glucobar login                 cambia account LibreLinkUp
+glucobar start | forget        avvia GlucoBar | cancella password e impostazioni
+```
+
+Se GlucoBar è aperto, applica le nuove impostazioni entro due secondi.
+
+Installazione silenziosa con le tue scelte (comoda per script e winget):
+
+```text
+GlucoBar-Setup-0.5.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /LANG=it
+```
+
 ## Impostazioni
 
 `%APPDATA%\GlucoBar\config.json`:
@@ -126,10 +148,10 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: avvio senza compilare
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.4.0 installer\glucobar.iss    :: serve Inno Setup 6
+iscc /DAppVersion=0.5.0 installer\glucobar.iss    :: serve Inno Setup 6
 ```
 
-Le release le crea GitHub Actions (`.github/workflows/build.yml`): pubblica un tag tipo `v0.4.0`
+Le release le crea GitHub Actions (`.github/workflows/build.yml`): pubblica un tag tipo `v0.5.0`
 e l'installer viene allegato a una nuova release. Le anteprime delle modalità si creano con
 `tools/compose_previews.py`.
 

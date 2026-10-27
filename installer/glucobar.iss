@@ -11,6 +11,8 @@
 #ifndef RepoUrl
   #define RepoUrl "https://github.com/"
 #endif
+; posizioni dei ritagli dell'anteprima (generato da tools\previews_to_bmp.py)
+#include "build\preview_layout.iss"
 
 [Setup]
 AppId={{08BF5F70-5160-4B58-BCA3-99FF0D35CACC}
@@ -71,6 +73,7 @@ it.GroupStartup=Avvio:
 it.LaunchNow=Avvia GlucoBar adesso
 it.RemoveSettings=Vuoi eliminare anche le impostazioni e la password LibreLinkUp salvata su questo PC?
 it.NeedOne=Scegli almeno un elemento da mostrare.
+it.PreviewHint=Spunta cosa vuoi vedere: l'anteprima mostra la tua combinazione.
 en.ModeTitle=Choose what to show
 en.ModeSubtitle=You can pick more than one and change them any time by right-clicking GlucoBar.
 en.Name_taskbar=On the taskbar
@@ -86,6 +89,7 @@ en.GroupStartup=Startup:
 en.LaunchNow=Start GlucoBar now
 en.RemoveSettings=Do you also want to delete the settings and the LibreLinkUp password saved on this PC?
 en.NeedOne=Please choose at least one thing to show.
+en.PreviewHint=Tick what you want to see: the preview shows your combination.
 es.ModeTitle=Elige qué mostrar
 es.ModeSubtitle=Puedes elegir más de uno y cambiarlos cuando quieras con clic derecho en GlucoBar.
 es.Name_taskbar=En la barra de tareas
@@ -101,6 +105,7 @@ es.GroupStartup=Inicio:
 es.LaunchNow=Iniciar GlucoBar ahora
 es.RemoveSettings=¿Quieres borrar también los ajustes y la contraseña de LibreLinkUp guardada en este PC?
 es.NeedOne=Elige al menos un elemento para mostrar.
+es.PreviewHint=Marca lo que quieres ver: la vista previa muestra tu combinación.
 fr.ModeTitle=Choisissez quoi afficher
 fr.ModeSubtitle=Vous pouvez en choisir plusieurs et les changer à tout moment par clic droit sur GlucoBar.
 fr.Name_taskbar=Sur la barre des tâches
@@ -116,6 +121,7 @@ fr.GroupStartup=Démarrage :
 fr.LaunchNow=Lancer GlucoBar maintenant
 fr.RemoveSettings=Voulez-vous aussi supprimer les réglages et le mot de passe LibreLinkUp enregistré sur ce PC ?
 fr.NeedOne=Choisissez au moins un élément à afficher.
+fr.PreviewHint=Cochez ce que vous voulez voir : l'aperçu montre votre combinaison.
 de.ModeTitle=Wähle, was angezeigt wird
 de.ModeSubtitle=Du kannst mehrere wählen und sie jederzeit per Rechtsklick auf GlucoBar ändern.
 de.Name_taskbar=Auf der Taskleiste
@@ -131,6 +137,7 @@ de.GroupStartup=Start:
 de.LaunchNow=GlucoBar jetzt starten
 de.RemoveSettings=Sollen auch die Einstellungen und das auf diesem PC gespeicherte LibreLinkUp-Passwort gelöscht werden?
 de.NeedOne=Bitte wähle mindestens ein Element aus.
+de.PreviewHint=Kreuze an, was du sehen möchtest: die Vorschau zeigt deine Auswahl.
 pt.ModeTitle=Escolha o que mostrar
 pt.ModeSubtitle=Pode escolher mais de um e mudá-los quando quiser com clique direito no GlucoBar.
 pt.Name_taskbar=Na barra de tarefas
@@ -146,6 +153,7 @@ pt.GroupStartup=Arranque:
 pt.LaunchNow=Iniciar o GlucoBar agora
 pt.RemoveSettings=Quer apagar também as definições e a palavra-passe LibreLinkUp guardada neste PC?
 pt.NeedOne=Escolha pelo menos um elemento para mostrar.
+pt.PreviewHint=Marque o que quer ver: a pré-visualização mostra a sua combinação.
 
 [Tasks]
 Name: "autostart"; Description: "{cm:TaskAutostart}"; GroupDescription: "{cm:GroupStartup}"
@@ -186,8 +194,10 @@ Filename: "{app}\GlucoBar.exe"; Description: "{cm:LaunchNow}"; Flags: nowait pos
 var
   ModePage: TWizardPage;
   ModeBoxes: array of TNewCheckBox;
-  ModePreview: TBitmapImage;
+  ModePreview: TBitmapImage;          // il desktop vuoto
+  ModeLayers: array of TBitmapImage;  // un ritaglio per elemento, sopra la base
   ModeDescription: TNewStaticText;
+  LastClicked: Integer;
 
 { Stesso ordine di ELEMENTS in glucobar/config.py }
 function ModeId(I: Integer): String;
@@ -201,35 +211,69 @@ begin
   end;
 end;
 
-{ Anteprima nella lingua dell'installazione, es. it_taskbar.bmp }
-function PreviewFile(I: Integer): String;
+{ Immagini nella lingua dell'installazione, es. it_base.bmp, it_taskbar.bmp }
+function PreviewFile(Name: String): String;
 begin
-  Result := ActiveLanguage + '_' + ModeId(I) + '.bmp';
+  Result := ActiveLanguage + '_' + Name + '.bmp';
 end;
 
-procedure ShowPreview(I: Integer);
+// Dove va il ritaglio sulla base, in pixel dell'immagine (vedi preview_layout.iss)
+procedure LayerRect(I: Integer; var X, Y, W, H: Integer);
+begin
+  case I of
+    0: begin X := {#Layer_taskbar_x}; Y := {#Layer_taskbar_y}; W := {#Layer_taskbar_w}; H := {#Layer_taskbar_h}; end;
+    1: begin X := {#Layer_tray_x}; Y := {#Layer_tray_y}; W := {#Layer_tray_w}; H := {#Layer_tray_h}; end;
+    2: begin X := {#Layer_window_x}; Y := {#Layer_window_y}; W := {#Layer_window_w}; H := {#Layer_window_h}; end;
+  else
+    begin X := {#Layer_desktop_x}; Y := {#Layer_desktop_y}; W := {#Layer_desktop_w}; H := {#Layer_desktop_h}; end;
+  end;
+end;
+
+{ L'anteprima mostra insieme tutti e soli gli elementi spuntati; la descrizione
+  è quella dell'ultimo spuntato, o un suggerimento se non ce n'è nessuno }
+procedure UpdatePreview;
+var
+  I, Shown: Integer;
 begin
   if (ModePreview = nil) or (ModeDescription = nil) then
     Exit;
-  ModePreview.Bitmap.LoadFromFile(ExpandConstant('{tmp}\') + PreviewFile(I));
-  ModeDescription.Caption := CustomMessage('Desc_' + ModeId(I));
+  Shown := -1;
+  for I := 0 to 3 do
+  begin
+    ModeLayers[I].Visible := ModeBoxes[I].Checked;
+    if ModeBoxes[I].Checked and (Shown < 0) then
+      Shown := I;
+  end;
+  if (LastClicked >= 0) and ModeBoxes[LastClicked].Checked then
+    Shown := LastClicked;
+  if Shown >= 0 then
+    ModeDescription.Caption := CustomMessage('Desc_' + ModeId(Shown))
+  else
+    ModeDescription.Caption := CustomMessage('PreviewHint');
 end;
 
-{ Anteprima e descrizione dell'ultima casella cliccata }
 procedure ModeClick(Sender: TObject);
 var
   I: Integer;
 begin
   for I := 0 to 3 do
     if Sender = ModeBoxes[I] then
-      ShowPreview(I);
+      LastClicked := I;
+  UpdatePreview;
+end;
+
+{ Coordinata dell'immagine (0..Size) -> pixel sullo schermo (0..Shown) }
+function ScaleTo(Value, Size, Shown: Integer): Integer;
+begin
+  Result := Value * Shown div Size;
 end;
 
 procedure InitializeWizard;
 var
-  I, ListWidth, Gap: Integer;
+  I, ListWidth, Gap, X, Y, W, H: Integer;
   Elements: String;
 begin
+  LastClicked := -1;
   ModePage := CreateCustomPage(wpInfoBefore, CustomMessage('ModeTitle'),
                                CustomMessage('ModeSubtitle'));
   ListWidth := ScaleX(170);
@@ -238,7 +282,6 @@ begin
   SetArrayLength(ModeBoxes, 4);
   for I := 0 to 3 do
   begin
-    ExtractTemporaryFile(PreviewFile(I));
     ModeBoxes[I] := TNewCheckBox.Create(ModePage);
     ModeBoxes[I].Parent := ModePage.Surface;
     ModeBoxes[I].Caption := CustomMessage('Name_' + ModeId(I));
@@ -247,18 +290,41 @@ begin
     ModeBoxes[I].Width := ListWidth;
     ModeBoxes[I].OnClick := @ModeClick;
   end;
+
+  ExtractTemporaryFile(PreviewFile('base'));
   ModePreview := TBitmapImage.Create(ModePage);
   ModePreview.Parent := ModePage.Surface;
   ModePreview.Left := ListWidth + Gap;
   ModePreview.Top := 0;
   ModePreview.Width := ModePage.SurfaceWidth - ListWidth - Gap;
-  ModePreview.Height := ModePreview.Width * 200 div 320;
+  ModePreview.Height := ModePreview.Width * {#PreviewH} div {#PreviewW};
   if ModePreview.Height > ModePage.SurfaceHeight then
   begin
     ModePreview.Height := ModePage.SurfaceHeight;
-    ModePreview.Width := ModePreview.Height * 320 div 200;
+    ModePreview.Width := ModePreview.Height * {#PreviewW} div {#PreviewH};
   end;
   ModePreview.Stretch := True;
+  ModePreview.Bitmap.LoadFromFile(ExpandConstant('{tmp}\') + PreviewFile('base'));
+
+  { i ritagli, creati dopo la base così le stanno sopra; nascosti finché non si spunta }
+  SetArrayLength(ModeLayers, 4);
+  for I := 0 to 3 do
+  begin
+    ExtractTemporaryFile(PreviewFile(ModeId(I)));
+    LayerRect(I, X, Y, W, H);
+    ModeLayers[I] := TBitmapImage.Create(ModePage);
+    ModeLayers[I].Parent := ModePage.Surface;
+    ModeLayers[I].Left := ModePreview.Left + ScaleTo(X, {#PreviewW}, ModePreview.Width);
+    ModeLayers[I].Top := ModePreview.Top + ScaleTo(Y, {#PreviewH}, ModePreview.Height);
+    { bordo destro/basso calcolati a parte: niente fessure di un pixel }
+    ModeLayers[I].Width := ScaleTo(X + W, {#PreviewW}, ModePreview.Width)
+                           - ScaleTo(X, {#PreviewW}, ModePreview.Width);
+    ModeLayers[I].Height := ScaleTo(Y + H, {#PreviewH}, ModePreview.Height)
+                            - ScaleTo(Y, {#PreviewH}, ModePreview.Height);
+    ModeLayers[I].Stretch := True;
+    ModeLayers[I].Bitmap.LoadFromFile(ExpandConstant('{tmp}\') + PreviewFile(ModeId(I)));
+    ModeLayers[I].Visible := False;
+  end;
 
   ModeDescription := TNewStaticText.Create(ModePage);
   ModeDescription.Parent := ModePage.Surface;
@@ -269,17 +335,13 @@ begin
   ModeDescription.Width := ListWidth;
   ModeDescription.Height := ModePage.SurfaceHeight - ModeDescription.Top;
 
-  { Predefiniti: valore sulla barra + icona vicino all'orologio.
-    Solo ora: spuntare una casella fa scattare ModeClick, che usa
-    ModePreview e ModeDescription (crearli dopo dava "Could not call proc") }
-  ModeBoxes[0].Checked := True;
-  ModeBoxes[1].Checked := True;
-  { Da riga di comando (anche winget): /ELEMENTS=desktop,tray }
+  { Nessuna casella spuntata all'inizio: si sceglie guardando l'anteprima.
+    Da riga di comando (anche winget): /ELEMENTS=desktop,tray }
   Elements := Lowercase(ExpandConstant('{param:ELEMENTS|}'));
   if Elements <> '' then
     for I := 0 to 3 do
       ModeBoxes[I].Checked := Pos(',' + ModeId(I) + ',', ',' + Elements + ',') > 0;
-  ShowPreview(0);
+  UpdatePreview;
 end;
 
 { Almeno un elemento da mostrare }

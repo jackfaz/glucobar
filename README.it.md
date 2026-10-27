@@ -10,46 +10,53 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/jackfaz/glucobar/releases/latest"><b>⬇️ Scarica per Windows</b></a> ·
+  <a href="https://github.com/jackfaz/glucobar/releases/latest"><b>Scarica per Windows</b></a> ·
   <a href="#installazione">Installazione</a> ·
   <a href="#uso">Uso</a> ·
+  <a href="#sensori">Sensori</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
-  <a href="README.md">🇬🇧 English</a>
+  <a href="README.md">English</a>
 </p>
 
-GlucoBar legge l'ultimo valore del sensore da **LibreLinkUp** (il servizio di condivisione di
-Abbott) e lo mostra sul PC, colorato, con la freccia di tendenza e da quanti minuti è stato
-misurato.
+GlucoBar mostra la glicemia del tuo FreeStyle Libre sul PC con Windows, così mentre lavori
+puoi tenerla d'occhio senza prendere il telefono. Legge l'ultimo valore da LibreLinkUp, il
+servizio di condivisione di Abbott, e lo mostra con la freccia di tendenza e da quanti minuti
+è stato misurato.
 
-- 🩸 **Sempre sotto gli occhi**: sulla barra accanto all'orologio, in una finestrella, in un
-  pannello sul desktop o come icona col numero. Scegli qualsiasi combinazione.
-- 📈 **I dettagli quando li vuoi**: grafico fino a 12 ore, media, minimo, massimo, tempo nel
-  range, variazione in 15 minuti, giorno del sensore.
-- 🖥️ **Secondo monitor** e **schermo intero**: si nasconde durante video e giochi.
-- 🔒 **Privato**: password cifrata nel Gestione credenziali di Windows, dati inviati solo ad Abbott.
-- 🌍 **6 lingue**: italiano, inglese, spagnolo, francese, tedesco, portoghese.
-- 🆓 **Gratuito e open source** (MIT), senza permessi di amministratore.
+Puoi vederla in quattro posti, uno o più insieme: sulla barra delle applicazioni accanto
+all'orologio, come icona nell'area di notifica, in una finestrella sempre in primo piano o in
+un pannello più grande sul desktop, con il grafico delle ultime 12 ore e qualche statistica.
+Funziona anche sul secondo monitor e si nasconde quando un video o un gioco è a schermo intero.
 
-Scegli cosa mostrare, **anche più cose insieme**, durante l'installazione, e cambialo quando vuoi
-col clic destro su qualsiasi elemento di GlucoBar (menu *Mostra*): lì trovi anche unità, lingua,
-account ed esci.
+La password resta cifrata nel Gestione credenziali di Windows e viene inviata solo ai server
+di Abbott. GlucoBar è gratuito, open source (MIT) e disponibile in italiano, inglese,
+spagnolo, francese, tedesco e portoghese.
 
-| Sulla barra (consigliata) | Finestrella |
+| Sulla barra | Finestrella |
 |---|---|
 | ![Barra](docs/preview_taskbar.png) | ![Finestrella](docs/preview_window.png) |
-| Valore, freccia e minuti accanto all'orologio. Funziona anche sul secondo monitor; si nasconde con i video a schermo intero. | Piccola finestra sempre in primo piano con il grafico delle ultime 3 ore. La trascini dove vuoi. |
+| Valore, freccia e minuti accanto all'orologio. | Sempre in primo piano, con il grafico delle ultime 3 ore. La sposti dove vuoi. |
 | **Pannello sullo sfondo** | **Icona vicino all'orologio** |
 | ![Pannello sullo sfondo](docs/preview_desktop.png) | ![Icona vicino all'orologio](docs/preview_tray.png) |
-| Pannello sul desktop, dietro le finestre: grafico grande (3, 6 o 12 ore), media, minimo, massimo, tempo nel range, variazione in 15 minuti e giorno del sensore. Lo sposti e lo ridimensioni dall'angolo in basso a destra. | Il numero colorato in un'icona vicino all'orologio; passandoci sopra vedi freccia e minuti. Facoltativa: togli la spunta se non la vuoi. |
+| Dietro le finestre: grafico delle ultime 3, 6 o 12 ore, media, minimo, massimo, tempo nel range, variazione in 15 minuti e giorno del sensore. Ridimensionabile. | Il numero colorato nell'area di notifica. Passandoci sopra vedi freccia e minuti. |
 
-Verde = nel range (70–180 mg/dL) · Arancione = sopra 180 · Rosso = sotto 70 o sopra 250 ·
-Grigio = dato di più di 15 minuti fa.
+Colori: verde nel range (70–180 mg/dL), arancione sopra 180, rosso sotto 70 o sopra 250,
+grigio se il dato è di più di 15 minuti fa. Le soglie si possono cambiare.
 
-Lingue: italiano, inglese, spagnolo, francese, tedesco, portoghese.
+> **GlucoBar non è un dispositivo medico.** Non usarlo per decidere dosi di insulina o per
+> trattare un'ipo: fa fede il lettore o l'app ufficiale. Usa un'API non ufficiale che Abbott
+> può cambiare in qualsiasi momento.
 
-> ⚠️ **GlucoBar non è un dispositivo medico.** Non usarlo per decidere dosi di insulina o per
-> trattare un'ipo: fa fede il lettore o l'app ufficiale. Usa un'**API non ufficiale** che
-> Abbott può cambiare in qualsiasi momento.
+## Sensori
+
+| Sensore | Letto tramite | Stato |
+|---|---|---|
+| FreeStyle Libre (Libre 2, Libre 3 e versioni Plus) | LibreLinkUp | Supportato |
+| Dexcom G6, G7, ONE+ | Dexcom Share | In lavorazione |
+| Qualsiasi sensore che invia i dati a Nightscout (Medtronic, Eversense, xDrip+, Juggluco, AndroidAPS, …) | Nightscout | Previsto |
+| Medtronic Guardian / Simplera | CareLink | In valutazione |
+
+Vorresti un altro sensore? [Apri una issue](../../issues) e dicci quale.
 
 ## Installazione
 

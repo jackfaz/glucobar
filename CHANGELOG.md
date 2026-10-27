@@ -20,6 +20,9 @@ uses [Semantic Versioning](https://semver.org/).
 - winget manifest generated for each release.
 
 ### Changed
+- Installer: nothing is ticked at first, and the preview shows exactly the ticked elements
+  together (base desktop plus one layer per element), in the installer's language.
+- README: plainer wording, and a list of supported and planned sensors (Dexcom in progress).
 - "Start with Windows" now uses the registry `Run` entry instead of a Startup-folder
   shortcut, so it can also be switched with `glucobar set autostart=true|false`.
 - The build now also tests the `glucobar` command, PATH and autostart after a silent install,

@@ -10,45 +10,52 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/jackfaz/glucobar/releases/latest"><b>⬇️ Download for Windows</b></a> ·
+  <a href="https://github.com/jackfaz/glucobar/releases/latest"><b>Download for Windows</b></a> ·
   <a href="#install">Install</a> ·
   <a href="#use">Use</a> ·
+  <a href="#sensors">Sensors</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
-  <a href="README.it.md">🇮🇹 Italiano</a>
+  <a href="README.it.md">Italiano</a>
 </p>
 
-GlucoBar reads your latest sensor value from **LibreLinkUp** (Abbott's sharing service)
-and shows it on your PC, colour-coded, with the trend arrow and how many minutes ago it
-was measured.
+GlucoBar shows your FreeStyle Libre reading on your Windows PC, so you can keep an eye on it
+while you work without reaching for your phone. It reads the latest value from LibreLinkUp,
+Abbott's sharing service, and shows it with the trend arrow and how long ago it was measured.
 
-- 🩸 **Always in sight** — on the taskbar next to the clock, in a small window, in a panel on
-  your desktop or as a number icon. Pick any combination.
-- 📈 **Details when you want them** — chart up to 12 hours, average, min, max, time in range,
-  15-minute change, sensor day.
-- 🖥️ **Second monitor** and **full-screen aware** — hides during videos and games.
-- 🔒 **Private** — password encrypted in Windows Credential Manager, data sent only to Abbott.
-- 🌍 **6 languages** — English, Italiano, Español, Français, Deutsch, Português.
-- 🆓 **Free and open source** (MIT), no administrator rights needed.
+You can show it in four places, alone or together: on the taskbar next to the clock, as an
+icon in the notification area, in a small window that stays on top, or in a larger panel on
+the desktop with a 12-hour chart and a few statistics. It works on a second monitor too, and
+hides while a video or a game is full screen.
 
-Choose what to show — **any combination** — during installation, and change it any time by
-right-clicking any GlucoBar element (*Show* menu): unit, language, account and quit are there too.
+Your password stays encrypted in Windows Credential Manager and is only sent to Abbott's
+servers. GlucoBar is free, open source (MIT), and available in English, Italian, Spanish,
+French, German and Portuguese.
 
-| On the taskbar (recommended) | Small window |
+| On the taskbar | Small window |
 |---|---|
 | ![Taskbar](docs/preview_taskbar.png) | ![Window](docs/preview_window.png) |
-| Value, arrow and minutes next to the clock. Works on a second monitor too; hides during full-screen videos. | Small always-on-top window with a 3-hour chart. Drag it anywhere. |
+| Value, arrow and minutes next to the clock. | Always on top, with a 3-hour chart. Drag it anywhere. |
 | **Desktop panel** | **Icon next to the clock** |
 | ![Desktop panel](docs/preview_desktop.png) | ![Icon next to the clock](docs/preview_tray.png) |
-| Panel on the desktop, behind your windows: large chart (3, 6 or 12 hours), average, min, max, time in range, 15-minute change and sensor day. Move it and resize it from the bottom-right corner. | The coloured number in an icon next to the clock; hover it for arrow and minutes. Optional: untick it if you don't want it. |
+| Behind your windows: chart of the last 3, 6 or 12 hours, average, min, max, time in range, 15-minute change and sensor day. Resizable. | The coloured number in the notification area. Hover it for the arrow and the minutes. |
 
-Green = in range (70–180 mg/dL) · Orange = above 180 · Red = below 70 or above 250 ·
-Grey = reading older than 15 minutes.
+Colours: green in range (70–180 mg/dL), orange above 180, red below 70 or above 250, grey when
+the reading is more than 15 minutes old. Thresholds can be changed.
 
-Languages: English, Italiano, Español, Français, Deutsch, Português.
+> **GlucoBar is not a medical device.** Do not use it to decide insulin doses or to treat a
+> hypo: always rely on your reader or the official app. It uses an unofficial API that Abbott
+> can change at any time.
 
-> ⚠️ **GlucoBar is not a medical device.** Do not use it to decide insulin doses or to treat
-> a hypo — always rely on your reader or the official app. It uses an **unofficial API** that
-> Abbott can change at any time.
+## Sensors
+
+| Sensor | Read through | Status |
+|---|---|---|
+| FreeStyle Libre (Libre 2, Libre 3 and their Plus versions) | LibreLinkUp | Supported |
+| Dexcom G6, G7, ONE+ | Dexcom Share | Work in progress |
+| Any sensor uploading to Nightscout (Medtronic, Eversense, xDrip+, Juggluco, AndroidAPS, …) | Nightscout | Planned |
+| Medtronic Guardian / Simplera | CareLink | Being evaluated |
+
+Would you like another sensor? [Open an issue](../../issues) and tell us which one.
 
 ## Install
 

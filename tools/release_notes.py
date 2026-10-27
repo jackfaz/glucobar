@@ -24,7 +24,7 @@ def notes(version):
         text = section(f.read(), version)
     repo = os.environ.get("GITHUB_REPOSITORY", "jackfaz/glucobar")
     return (f"{text}\n\n---\n"
-            f"⚠️ GlucoBar is not a medical device. Download `GlucoBar-Setup-{version}.exe` "
+            f"GlucoBar is not a medical device. Download `GlucoBar-Setup-{version}.exe` "
             f"below. Full history: "
             f"[CHANGELOG.md](https://github.com/{repo}/blob/main/CHANGELOG.md)\n")
 

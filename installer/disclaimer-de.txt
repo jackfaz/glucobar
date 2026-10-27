@@ -16,7 +16,7 @@ gelesen über LibreLinkUp (den Teilen-Dienst von Abbott), oder Dexcom, gelesen
 
 WAS DU BRAUCHST
 • FreeStyle Libre: ein LibreLinkUp-Konto, das deinem Sensor „folgt“. Lade in der
-  LibreLink-App eine E-Mail-Adresse ein (am besten eine andere als deine), dann nimm
+  LibreLink-App eine E-Mail-Adresse ein (auch die deines LibreLink-Kontos), dann nimm
   in der LibreLinkUp-App die Einladung und die Nutzungsbedingungen an.
 • Dexcom: dein Dexcom-Konto, mit aktivierter Freigabe (Share) in der Dexcom-App und
   mindestens einem Follower.

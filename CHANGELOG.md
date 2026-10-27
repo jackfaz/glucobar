@@ -15,6 +15,9 @@ uses [Semantic Versioning](https://semver.org/).
   dexcom_region=us` works from scripts.
 
 ### Changed
+- LibreLinkUp: the README has a step-by-step guide, and the installer and the app now say
+  that the LibreLinkUp account can be the same as your LibreLink account (sharing with
+  yourself), which is the simplest setup.
 - Each sensor service has its own entry in Windows Credential Manager
   (`GlucoBar:LibreLinkUp`, `GlucoBar:Dexcom`); deleting everything removes both.
 - The PyInstaller bootloader is built from source in CI, and test builds can be scanned on

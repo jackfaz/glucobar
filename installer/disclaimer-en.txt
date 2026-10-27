@@ -16,7 +16,7 @@ Dexcom Share (beta).
 
 WHAT YOU NEED
 • FreeStyle Libre: a LibreLinkUp account that "follows" your sensor. In the
-  LibreLink app invite an email address (preferably a different one from yours),
+  LibreLink app invite an email address (it can be the one you use for LibreLink),
   then accept the invitation and the terms of use in the LibreLinkUp app.
 • Dexcom: your Dexcom account, with Share turned on in the Dexcom app and at
   least one follower.

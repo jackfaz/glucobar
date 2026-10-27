@@ -65,10 +65,8 @@ Vorresti un altro sensore? [Apri una issue](../../issues) e dicci quale.
 ## Installazione
 
 1. **Attiva la condivisione sul telefono (una volta sola).**
-   - **FreeStyle Libre:** nell'app **LibreLink**: *Condividi → App collegate → LibreLinkUp →
-     Aggiungi* e invita un indirizzo email (meglio diverso da quello di LibreLink). Installa
-     l'app **LibreLinkUp**, accedi con quell'email, accetta l'invito e i termini d'uso. Dopo
-     puoi disinstallare LibreLinkUp.
+   - **FreeStyle Libre:** condividi le letture con LibreLinkUp usando il tuo account
+     LibreLink. Bastano cinque minuti: vedi [Configurare LibreLinkUp](#configurare-librelinkup).
    - **Dexcom:** nell'app **Dexcom** attiva la **condivisione (Share)** e invita almeno un
      follower. GlucoBar entra con il tuo account Dexcom, non con quello del follower.
 2. Scarica `GlucoBar-Setup-x.y.z.exe` dalla pagina [Release](../../releases/latest) e avvialo.
@@ -76,12 +74,43 @@ Vorresti un altro sensore? [Apri una issue](../../issues) e dicci quale.
 3. Scegli la lingua dell'installazione, spunta cosa mostrare (con le anteprime) e se avviare
    GlucoBar all'accensione del PC.
 4. Al primo avvio scegli il sensore e inserisci l'account: l'email **LibreLinkUp** per
-   FreeStyle Libre, oppure email, telefono (con prefisso) o nome utente **Dexcom**.
+   FreeStyle Libre (la stessa di LibreLink, se hai seguito la guida qui sotto), oppure email,
+   telefono (con prefisso) o nome utente **Dexcom**.
 
 Windows può mostrare *"Windows ha protetto il PC"* perché l'installer non è ancora firmato
 digitalmente: clicca *Ulteriori informazioni → Esegui comunque*. Ogni release riporta
 l'impronta SHA-256 dell'installer e il link alla sua scansione su VirusTotal, così puoi
 controllare il file prima di avviarlo.
+
+## Configurare LibreLinkUp
+
+GlucoBar legge il FreeStyle Libre tramite LibreLinkUp, l'app di Abbott per condividere le
+letture con familiari e assistenti. Si configura una volta sola, dal telefono. La strada più
+semplice è condividere con te stesso, usando l'account che hai già nell'app LibreLink.
+
+1. Nell'app **LibreLink** (quella che legge il sensore) apri il menu e vai su
+   *Condividi → App collegate → LibreLinkUp → Aggiungi connessione*.
+2. Inserisci il tuo nome e **l'email del tuo account LibreLink**, poi invia l'invito.
+3. Installa **LibreLinkUp** dall'App Store o da Google Play e accedi con **la stessa email e
+   la stessa password** che usi per LibreLink.
+4. Accetta l'**invito** e i **termini d'uso**. Ora in LibreLinkUp dovresti vedere la tua
+   glicemia.
+5. In GlucoBar scegli *FreeStyle Libre* e inserisci la stessa email e la stessa password.
+
+Dopo puoi disinstallare LibreLinkUp dal telefono. Se un giorno servisse di nuovo, per esempio
+quando Abbott aggiorna i termini d'uso, te lo dice GlucoBar.
+
+Puoi anche invitare un'altra email, per esempio quella di un familiare, e usare quell'account
+in GlucoBar: funziona allo stesso modo.
+
+**Se GlucoBar mostra un errore**
+
+| Messaggio | Cosa fare |
+|---|---|
+| *Email o password errate* | Controlla di riuscire ad accedere all'app LibreLinkUp con la stessa email e password. |
+| *Nessun paziente collegato* | L'invito non è ancora stato accettato: apri LibreLinkUp e accettalo, oppure rimandalo da LibreLink. |
+| *Apri l'app LibreLinkUp sul telefono e accetta i termini d'uso* | Apri LibreLinkUp, accetta, poi clic destro su GlucoBar → *Aggiorna ora*. |
+| Il valore resta grigio | Nessuna lettura nuova da 15 minuti: controlla che il telefono sia vicino al sensore e connesso. |
 
 ## Uso
 

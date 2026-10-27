@@ -16,7 +16,7 @@ leída a través de Dexcom Share (beta).
 
 QUÉ NECESITAS
 • FreeStyle Libre: una cuenta LibreLinkUp que "siga" tu sensor. Desde la app
-  LibreLink invita una dirección de email (mejor una distinta de la tuya) y luego,
+  LibreLink invita una dirección de email (puede ser la misma que usas en LibreLink) y luego,
   en la app LibreLinkUp, acepta la invitación y los términos de uso.
 • Dexcom: tu cuenta Dexcom, con Compartir activado en la app Dexcom y al menos
   un seguidor.

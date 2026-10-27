@@ -15,7 +15,7 @@ LibreLinkUp (le service de partage d'Abbott), ou Dexcom, lue via Dexcom Share (b
 
 CE QU'IL VOUS FAUT
 • FreeStyle Libre : un compte LibreLinkUp qui « suit » votre capteur. Dans l'app
-  LibreLink, invitez une adresse e-mail (de préférence différente de la vôtre), puis
+  LibreLink, invitez une adresse e-mail (ce peut être celle de votre compte LibreLink), puis
   dans l'app LibreLinkUp acceptez l'invitation et les conditions d'utilisation.
 • Dexcom : votre compte Dexcom, avec le Partage activé dans l'app Dexcom et au
   moins un abonné.

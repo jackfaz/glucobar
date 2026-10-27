@@ -100,10 +100,28 @@ def load_config():
             # 0.2.0: una modalità alla volta, sempre con l'icona vicino all'orologio
             cfg["elements"] = [saved["mode"], "tray"]
         cfg.pop("mode", None)
+        _scrub_legacy()
     elif os.path.exists(LEGACY_CONFIG_PATH):
         cfg = _import_legacy(cfg)
     cfg["elements"] = normalize_elements(cfg["elements"])
     return cfg
+
+
+def _scrub_legacy():
+    """Le versioni fino alla 0.3.0 importavano il vecchio file senza togliere la
+    password in chiaro: la toglie ora (le impostazioni sono già state importate)."""
+    try:
+        with open(LEGACY_CONFIG_PATH, "r", encoding="utf-8") as f:
+            legacy = json.load(f)
+        if "password" not in legacy and legacy.get("imported_to_glucobar"):
+            return
+        legacy.pop("password", None)
+        legacy["imported_to_glucobar"] = True
+        with open(LEGACY_CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(legacy, f, indent=2)
+        log(f"password in chiaro tolta da {LEGACY_CONFIG_PATH}")
+    except (OSError, ValueError):
+        pass
 
 
 def _import_legacy(cfg):
@@ -114,6 +132,10 @@ def _import_legacy(cfg):
             legacy = json.load(f)
     except (OSError, ValueError):
         return cfg
+    if legacy.get("imported_to_glucobar"):
+        # già importato una volta: dopo una disinstallazione "cancella tutto"
+        # non deve ricomparire niente
+        return cfg
     password = legacy.pop("password", "")
     for key in DEFAULT_CONFIG:
         if key in legacy:
@@ -121,5 +143,28 @@ def _import_legacy(cfg):
     if cfg["email"] and password:
         credentials.set_password(cfg["email"], password)
     save_config(cfg)
-    log(f"impostazioni importate da {LEGACY_CONFIG_PATH}")
+    # la password non resta in chiaro nel vecchio file
+    legacy["imported_to_glucobar"] = True
+    try:
+        with open(LEGACY_CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(legacy, f, indent=2)
+    except OSError:
+        pass
+    log(f"impostazioni importate da {LEGACY_CONFIG_PATH} (password tolta dal vecchio file)")
     return cfg
+
+
+def forget_everything():
+    """Cancella password, impostazioni, log e il file della prima versione.
+    Usata dalla disinstallazione quando si sceglie di eliminare tutto."""
+    import shutil
+    from . import credentials
+    try:
+        credentials.delete_password()
+    except OSError:
+        pass
+    shutil.rmtree(CONFIG_DIR, ignore_errors=True)
+    try:
+        os.remove(LEGACY_CONFIG_PATH)
+    except OSError:
+        pass

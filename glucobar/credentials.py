@@ -41,6 +41,9 @@ if sys.platform == "win32":
                                     ctypes.POINTER(ctypes.POINTER(CREDENTIALW))]
     _advapi32.CredReadW.restype = wintypes.BOOL
     _advapi32.CredFree.argtypes = [ctypes.c_void_p]
+    _advapi32.CredDeleteW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD]
+    _advapi32.CredDeleteW.restype = wintypes.BOOL
+    ERROR_NOT_FOUND = 1168
 
     def set_password(email, password):
         blob = password.encode("utf-16-le")
@@ -68,6 +71,14 @@ if sys.platform == "win32":
         finally:
             _advapi32.CredFree(p)
 
+    def delete_password():
+        """True se c'era una password e l'ha cancellata."""
+        if _advapi32.CredDeleteW(TARGET, CRED_TYPE_GENERIC, 0):
+            return True
+        if ctypes.get_last_error() == ERROR_NOT_FOUND:
+            return False
+        raise OSError(ctypes.get_last_error(), "CredDeleteW non riuscita")
+
 else:
     _PATH = os.path.join(CONFIG_DIR, "credentials.json")
 
@@ -86,3 +97,10 @@ else:
         if data.get("email", "").lower() != (email or "").lower():
             return None
         return data.get("password")
+
+    def delete_password():
+        try:
+            os.remove(_PATH)
+            return True
+        except FileNotFoundError:
+            return False

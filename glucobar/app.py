@@ -4,6 +4,7 @@
     GlucoBar.exe --show desktop,tray      mostra questi elementi (e li ricorda)
     GlucoBar.exe --set-elements taskbar,tray --set-language it
                                           salva solo le scelte (usato dall'installer)
+    GlucoBar.exe --forget                 cancella password e impostazioni
 
 Elementi: taskbar (valore sulla barra), tray (icona vicino all'orologio),
 window (finestrella), desktop (pannello sullo sfondo).
@@ -15,8 +16,8 @@ import sys
 import traceback
 
 from . import __version__, credentials
-from .config import ELEMENTS, LOG_PATH, load_config, log, normalize_elements, save_config, \
-    trim_log
+from .config import ELEMENTS, LOG_PATH, forget_everything, load_config, log, \
+    normalize_elements, save_config, trim_log
 from .i18n import LANGUAGES, set_language, t
 
 MUTEX_NAME = "GlucoBar"   # lo stesso di AppMutex in installer/glucobar.iss
@@ -102,11 +103,16 @@ def main(argv=None):
     parser.add_argument("--set-elements", type=elements_arg, metavar="ELEMENTI")
     parser.add_argument("--set-language", choices=sorted(LANGUAGES) + ["auto"])
     parser.add_argument("--version", action="version", version=f"GlucoBar {__version__}")
+    parser.add_argument("--forget", action="store_true",
+                        help="cancella password e impostazioni (usato dalla disinstallazione)")
     parser.add_argument("--self-test", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
 
     if args.self_test:
         return self_test()
+    if args.forget:
+        forget_everything()
+        return 0
     if args.set_elements or args.set_language:
         save_choices(args.set_elements, args.set_language)
         return 0

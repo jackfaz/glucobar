@@ -2,10 +2,10 @@
 ; Prima servono l'exe e le anteprime:
 ;   pyinstaller --noconfirm --clean glucobar.spec
 ;   python tools\previews_to_bmp.py
-; Poi: iscc /DAppVersion=0.3.0 installer\glucobar.iss
+; Poi: iscc /DAppVersion=0.4.0 installer\glucobar.iss
 
 #ifndef AppVersion
-  #define AppVersion "0.3.0"
+  #define AppVersion "0.4.0"
 #endif
 #ifndef RepoUrl
   #define RepoUrl "https://github.com/"
@@ -41,7 +41,8 @@ WizardStyle=modern
 ; Stesso nome del mutex creato da glucobar/app.py
 AppMutex=GlucoBar
 CloseApplications=yes
-ShowLanguageDialog=auto
+; chiede sempre la lingua all'avvio: diventa anche la lingua di GlucoBar
+ShowLanguageDialog=yes
 
 [Languages]
 Name: "it"; MessagesFile: "compiler:Languages\Italian.isl"; InfoBeforeFile: "disclaimer-it.txt"
@@ -299,13 +300,18 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   ResultCode: Integer;
 begin
-  if (CurUninstallStep = usPostUninstall) and not UninstallSilent then
+  { Si chiede PRIMA di rimuovere i file: così è GlucoBar stesso a cancellare
+    password (Gestione credenziali), impostazioni e il file della prima versione }
+  if (CurUninstallStep = usUninstall) and not UninstallSilent then
     if MsgBox(CustomMessage('RemoveSettings'), mbConfirmation,
               MB_YESNO or MB_DEFBUTTON2) = IDYES then
     begin
-      DelTree(ExpandConstant('{userappdata}\GlucoBar'), True, True, True);
-      // Password nel Gestione credenziali (vedi glucobar/credentials.py)
+      Exec(ExpandConstant('{app}\GlucoBar.exe'), '--forget', '',
+           SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      { riserva, se l'exe non partisse }
       Exec(ExpandConstant('{sys}\cmdkey.exe'), '/delete:GlucoBar:LibreLinkUp', '',
            SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      DelTree(ExpandConstant('{userappdata}\GlucoBar'), True, True, True);
+      DeleteFile(ExpandConstant('{%USERPROFILE}\.glicemia_widget.json'));
     end;
 end;

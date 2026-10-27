@@ -40,6 +40,9 @@ jobs:
           }
           "version=$v" >> $env:GITHUB_OUTPUT
 
+      - name: Changelog has this version
+        run: python tools/release_notes.py ${{ steps.version.outputs.version }}
+
       - name: Build GlucoBar.exe
         run: pyinstaller --noconfirm --clean glucobar.spec
 
@@ -82,6 +85,19 @@ jobs:
           $cfg = Get-Content "$env:APPDATA\GlucoBar\config.json" -Raw | ConvertFrom-Json
           "elementi salvati: $($cfg.elements -join ',')   lingua: $($cfg.language)"
           if (($cfg.elements -join ',') -ne 'taskbar,tray') { throw "scelte non salvate" }
+
+          # "Cancella tutto" deve cancellare davvero la password (0.3.0: tornava
+          # dal file in chiaro della prima versione)
+          cmdkey /generic:GlucoBar:LibreLinkUp /user:test@example.com /pass:segreta | Out-Null
+          '{"email": "test@example.com", "password": "in-chiaro"}' |
+              Set-Content "$env:USERPROFILE\.glicemia_widget.json"
+          $f = Start-Process "$dir\GlucoBar.exe" -ArgumentList "--forget" -Wait -PassThru
+          if ($f.ExitCode -ne 0) { throw "--forget fallito (codice $($f.ExitCode))" }
+          $left = cmdkey /list:GlucoBar:LibreLinkUp | Out-String
+          if ($left -match "test@example.com") { throw "password ancora nel Gestione credenziali" }
+          if (Test-Path "$env:APPDATA\GlucoBar") { throw "impostazioni non cancellate" }
+          if (Test-Path "$env:USERPROFILE\.glicemia_widget.json") { throw "file della prima versione non cancellato" }
+          "--forget ok: password, impostazioni e vecchio file cancellati"
           $u = Start-Process "$dir\unins000.exe" -Wait -PassThru -ArgumentList `
                "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"
           if ($u.ExitCode -ne 0) { throw "disinstallazione fallita (codice $($u.ExitCode))" }
@@ -94,9 +110,13 @@ jobs:
           name: GlucoBar-Setup-${{ steps.version.outputs.version }}
           path: dist-installer/*.exe
 
+      - name: Release notes
+        if: github.ref_type == 'tag'
+        run: python tools/release_notes.py ${{ steps.version.outputs.version }} release-notes.md
+
       - name: Publish release
         if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v3
         with:
           files: dist-installer/*.exe
-          generate_release_notes: true
+          body_path: release-notes.md

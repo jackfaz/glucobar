@@ -1,12 +1,34 @@
-# GlucoBar
+<p align="center"><img src="docs/banner.png" alt="GlucoBar: la glicemia del FreeStyle Libre sulla barra di Windows"></p>
 
-**La glicemia del tuo FreeStyle Libre sul desktop di Windows.**
+<p align="center">
+  <a href="https://github.com/jackfaz/glucobar/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/jackfaz/glucobar?include_prereleases&label=release&color=3ecf6e"></a>
+  <a href="https://github.com/jackfaz/glucobar/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/jackfaz/glucobar/total?color=3ecf6e"></a>
+  <a href="https://github.com/jackfaz/glucobar/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/jackfaz/glucobar/build.yml?branch=main"></a>
+  <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4">
+  <img alt="6 languages" src="https://img.shields.io/badge/languages-6-f5a524">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-lightgrey"></a>
+</p>
 
-🇬🇧 [Read in English](README.md)
+<p align="center">
+  <a href="https://github.com/jackfaz/glucobar/releases/latest"><b>⬇️ Scarica per Windows</b></a> ·
+  <a href="#installazione">Installazione</a> ·
+  <a href="#uso">Uso</a> ·
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="README.md">🇬🇧 English</a>
+</p>
 
 GlucoBar legge l'ultimo valore del sensore da **LibreLinkUp** (il servizio di condivisione di
 Abbott) e lo mostra sul PC, colorato, con la freccia di tendenza e da quanti minuti è stato
 misurato.
+
+- 🩸 **Sempre sotto gli occhi**: sulla barra accanto all'orologio, in una finestrella, in un
+  pannello sul desktop o come icona col numero. Scegli qualsiasi combinazione.
+- 📈 **I dettagli quando li vuoi**: grafico fino a 12 ore, media, minimo, massimo, tempo nel
+  range, variazione in 15 minuti, giorno del sensore.
+- 🖥️ **Secondo monitor** e **schermo intero**: si nasconde durante video e giochi.
+- 🔒 **Privato**: password cifrata nel Gestione credenziali di Windows, dati inviati solo ad Abbott.
+- 🌍 **6 lingue**: italiano, inglese, spagnolo, francese, tedesco, portoghese.
+- 🆓 **Gratuito e open source** (MIT), senza permessi di amministratore.
 
 Scegli cosa mostrare, **anche più cose insieme**, durante l'installazione, e cambialo quando vuoi
 col clic destro su qualsiasi elemento di GlucoBar (menu *Mostra*): lì trovi anche unità, lingua,
@@ -37,7 +59,8 @@ Lingue: italiano, inglese, spagnolo, francese, tedesco, portoghese.
    l'invito e i termini d'uso. Dopo puoi disinstallare LibreLinkUp.
 2. Scarica `GlucoBar-Setup-x.y.z.exe` dalla pagina [Release](../../releases/latest) e avvialo.
    Non servono permessi di amministratore.
-3. Spunta cosa mostrare (con le anteprime) e se avviare GlucoBar all'accensione del PC.
+3. Scegli la lingua dell'installazione, spunta cosa mostrare (con le anteprime) e se avviare
+   GlucoBar all'accensione del PC.
 4. Al primo avvio inserisci email e password dell'account **LibreLinkUp**.
 
 Windows può mostrare *"Windows ha protetto il PC"* perché l'installer non è ancora firmato
@@ -85,7 +108,8 @@ GlucoBar importa da solo impostazioni e password. Poi puoi cancellare quel file.
 - La password è salvata **cifrata nel Gestione credenziali di Windows** (voce
   `GlucoBar:LibreLinkUp`), mai nel file delle impostazioni.
 - GlucoBar comunica **solo con i server LibreView di Abbott**. Nessuna statistica, nessun altro server.
-- La disinstallazione chiede se eliminare anche impostazioni e password.
+- La disinstallazione chiede se eliminare anche impostazioni e password (anche il vecchio
+  `.glicemia_widget.json`). Puoi farlo anche in qualsiasi momento con `GlucoBar.exe --forget`.
 
 ## Perché "sulla" barra e non "dentro"?
 
@@ -102,10 +126,10 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: avvio senza compilare
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.3.0 installer\glucobar.iss    :: serve Inno Setup 6
+iscc /DAppVersion=0.4.0 installer\glucobar.iss    :: serve Inno Setup 6
 ```
 
-Le release le crea GitHub Actions (`.github/workflows/build.yml`): pubblica un tag tipo `v0.3.0`
+Le release le crea GitHub Actions (`.github/workflows/build.yml`): pubblica un tag tipo `v0.4.0`
 e l'installer viene allegato a una nuova release. Le anteprime delle modalità si creano con
 `tools/compose_previews.py`.
 

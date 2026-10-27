@@ -1,12 +1,34 @@
-# GlucoBar
+<p align="center"><img src="docs/banner.png" alt="GlucoBar: your FreeStyle Libre glucose on the Windows taskbar"></p>
 
-**Your FreeStyle Libre glucose reading on the Windows desktop.**
+<p align="center">
+  <a href="https://github.com/jackfaz/glucobar/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/jackfaz/glucobar?include_prereleases&label=release&color=3ecf6e"></a>
+  <a href="https://github.com/jackfaz/glucobar/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/jackfaz/glucobar/total?color=3ecf6e"></a>
+  <a href="https://github.com/jackfaz/glucobar/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/jackfaz/glucobar/build.yml?branch=main"></a>
+  <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4">
+  <img alt="6 languages" src="https://img.shields.io/badge/languages-6-f5a524">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-lightgrey"></a>
+</p>
 
-🇮🇹 [Leggi in italiano](README.it.md)
+<p align="center">
+  <a href="https://github.com/jackfaz/glucobar/releases/latest"><b>⬇️ Download for Windows</b></a> ·
+  <a href="#install">Install</a> ·
+  <a href="#use">Use</a> ·
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="README.it.md">🇮🇹 Italiano</a>
+</p>
 
 GlucoBar reads your latest sensor value from **LibreLinkUp** (Abbott's sharing service)
 and shows it on your PC, colour-coded, with the trend arrow and how many minutes ago it
 was measured.
+
+- 🩸 **Always in sight** — on the taskbar next to the clock, in a small window, in a panel on
+  your desktop or as a number icon. Pick any combination.
+- 📈 **Details when you want them** — chart up to 12 hours, average, min, max, time in range,
+  15-minute change, sensor day.
+- 🖥️ **Second monitor** and **full-screen aware** — hides during videos and games.
+- 🔒 **Private** — password encrypted in Windows Credential Manager, data sent only to Abbott.
+- 🌍 **6 languages** — English, Italiano, Español, Français, Deutsch, Português.
+- 🆓 **Free and open source** (MIT), no administrator rights needed.
 
 Choose what to show — **any combination** — during installation, and change it any time by
 right-clicking any GlucoBar element (*Show* menu): unit, language, account and quit are there too.
@@ -36,7 +58,8 @@ Languages: English, Italiano, Español, Français, Deutsch, Português.
    the invitation and the terms of use. You can uninstall LibreLinkUp afterwards.
 2. Download `GlucoBar-Setup-x.y.z.exe` from the [Releases](../../releases/latest) page and run
    it. No administrator rights needed.
-3. Tick what to show (with previews) and whether to start GlucoBar with Windows.
+3. Choose the setup language, tick what to show (with previews) and whether to start GlucoBar
+   with Windows.
 4. On first start, enter the **LibreLinkUp** email and password.
 
 Windows may show *"Windows protected your PC"* because the installer is not code-signed yet:
@@ -81,7 +104,8 @@ Log file: `%APPDATA%\GlucoBar\glucobar.log`.
 - Your password is stored **encrypted in Windows Credential Manager** (entry
   `GlucoBar:LibreLinkUp`), never in the settings file.
 - GlucoBar talks **only to Abbott's LibreView servers**. No analytics, no other servers.
-- Uninstalling asks whether to delete settings and the saved password too.
+- Uninstalling asks whether to delete settings and the saved password too (also the first version's
+  `.glicemia_widget.json`). You can do the same any time with `GlucoBar.exe --forget`.
 
 ## Why "on" and not "inside" the taskbar?
 
@@ -98,11 +122,11 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.3.0 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.4.0 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): push a tag like
-`v0.3.0` and the installer is attached to a new release. The mode previews are made with
+`v0.4.0` and the installer is attached to a new release. The mode previews are made with
 `tools/compose_previews.py`.
 
 ## Credits and trademarks

@@ -138,6 +138,22 @@ Log file: `%APPDATA%\GlucoBar\glucobar.log`.
 - Uninstalling asks whether to delete settings and the saved password too (also the first version's
   `.glicemia_widget.json`). You can do the same any time with `GlucoBar.exe --forget`.
 
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by
+[SignPath Foundation](https://signpath.org). Signing starts once the application to SignPath
+Foundation is approved; until then the installer is unsigned.
+
+- Committers and reviewers: [jackfaz](https://github.com/jackfaz)
+- Approvers: [jackfaz](https://github.com/jackfaz)
+
+Only installers built by GitHub Actions from this repository are signed.
+
+This program will not transfer any information to other networked systems unless
+specifically requested by the user or the person installing or operating it. The only
+connection GlucoBar makes is to Abbott's LibreView servers, with the LibreLinkUp account the
+user enters.
+
 ## Why "on" and not "inside" the taskbar?
 
 On Windows 11 25H2 a window embedded in the taskbar (`SetParent` on `Shell_TrayWnd`, the

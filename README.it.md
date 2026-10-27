@@ -143,6 +143,22 @@ GlucoBar importa da solo impostazioni e password. Poi puoi cancellare quel file.
 - La disinstallazione chiede se eliminare anche impostazioni e password (anche il vecchio
   `.glicemia_widget.json`). Puoi farlo anche in qualsiasi momento con `GlucoBar.exe --forget`.
 
+## Firma del codice
+
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by
+[SignPath Foundation](https://signpath.org): la firma digitale è offerta gratuitamente da
+SignPath.io, con un certificato di SignPath Foundation. La firma partirà quando la richiesta a
+SignPath Foundation sarà approvata; fino ad allora l'installer non è firmato.
+
+- Chi modifica e rivede il codice: [jackfaz](https://github.com/jackfaz)
+- Chi approva le release da firmare: [jackfaz](https://github.com/jackfaz)
+
+Vengono firmati solo gli installer compilati da GitHub Actions a partire da questo repository.
+
+GlucoBar non trasmette nessuna informazione ad altri sistemi in rete, se non su richiesta
+esplicita di chi lo installa o lo usa. L'unica connessione è verso i server LibreView di
+Abbott, con l'account LibreLinkUp inserito dall'utente.
+
 ## Perché "sulla" barra e non "dentro"?
 
 Su Windows 11 25H2 una finestra agganciata alla barra (`SetParent` su `Shell_TrayWnd`, la

@@ -186,6 +186,8 @@ jobs:
           Start-Sleep -Seconds 2
           Stop-Process -Id $np.Id
           Start-Sleep -Seconds 2
+          $fired = [bool](Get-Content "$env:APPDATA\GlucoBar\glucobar.log" | Select-String "primo piano")
+          "::notice title=Avviso primo piano::ricevuto=$fired"
           & $gb stop
           $code = $LASTEXITCODE
           Start-Sleep -Seconds 1

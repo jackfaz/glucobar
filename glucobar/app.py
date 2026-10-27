@@ -1,9 +1,12 @@
 """Avvio di GlucoBar.
 
-    GlucoBar.exe                  riparte nell'ultima modalità usata
-    GlucoBar.exe --mode desktop   parte in quella modalità (e la ricorda)
-    GlucoBar.exe --set-mode tray --set-language it
-                                  salva solo le scelte (usato dall'installer) ed esce
+    GlucoBar.exe                          mostra gli elementi scelti l'ultima volta
+    GlucoBar.exe --show desktop,tray      mostra questi elementi (e li ricorda)
+    GlucoBar.exe --set-elements taskbar,tray --set-language it
+                                          salva solo le scelte (usato dall'installer)
+
+Elementi: taskbar (valore sulla barra), tray (icona vicino all'orologio),
+window (finestrella), desktop (pannello sullo sfondo).
 """
 
 import argparse
@@ -12,8 +15,8 @@ import sys
 import traceback
 
 from . import __version__, credentials
-from .config import LOG_PATH, load_config, log, save_config, trim_log
-from .controller import MODES
+from .config import ELEMENTS, LOG_PATH, load_config, log, normalize_elements, save_config, \
+    trim_log
 from .i18n import LANGUAGES, set_language, t
 
 MUTEX_NAME = "GlucoBar"   # lo stesso di AppMutex in installer/glucobar.iss
@@ -21,7 +24,7 @@ _instance_mutex = None    # resta aperto finché il programma gira
 
 
 def already_running():
-    """Una sola copia di GlucoBar: si cambia modalità dall'icona."""
+    """Una sola copia di GlucoBar: cosa mostrare si sceglie dal menu."""
     global _instance_mutex
     if sys.platform != "win32":
         return False
@@ -32,13 +35,23 @@ def already_running():
     return ctypes.get_last_error() == 183  # ERROR_ALREADY_EXISTS
 
 
-def run(mode):
+def elements_arg(text):
+    """"taskbar,tray" -> ["taskbar", "tray"] (per argparse)."""
+    items = [e.strip() for e in text.split(",") if e.strip()]
+    wrong = [e for e in items if e not in ELEMENTS]
+    if wrong or not items:
+        raise argparse.ArgumentTypeError(
+            f"elementi validi: {', '.join(ELEMENTS)} (separati da virgola)")
+    return normalize_elements(items)
+
+
+def run(elements):
     from .taskbar import enable_dpi_awareness
     enable_dpi_awareness()  # prima di creare qualsiasi finestra
 
     cfg = load_config()
-    if mode:
-        cfg["mode"] = mode
+    if elements:
+        cfg["elements"] = elements
     set_language(cfg["language"])
 
     if not cfg["email"] or not credentials.get_password(cfg["email"]):
@@ -50,14 +63,14 @@ def run(mode):
     Controller(cfg).run()
 
 
-def save_choices(mode, language):
+def save_choices(elements, language):
     cfg = load_config()
-    if mode:
-        cfg["mode"] = mode
+    if elements:
+        cfg["elements"] = elements
     if language:
         cfg["language"] = language
     save_config(cfg)
-    log(f"scelte salvate: modalità={cfg['mode']} lingua={cfg['language']}")
+    log(f"scelte salvate: elementi={','.join(cfg['elements'])} lingua={cfg['language']}")
 
 
 def self_test():
@@ -85,8 +98,8 @@ def show_crash():
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="GlucoBar")
-    parser.add_argument("--mode", choices=MODES)
-    parser.add_argument("--set-mode", choices=MODES)
+    parser.add_argument("--show", type=elements_arg, metavar="ELEMENTI")
+    parser.add_argument("--set-elements", type=elements_arg, metavar="ELEMENTI")
     parser.add_argument("--set-language", choices=sorted(LANGUAGES) + ["auto"])
     parser.add_argument("--version", action="version", version=f"GlucoBar {__version__}")
     parser.add_argument("--self-test", action="store_true", help=argparse.SUPPRESS)
@@ -94,15 +107,15 @@ def main(argv=None):
 
     if args.self_test:
         return self_test()
-    if args.set_mode or args.set_language:
-        save_choices(args.set_mode, args.set_language)
+    if args.set_elements or args.set_language:
+        save_choices(args.set_elements, args.set_language)
         return 0
     if already_running():
         return 0
     trim_log()
     log(f"GlucoBar {__version__} avvio (Python {sys.version.split()[0]})")
     try:
-        run(args.mode)
+        run(args.show)
     except Exception:
         log("ERRORE:\n" + traceback.format_exc())
         show_crash()

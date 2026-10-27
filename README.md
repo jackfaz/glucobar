@@ -8,17 +8,16 @@ GlucoBar reads your latest sensor value from **LibreLinkUp** (Abbott's sharing s
 and shows it on your PC, colour-coded, with the trend arrow and how many minutes ago it
 was measured.
 
-A **single GlucoBar icon** sits next to the clock: it shows the value and, with a right-click,
-lets you switch mode, unit and language, change account or quit. Pick the mode you like
-during installation and change it whenever you want:
+Choose what to show — **any combination** — during installation, and change it any time by
+right-clicking any GlucoBar element (*Show* menu): unit, language, account and quit are there too.
 
 | On the taskbar (recommended) | Small window |
 |---|---|
 | ![Taskbar](docs/preview_taskbar.png) | ![Window](docs/preview_window.png) |
 | Value, arrow and minutes next to the clock. Works on a second monitor too; hides during full-screen videos. | Small always-on-top window with a 3-hour chart. Drag it anywhere. |
-| **Desktop panel** | **Icon only** |
-| ![Desktop panel](docs/preview_desktop.png) | ![Icon only](docs/preview_tray.png) |
-| Panel on the desktop, behind your windows: large chart (3, 6 or 12 hours), average, min, max, time in range, 15-minute change and sensor day. Move it and resize it from the bottom-right corner. | Just the coloured number in the icon; hover it for arrow and minutes. |
+| **Desktop panel** | **Icon next to the clock** |
+| ![Desktop panel](docs/preview_desktop.png) | ![Icon next to the clock](docs/preview_tray.png) |
+| Panel on the desktop, behind your windows: large chart (3, 6 or 12 hours), average, min, max, time in range, 15-minute change and sensor day. Move it and resize it from the bottom-right corner. | The coloured number in an icon next to the clock; hover it for arrow and minutes. Optional: untick it if you don't want it. |
 
 Green = in range (70–180 mg/dL) · Orange = above 180 · Red = below 70 or above 250 ·
 Grey = reading older than 15 minutes.
@@ -37,7 +36,7 @@ Languages: English, Italiano, Español, Français, Deutsch, Português.
    the invitation and the terms of use. You can uninstall LibreLinkUp afterwards.
 2. Download `GlucoBar-Setup-x.y.z.exe` from the [Releases](../../releases/latest) page and run
    it. No administrator rights needed.
-3. Choose the mode (with preview) and whether to start GlucoBar with Windows.
+3. Tick what to show (with previews) and whether to start GlucoBar with Windows.
 4. On first start, enter the **LibreLinkUp** email and password.
 
 Windows may show *"Windows protected your PC"* because the installer is not code-signed yet:
@@ -45,8 +44,9 @@ click *More info → Run anyway*.
 
 ## Use
 
-- **Right-click the GlucoBar icon** next to the clock (or the value itself): refresh, mode,
-  unit, language, change account, quit. **Double-click**: refresh now.
+- **Right-click any GlucoBar element** (the icon, the value on the taskbar, the window or the
+  panel): refresh, *Show* (tick the elements you want), unit, language, change account, quit.
+  **Double-click**: refresh now.
 - Windows 11 hides new icons under the **^** arrow: drag the GlucoBar icon onto the taskbar to
   keep it visible.
 - Taskbar mode on a second monitor: enable *Settings → Personalization → Taskbar → Taskbar
@@ -61,7 +61,7 @@ click *More info → Run anyway*.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `mode` | `taskbar` | `taskbar`, `window`, `desktop` or `tray` (icon only) |
+| `elements` | `["taskbar", "tray"]` | What to show, any combination of `taskbar`, `tray` (icon next to the clock), `window`, `desktop` |
 | `low` / `high` / `very_high` | 70 / 180 / 250 | Thresholds in mg/dL |
 | `unit` | `mg/dL` | or `mmol/L` |
 | `stale_minutes` | 15 | After this, the value turns grey |
@@ -98,11 +98,11 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.2.0 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.3.0 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): push a tag like
-`v0.2.0` and the installer is attached to a new release. The mode previews are made with
+`v0.3.0` and the installer is attached to a new release. The mode previews are made with
 `tools/compose_previews.py`.
 
 ## Credits and trademarks

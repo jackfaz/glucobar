@@ -1,17 +1,18 @@
-"""L'unica icona di GlucoBar nell'area di notifica, vicino all'orologio.
+"""L'icona di GlucoBar nell'area di notifica, vicino all'orologio.
 
-Mostra il valore colorato (passandoci sopra: freccia e minuti) e fa da
-telecomando: modalità, unità, lingua, account, esci. In modalità "Solo icona"
-è l'unica cosa visibile.
+Mostra il valore colorato (passandoci sopra: freccia e minuti) e, col clic destro,
+il menu: cosa mostrare, unità, lingua, account, esci. Si può nascondere: il menu
+resta disponibile col clic destro sugli altri elementi.
 """
 
 import os
+import traceback
 
 import pystray
 from PIL import Image, ImageDraw, ImageFont
 
 from . import i18n
-from .config import log, save_config
+from .config import ELEMENTS, log, save_config
 from .i18n import LANGUAGES, t
 from .librelinkup import TREND_ARROWS
 from .ui_common import GREY, age_minutes, asset_path, color_for, fmt_value, is_stale
@@ -69,6 +70,7 @@ def logo_icon():
 class TrayIcon:
     def __init__(self, ctl):
         self.ctl = ctl
+        self.ready = False   # l'icona esiste davvero solo dopo _setup
         self.logo = logo_icon()
         self.icon = pystray.Icon("glucobar", self.logo, "GlucoBar", menu=self.build_menu())
 
@@ -79,9 +81,10 @@ class TrayIcon:
             # i clic arrivano dal thread dell'icona: li esegue il thread di Tk
             return lambda: ctl.post(fn, *args)
 
-        def mode_item(mode):
-            return pystray.MenuItem(lambda item: t(f"mode_{mode}"), do(ctl.set_mode, mode),
-                                    checked=lambda item: ctl.cfg["mode"] == mode, radio=True)
+        def show_item(element):
+            return pystray.MenuItem(lambda item: t(f"mode_{element}"),
+                                    do(ctl.toggle_element, element),
+                                    checked=lambda item: ctl.shown(element))
 
         def lang_item(code, name):
             return pystray.MenuItem(name, do(ctl.set_language, code), radio=True,
@@ -89,9 +92,8 @@ class TrayIcon:
 
         return pystray.Menu(
             pystray.MenuItem(lambda item: t("menu_refresh"), do(ctl.refresh), default=True),
-            pystray.MenuItem(lambda item: t("menu_mode"),
-                             pystray.Menu(*[mode_item(m) for m in
-                                            ("taskbar", "window", "desktop", "tray")])),
+            pystray.MenuItem(lambda item: t("menu_show"),
+                             pystray.Menu(*[show_item(e) for e in ELEMENTS])),
             pystray.MenuItem(lambda item: t("menu_unit"), do(ctl.toggle_unit)),
             pystray.MenuItem(lambda item: t("menu_language"),
                              pystray.Menu(*[lang_item(c, n) for c, n in LANGUAGES.items()])),
@@ -105,10 +107,11 @@ class TrayIcon:
         self.icon.run_detached(setup=self._setup)
 
     def _setup(self, icon):
-        icon.visible = True
-        log("icona nell'area di notifica creata")
         cfg = self.ctl.cfg
-        if not cfg.get("tray_hint_shown"):
+        icon.visible = "tray" in cfg["elements"]
+        self.ready = True
+        log("icona nell'area di notifica creata")
+        if icon.visible and not cfg.get("tray_hint_shown"):
             # Windows 11 nasconde le icone nuove sotto la freccetta ^
             try:
                 icon.notify(t("tray_hint"), "GlucoBar")
@@ -116,6 +119,14 @@ class TrayIcon:
                 log(f"notifica non mostrata: {e}")
             cfg["tray_hint_shown"] = True
             self.ctl.post(save_config, cfg)
+
+    def set_visible(self, visible):
+        if not self.ready:
+            return   # ci pensa _setup, leggendo cfg["elements"]
+        try:
+            self.icon.visible = visible
+        except Exception:
+            log("visibilità dell'icona non cambiata:\n" + traceback.format_exc())
 
     def update_menu(self):
         try:

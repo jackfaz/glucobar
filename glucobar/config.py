@@ -7,6 +7,9 @@ import time
 
 APP_NAME = "GlucoBar"
 
+# Elementi che si possono mostrare, anche insieme
+ELEMENTS = ("taskbar", "tray", "window", "desktop")
+
 
 def _config_dir():
     if sys.platform == "win32":
@@ -31,7 +34,9 @@ DEFAULT_CONFIG = {
     "stale_minutes": 15,        # oltre questo il valore è mostrato in grigio
     "app_version": "4.16.0",    # si aggiorna da sola se il server ne chiede una più recente
     "language": "auto",         # "auto" oppure it, en, es, fr, de, pt
-    "mode": "taskbar",          # taskbar, window, desktop, tray (solo icona)
+    # cosa mostrare, anche più cose insieme: taskbar (valore sulla barra),
+    # tray (icona col numero vicino all'orologio), window, desktop
+    "elements": ["taskbar", "tray"],
     # finestrella
     "window_x": None,
     "window_y": None,
@@ -79,13 +84,25 @@ def save_config(cfg):
         os.chmod(CONFIG_PATH, 0o600)
 
 
+def normalize_elements(elements):
+    """Elementi validi, senza doppioni, nell'ordine di ELEMENTS; mai vuoto."""
+    chosen = [e for e in ELEMENTS if e in (elements or [])]
+    return chosen or ["taskbar"]
+
+
 def load_config():
     cfg = dict(DEFAULT_CONFIG)
     if os.path.exists(CONFIG_PATH):
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            cfg.update(json.load(f))
+            saved = json.load(f)
+        cfg.update(saved)
+        if "elements" not in saved and "mode" in saved:
+            # 0.2.0: una modalità alla volta, sempre con l'icona vicino all'orologio
+            cfg["elements"] = [saved["mode"], "tray"]
+        cfg.pop("mode", None)
     elif os.path.exists(LEGACY_CONFIG_PATH):
         cfg = _import_legacy(cfg)
+    cfg["elements"] = normalize_elements(cfg["elements"])
     return cfg
 
 

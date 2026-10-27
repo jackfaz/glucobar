@@ -8,17 +8,17 @@ GlucoBar legge l'ultimo valore del sensore da **LibreLinkUp** (il servizio di co
 Abbott) e lo mostra sul PC, colorato, con la freccia di tendenza e da quanti minuti è stato
 misurato.
 
-**Un'unica icona di GlucoBar** sta vicino all'orologio: mostra il valore e, col clic destro,
-ti fa cambiare modalità, unità e lingua, cambiare account o chiudere. Scegli la modalità durante
-l'installazione e cambiala quando vuoi:
+Scegli cosa mostrare, **anche più cose insieme**, durante l'installazione, e cambialo quando vuoi
+col clic destro su qualsiasi elemento di GlucoBar (menu *Mostra*): lì trovi anche unità, lingua,
+account ed esci.
 
 | Sulla barra (consigliata) | Finestrella |
 |---|---|
 | ![Barra](docs/preview_taskbar.png) | ![Finestrella](docs/preview_window.png) |
 | Valore, freccia e minuti accanto all'orologio. Funziona anche sul secondo monitor; si nasconde con i video a schermo intero. | Piccola finestra sempre in primo piano con il grafico delle ultime 3 ore. La trascini dove vuoi. |
-| **Pannello sullo sfondo** | **Solo icona** |
-| ![Pannello sullo sfondo](docs/preview_desktop.png) | ![Solo icona](docs/preview_tray.png) |
-| Pannello sul desktop, dietro le finestre: grafico grande (3, 6 o 12 ore), media, minimo, massimo, tempo nel range, variazione in 15 minuti e giorno del sensore. Lo sposti e lo ridimensioni dall'angolo in basso a destra. | Solo il numero colorato nell'icona; passandoci sopra vedi freccia e minuti. |
+| **Pannello sullo sfondo** | **Icona vicino all'orologio** |
+| ![Pannello sullo sfondo](docs/preview_desktop.png) | ![Icona vicino all'orologio](docs/preview_tray.png) |
+| Pannello sul desktop, dietro le finestre: grafico grande (3, 6 o 12 ore), media, minimo, massimo, tempo nel range, variazione in 15 minuti e giorno del sensore. Lo sposti e lo ridimensioni dall'angolo in basso a destra. | Il numero colorato in un'icona vicino all'orologio; passandoci sopra vedi freccia e minuti. Facoltativa: togli la spunta se non la vuoi. |
 
 Verde = nel range (70–180 mg/dL) · Arancione = sopra 180 · Rosso = sotto 70 o sopra 250 ·
 Grigio = dato di più di 15 minuti fa.
@@ -37,7 +37,7 @@ Lingue: italiano, inglese, spagnolo, francese, tedesco, portoghese.
    l'invito e i termini d'uso. Dopo puoi disinstallare LibreLinkUp.
 2. Scarica `GlucoBar-Setup-x.y.z.exe` dalla pagina [Release](../../releases/latest) e avvialo.
    Non servono permessi di amministratore.
-3. Scegli la modalità (con anteprima) e se avviare GlucoBar all'accensione del PC.
+3. Spunta cosa mostrare (con le anteprime) e se avviare GlucoBar all'accensione del PC.
 4. Al primo avvio inserisci email e password dell'account **LibreLinkUp**.
 
 Windows può mostrare *"Windows ha protetto il PC"* perché l'installer non è ancora firmato
@@ -45,8 +45,9 @@ digitalmente: clicca *Ulteriori informazioni → Esegui comunque*.
 
 ## Uso
 
-- **Clic destro sull'icona di GlucoBar** vicino all'orologio (o sul valore): aggiorna, modalità,
-  unità, lingua, cambia account, esci. **Doppio clic**: aggiorna subito.
+- **Clic destro su qualsiasi elemento di GlucoBar** (l'icona, il valore sulla barra, la
+  finestrella o il pannello): aggiorna, *Mostra* (spunta gli elementi che vuoi), unità, lingua,
+  cambia account, esci. **Doppio clic**: aggiorna subito.
 - Windows 11 nasconde le icone nuove sotto la freccetta **^**: trascina l'icona di GlucoBar
   sulla barra per tenerla sempre visibile.
 - Barra sul secondo monitor: attiva *Impostazioni → Personalizzazione → Barra delle applicazioni →
@@ -61,7 +62,7 @@ digitalmente: clicca *Ulteriori informazioni → Esegui comunque*.
 
 | Chiave | Predefinito | Significato |
 |---|---|---|
-| `mode` | `taskbar` | `taskbar`, `window`, `desktop` o `tray` (solo icona) |
+| `elements` | `["taskbar", "tray"]` | Cosa mostrare, in qualsiasi combinazione: `taskbar`, `tray` (icona vicino all'orologio), `window`, `desktop` |
 | `low` / `high` / `very_high` | 70 / 180 / 250 | Soglie in mg/dL |
 | `unit` | `mg/dL` | oppure `mmol/L` |
 | `stale_minutes` | 15 | Oltre questo il valore diventa grigio |
@@ -101,10 +102,10 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: avvio senza compilare
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.2.0 installer\glucobar.iss    :: serve Inno Setup 6
+iscc /DAppVersion=0.3.0 installer\glucobar.iss    :: serve Inno Setup 6
 ```
 
-Le release le crea GitHub Actions (`.github/workflows/build.yml`): pubblica un tag tipo `v0.2.0`
+Le release le crea GitHub Actions (`.github/workflows/build.yml`): pubblica un tag tipo `v0.3.0`
 e l'installer viene allegato a una nuova release. Le anteprime delle modalità si creano con
 `tools/compose_previews.py`.
 

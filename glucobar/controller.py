@@ -1,5 +1,7 @@
-"""Cuore di GlucoBar: un solo processo, un'icona vicino all'orologio che fa da
-telecomando (modalità, lingua, account, esci) e una vista alla volta.
+"""Cuore di GlucoBar: un solo processo che mostra gli elementi scelti, anche insieme:
+valore sulla barra, icona col numero vicino all'orologio, finestrella, pannello sullo
+sfondo. Il menu (clic destro sull'icona o su qualsiasi elemento) sceglie cosa
+mostrare, lingua, account, esci.
 
 Tutto ciò che tocca Tkinter avviene nel thread principale: le richieste che
 arrivano dal thread dell'icona o da quello dei dati passano per `post()`.
@@ -12,12 +14,21 @@ import tkinter as tk
 import traceback
 
 from . import i18n
-from .config import log, save_config
+from .config import ELEMENTS, log, normalize_elements, save_config
 from .i18n import LANGUAGES, t
 from .librelinkup import LibreLinkUp, fetch_safely
 from .ui_common import apply_icon, ask_credentials
 
-MODES = ("taskbar", "window", "desktop", "tray")
+
+def _view_class(element):
+    if element == "taskbar":
+        from .taskbar import TaskbarView
+        return TaskbarView
+    if element == "window":
+        from .window import WindowView
+        return WindowView
+    from .desktop import DesktopView
+    return DesktopView
 
 
 class Controller:
@@ -30,7 +41,7 @@ class Controller:
         self.updated_at = None
         self.busy = False
         self._last_fetch = 0
-        self.view = None
+        self.views = {}      # elemento -> vista aperta (taskbar, window, desktop)
         self.tray = None
         self._calls = queue.Queue()
 
@@ -39,10 +50,10 @@ class Controller:
         apply_icon(self.root)
 
         self._start_tray()
-        mode = cfg["mode"] if cfg["mode"] in MODES else "taskbar"
-        if mode == "tray" and not self.tray:
-            mode = "taskbar"  # senza icona non resterebbe nulla da vedere
-        self.set_mode(mode)
+        elements = normalize_elements(cfg["elements"])
+        if elements == ["tray"] and not self.tray:
+            elements = ["taskbar"]   # senza icona non resterebbe nulla da vedere
+        self.set_elements(elements)
         self.root.after(100, self._drain_calls)
         self._tick()
 
@@ -73,32 +84,53 @@ class Controller:
             log("icona nell'area di notifica non disponibile:\n" + traceback.format_exc())
             self.tray = None
 
-    # ---- comandi (dall'icona o dai menu delle viste) ----
-    def set_mode(self, mode):
-        if self.view:
-            self.view.destroy()
-            self.view = None
-        self.cfg["mode"] = mode
-        save_config(self.cfg)
-        log(f"modalità: {mode}")
-        if mode == "taskbar":
-            from .taskbar import TaskbarView
-            self.view = TaskbarView(self)
-        elif mode == "window":
-            from .window import WindowView
-            self.view = WindowView(self)
-        elif mode == "desktop":
-            from .desktop import DesktopView
-            self.view = DesktopView(self)
+    def available(self, element):
+        return element != "tray" or self.tray is not None
+
+    # ---- cosa mostrare ----
+    def shown(self, element):
+        return element in self.cfg["elements"]
+
+    def set_elements(self, elements):
+        elements = normalize_elements(elements)
+        # prima di toccare l'icona: il suo thread legge cfg["elements"] quando è pronta
+        self.cfg["elements"] = elements
+        for element in list(self.views):
+            if element not in elements:
+                self.views.pop(element).destroy()
+        for element in elements:
+            if element != "tray" and element not in self.views:
+                self.views[element] = _view_class(element)(self)
         if self.tray:
+            # nascosta, non fermata: si può riaccendere dal menu degli altri elementi
+            self.tray.set_visible("tray" in elements)
             self.tray.update_menu()
+        save_config(self.cfg)
+        log(f"elementi mostrati: {', '.join(elements)}")
         self.render()
 
+    def toggle_element(self, element):
+        elements = list(self.cfg["elements"])
+        if element in elements:
+            if len(elements) == 1:
+                return   # almeno un elemento deve restare visibile
+            elements.remove(element)
+        else:
+            elements.append(element)
+        self.set_elements(elements)
+
+    def rebuild_views(self):
+        """Ricrea le viste aperte (per esempio dopo un cambio di lingua)."""
+        for element in list(self.views):
+            self.views.pop(element).destroy()
+        self.set_elements(self.cfg["elements"])
+
+    # ---- comandi (dall'icona o dai menu delle viste) ----
     def set_language(self, lang):
         self.cfg["language"] = lang
         save_config(self.cfg)
         i18n.set_language(lang)
-        self.set_mode(self.cfg["mode"])   # ricrea la vista con i testi nuovi
+        self.rebuild_views()
 
     def toggle_unit(self):
         self.cfg["unit"] = "mmol/L" if self.cfg["unit"] == "mg/dL" else "mg/dL"
@@ -115,33 +147,42 @@ class Controller:
         log("uscita")
         if self.tray:
             self.tray.stop()
-        if self.view:
-            self.view.destroy()
-            self.view = None
+        for element in list(self.views):
+            self.views.pop(element).destroy()
         root, self.root = self.root, None
         root.destroy()
 
     def add_common_menu(self, menu):
         """Voci comuni ai menu col clic destro delle viste."""
-        modes = tk.Menu(menu, tearoff=0)
-        mode_var = tk.StringVar(master=menu, value=self.cfg["mode"])
-        for mode in MODES:
-            if mode == "tray" and not self.tray:
+        show = tk.Menu(menu, tearoff=0)
+        show_vars = []
+        for element in ELEMENTS:
+            if not self.available(element):
                 continue
-            modes.add_radiobutton(label=t(f"mode_{mode}"), value=mode, variable=mode_var,
-                                  command=lambda m=mode: self.post(self.set_mode, m))
+            var = tk.BooleanVar(master=menu, value=self.shown(element))
+            show_vars.append(var)
+            show.add_checkbutton(label=t(f"mode_{element}"), variable=var,
+                                 command=lambda e=element: self.post(self.toggle_element, e))
         langs = tk.Menu(menu, tearoff=0)
         lang_var = tk.StringVar(master=menu, value=i18n.current_language())
         for code, name in LANGUAGES.items():
             langs.add_radiobutton(label=name, value=code, variable=lang_var,
                                   command=lambda c=code: self.post(self.set_language, c))
-        menu.add_cascade(label=t("menu_mode"), menu=modes)
+        menu.add_cascade(label=t("menu_show"), menu=show)
         menu.add_cascade(label=t("menu_language"), menu=langs)
         menu.add_command(label=t("menu_account"),
                          command=lambda: self.post(self.change_account))
         menu.add_separator()
         menu.add_command(label=t("menu_quit"), command=lambda: self.post(self.quit))
-        menu._vars = (mode_var, lang_var)   # tenute vive insieme al menu
+
+        def sync():
+            # le spunte seguono i cambi fatti da altri menu (per esempio dall'icona)
+            visible = [e for e in ELEMENTS if self.available(e)]
+            for var, element in zip(show_vars, visible):
+                var.set(self.shown(element))
+            lang_var.set(i18n.current_language())
+        menu.configure(postcommand=sync)
+        menu._vars = (show_vars, lang_var)   # tenute vive insieme al menu
 
     # ---- dati ----
     def refresh(self):
@@ -176,8 +217,8 @@ class Controller:
         self.root.after(15000, self._tick)
 
     def render(self):
-        if self.view:
-            self.view.render()
+        for view in self.views.values():
+            view.render()
         if self.tray:
             self.tray.render()
 

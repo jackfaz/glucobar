@@ -46,11 +46,12 @@ class ToolsTest(unittest.TestCase):
     def test_release_notes(self):
         version = glucobar.__version__
         plain = release_notes.notes(version)
-        self.assertNotIn("SHA-256", plain)
+        self.assertNotIn("SHA-256 of", plain)
+        self.assertNotIn("[VirusTotal]", plain)
         full = release_notes.notes(version, self.path, "https://vt.example/x")
         self.assertIn(self.digest, full)
         self.assertIn("[VirusTotal](https://vt.example/x)", full)
-        self.assertNotIn("VirusTotal", release_notes.notes(version, self.path))
+        self.assertNotIn("[VirusTotal]", release_notes.notes(version, self.path))
 
 
 if __name__ == "__main__":

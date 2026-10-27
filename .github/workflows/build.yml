@@ -13,6 +13,10 @@ on:
         description: "Publish a release for the version in glucobar/__init__.py"
         type: boolean
         default: false
+      scan:
+        description: "Scan the installer on VirusTotal even without publishing"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -27,10 +31,19 @@ jobs:
         with:
           python-version: "3.12"
 
+      # PyInstaller compilato qui, bootloader compreso: quello precompilato è lo stesso
+      # usato da molti malware e fa scattare i falsi positivi (es. Windows Defender)
       - name: Install dependencies
+        shell: pwsh
+        env:
+          PYINSTALLER_COMPILE_BOOTLOADER: "1"
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt "pyinstaller>=6.10,<7"
+          python -m pip install --upgrade pip wheel
+          pip install -r requirements.txt
+          pip install --no-binary pyinstaller "pyinstaller>=6.10,<7"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $boot = python -c "import os, PyInstaller; print(os.path.join(os.path.dirname(PyInstaller.__file__), 'bootloader', 'Windows-64bit-intel', 'runw.exe'))"
+          "::notice title=Bootloader::runw.exe $((Get-FileHash $boot).Hash)"
 
       - name: Tests
         run: python -m unittest discover -s tests -v
@@ -170,13 +183,13 @@ jobs:
       # Serve il secret VT_API_KEY (chiave gratuita di virustotal.com); senza, si salta.
       - name: VirusTotal
         id: vt
-        if: github.ref_type == 'tag' || inputs.release
+        if: github.ref_type == 'tag' || inputs.release || inputs.scan
         shell: pwsh
         env:
           VT_API_KEY: ${{ secrets.VT_API_KEY }}
         run: |
           $setup = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
-          $url = python tools/virustotal.py $setup.FullName
+          $url = python tools/virustotal.py --wait $setup.FullName
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           "VirusTotal: $url"
           "url=$url" >> $env:GITHUB_OUTPUT

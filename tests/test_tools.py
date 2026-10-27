@@ -43,6 +43,18 @@ class ToolsTest(unittest.TestCase):
         self.assertEqual(done.exception.code, 0)
         urlopen.assert_not_called()
 
+    def test_wait_reports_flagging_engines(self):
+        analysis = {"data": {"attributes": {
+            "status": "completed",
+            "stats": {"malicious": 1, "suspicious": 0, "undetected": 70},
+            "results": {"Microsoft": {"category": "malicious",
+                                      "result": "Trojan:Win32/Wacatac.B!ml"},
+                        "ESET-NOD32": {"category": "undetected", "result": None}}}}}
+        with mock.patch.object(virustotal, "request", return_value=analysis):
+            lines = virustotal.summary(*virustotal.wait("id", "key"))
+        self.assertEqual(lines, ["1 malicious, 0 suspicious, 70 undetected",
+                                 "Microsoft: Trojan:Win32/Wacatac.B!ml"])
+
     def test_release_notes(self):
         version = glucobar.__version__
         plain = release_notes.notes(version)

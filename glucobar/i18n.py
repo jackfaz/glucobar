@@ -105,6 +105,7 @@ STRINGS = {
         "cli_not_tty": 'Questo comando serve in un terminale interattivo. In alternativa usa: glucobar set chiave=valore',
         "cli_cancelled": 'Annullato, nessuna modifica.',
         "cli_no_account": 'Nessun account configurato: usa «glucobar setup» o «glucobar login».',
+        "cli_report_copied": 'Copiato negli appunti: incollalo nella segnalazione su GitHub (Ctrl+V). Email, nome utente e valori di glicemia sono già nascosti.',
     },
     "en": {
         "connecting": "connecting…",
@@ -194,6 +195,7 @@ STRINGS = {
         "cli_not_tty": 'This command needs an interactive terminal. Otherwise use: glucobar set key=value',
         "cli_cancelled": 'Cancelled, nothing changed.',
         "cli_no_account": 'No account set up: use “glucobar setup” or “glucobar login”.',
+        "cli_report_copied": 'Copied to the clipboard: paste it into the GitHub issue (Ctrl+V). Email, user name and glucose values are already hidden.',
     },
     "es": {
         "connecting": "conectando…",
@@ -283,6 +285,7 @@ STRINGS = {
         "cli_not_tty": 'Este comando necesita un terminal interactivo. Si no, usa: glucobar set clave=valor',
         "cli_cancelled": 'Cancelado, sin cambios.',
         "cli_no_account": 'Ninguna cuenta configurada: usa «glucobar setup» o «glucobar login».',
+        "cli_report_copied": 'Copiado al portapapeles: pégalo en el informe de GitHub (Ctrl+V). Email, nombre de usuario y valores de glucosa ya están ocultos.',
     },
     "fr": {
         "connecting": "connexion…",
@@ -372,6 +375,7 @@ STRINGS = {
         "cli_not_tty": 'Cette commande nécessite un terminal interactif. Sinon utilisez : glucobar set clé=valeur',
         "cli_cancelled": "Annulé, rien n'a changé.",
         "cli_no_account": 'Aucun compte configuré : utilisez « glucobar setup » ou « glucobar login ».',
+        "cli_report_copied": "Copié dans le presse-papiers : collez-le dans le ticket GitHub (Ctrl+V). E-mail, nom d'utilisateur et valeurs de glycémie sont déjà masqués.",
     },
     "de": {
         "connecting": "verbinde…",
@@ -461,6 +465,7 @@ STRINGS = {
         "cli_not_tty": 'Dieser Befehl braucht ein interaktives Terminal. Sonst: glucobar set schlüssel=wert',
         "cli_cancelled": 'Abgebrochen, nichts geändert.',
         "cli_no_account": 'Kein Konto eingerichtet: „glucobar setup“ oder „glucobar login“ verwenden.',
+        "cli_report_copied": 'In die Zwischenablage kopiert: im GitHub-Ticket einfügen (Strg+V). E-Mail, Benutzername und Glukosewerte sind bereits ausgeblendet.',
     },
     "pt": {
         "connecting": "a ligar…",
@@ -550,6 +555,7 @@ STRINGS = {
         "cli_not_tty": 'Este comando precisa de um terminal interativo. Em alternativa use: glucobar set chave=valor',
         "cli_cancelled": 'Cancelado, nada foi alterado.',
         "cli_no_account": 'Nenhuma conta configurada: use «glucobar setup» ou «glucobar login».',
+        "cli_report_copied": 'Copiado para a área de transferência: cole-o no relatório do GitHub (Ctrl+V). Email, nome de utilizador e valores de glicose já estão ocultos.',
     },
 }
 

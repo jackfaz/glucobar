@@ -7,6 +7,7 @@
     glucobar login                cambia account LibreLinkUp
     glucobar start                avvia GlucoBar
     glucobar forget               cancella password e impostazioni
+    glucobar report               riepilogo per le segnalazioni (copiato negli appunti)
 
 Se GlucoBar è aperto, si accorge da solo delle impostazioni cambiate.
 """
@@ -370,6 +371,17 @@ def cmd_start(_args):
     return 0
 
 
+def cmd_report(args):
+    from .report import build_report, copy_to_clipboard
+    cfg = load_config()
+    i18n.set_language(cfg["language"])
+    text = build_report(cfg, running=is_running())
+    print(text)
+    if not args.no_copy and copy_to_clipboard(text):
+        print("\n" + t("cli_report_copied"))
+    return 0
+
+
 def cmd_forget(_args):
     forget_everything()
     print("Password, settings and log deleted.")
@@ -397,6 +409,9 @@ def main(argv=None):
     sub.add_parser("login", help="change LibreLinkUp account").set_defaults(func=cmd_login)
     sub.add_parser("start", help="start GlucoBar").set_defaults(func=cmd_start)
     sub.add_parser("forget", help="delete password and settings").set_defaults(func=cmd_forget)
+    p = sub.add_parser("report", help="diagnostic report for bug reports (copied to clipboard)")
+    p.add_argument("--no-copy", action="store_true", help="only print it")
+    p.set_defaults(func=cmd_report)
     args = parser.parse_args(argv)
     if not args.command:
         parser.print_help()

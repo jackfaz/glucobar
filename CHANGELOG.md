@@ -4,6 +4,14 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- `glucobar report`: a diagnostic summary for bug reports (versions, screens, settings, last
+  log lines), copied to the clipboard. Email, user name and glucose values are hidden.
+- Bug report form on GitHub, with the commands to collect that summary; questions and ideas
+  go to Discussions.
+
 ## [0.5.0] - 2026-10-27
 
 ### Added

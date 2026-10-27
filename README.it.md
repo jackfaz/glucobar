@@ -98,6 +98,7 @@ glucobar set elements=desktop,tray autostart=true
 glucobar get                   tutte le impostazioni
 glucobar login                 cambia account LibreLinkUp
 glucobar start | forget        avvia GlucoBar | cancella password e impostazioni
+glucobar report                riepilogo per le segnalazioni, copiato negli appunti
 ```
 
 Se GlucoBar è aperto, applica le nuove impostazioni entro due secondi.

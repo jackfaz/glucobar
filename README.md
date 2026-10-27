@@ -97,6 +97,7 @@ glucobar set elements=desktop,tray autostart=true
 glucobar get                   all settings
 glucobar login                 change LibreLinkUp account
 glucobar start | forget        start GlucoBar | delete password and settings
+glucobar report                diagnostic summary for bug reports, copied to the clipboard
 ```
 
 If GlucoBar is running, it applies the new settings within two seconds.

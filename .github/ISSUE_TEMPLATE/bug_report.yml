@@ -1,0 +1,82 @@
+name: Bug report
+description: Something in GlucoBar doesn't work as expected
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. You can write in English or Italian.
+        Questions and ideas are welcome in [Discussions](https://github.com/jackfaz/glucobar/discussions).
+
+        GlucoBar is not a medical device: if you need your glucose value right now, check your reader or the official app.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Right-click the value on the taskbar
+        2. Show → Desktop panel
+        3. …
+
+  - type: dropdown
+    id: elements
+    attributes:
+      label: What do you show?
+      multiple: true
+      options:
+        - On the taskbar
+        - Icon next to the clock
+        - Small window
+        - Desktop panel
+
+  - type: dropdown
+    id: sensor
+    attributes:
+      label: Sensor
+      options:
+        - FreeStyle Libre 2 / 2 Plus
+        - FreeStyle Libre 3 / 3 Plus
+        - Other / not sure
+
+  - type: textarea
+    id: report
+    attributes:
+      label: Diagnostic report
+      description: |
+        Open a terminal (Start → type **Terminal** → Enter), run this command, then click here and press **Ctrl+V**:
+
+        ```
+        glucobar report
+        ```
+
+        It copies a short summary: GlucoBar and Windows versions, your screens and taskbars, your settings and the last lines of the log. Your email, your user name and your glucose values are hidden.
+
+        If the `glucobar` command doesn't work, open **PowerShell** and run this instead (it is also copied to the clipboard):
+
+        ```powershell
+        $r = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' | Select-Object ProductName, DisplayVersion, CurrentBuild | Out-String) + (Get-Content "$env:APPDATA\GlucoBar\glucobar.log" -Tail 40 -ErrorAction SilentlyContinue | Out-String); $r.Replace($env:USERPROFILE, '%USERPROFILE%') -replace '[\w.+-]+@[\w-]+(\.[\w-]+)+', '<email>' -replace '\d+([.,]\d)? ?(mg/dL|mmol/L)', '<value> $2' | Set-Clipboard
+        ```
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: If something looks wrong on screen, take a screenshot with **Win+Shift+S** and paste or drag it here. Crop out anything private.
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before sending
+      options:
+        - label: I had a look at the report and the screenshot, and they contain nothing I don't want to share publicly.
+          required: true

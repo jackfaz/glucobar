@@ -118,6 +118,21 @@ jobs:
           & $gb set autostart=true | Out-Null
           Check ($null -ne (Get-ItemProperty $run).GlucoBar) "glucobar set autostart=true"
 
+          # glucobar report e il comando PowerShell di riserva del modulo "Bug report"
+          $log = "$env:APPDATA\GlucoBar\glucobar.log"
+          Add-Content $log "2026-01-01 10:00:00 primo dato ricevuto: 140 mg/dL"
+          Add-Content $log "2026-01-01 10:00:01 errore per mario.rossi@example.com in $env:USERPROFILE\x"
+          $rep = & $gb report --no-copy | Out-String
+          $rep
+          Check ($rep -match "GlucoBar diagnostic report" -and $rep -match "Windows 1\d") "glucobar report"
+          Check ($rep -notmatch "example.com|140 mg/dL" -and $rep -notlike "*$env:USERPROFILE*") "glucobar report nasconde email, valori e utente"
+          $form = Get-Content .github\ISSUE_TEMPLATE\bug_report.yml -Raw
+          $cmd = [regex]::Match($form, '(?s)```powershell\s*\n\s*(.+?)\n\s*```').Groups[1].Value.Trim()
+          $out = Invoke-Expression ($cmd -replace '\| Set-Clipboard$', '| Out-String')
+          $out
+          Check ($out -match "CurrentBuild" -and $out -match "<value> mg/dL") "comando PowerShell del modulo"
+          Check ($out -notmatch "example.com|140 mg/dL" -and $out -notlike "*$env:USERPROFILE*") "il comando PowerShell nasconde email, valori e utente"
+
           # "Cancella tutto" deve cancellare davvero la password (0.3.0: tornava
           # dal file in chiaro della prima versione)
           cmdkey /generic:GlucoBar:LibreLinkUp /user:test@example.com /pass:segreta | Out-Null

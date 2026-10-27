@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or help
+    url: https://github.com/jackfaz/glucobar/discussions/categories/q-a
+    about: How to install or set up GlucoBar, or anything you're not sure about.
+  - name: Idea or new sensor
+    url: https://github.com/jackfaz/glucobar/discussions/categories/ideas
+    about: Suggest a feature, or a sensor you would like GlucoBar to support.

@@ -6,20 +6,24 @@ import unittest
 from unittest import mock
 
 from glucobar import app, config
-from glucobar.config import load_config, normalize_elements
+from glucobar.config import ELEMENTS, IS_MAC, load_config, normalize_elements
 
 
 class ElementsTest(unittest.TestCase):
     def test_normalize(self):
         self.assertEqual(normalize_elements(["desktop", "tray", "tray", "boh"]),
                          ["tray", "desktop"])
-        self.assertEqual(normalize_elements([]), ["taskbar"])
-        self.assertEqual(normalize_elements(None), ["taskbar"])
+        # mai vuoto: la barra delle applicazioni (Windows) o la barra dei menu (Mac)
+        self.assertEqual(normalize_elements([]), [ELEMENTS[0]])
+        self.assertEqual(normalize_elements(None), [ELEMENTS[0]])
 
     def test_command_line(self):
-        self.assertEqual(app.elements_arg("window, taskbar"), ["taskbar", "window"])
+        self.assertEqual(app.elements_arg("window, tray"), ["tray", "window"])
         with self.assertRaises(argparse.ArgumentTypeError):
-            app.elements_arg("taskbar,orologio")
+            app.elements_arg("tray,orologio")
+
+    def test_mac_has_no_taskbar(self):
+        self.assertEqual("taskbar" in ELEMENTS, not IS_MAC)
 
 
 class LoadConfigTest(unittest.TestCase):
@@ -38,7 +42,7 @@ class LoadConfigTest(unittest.TestCase):
             json.dump(data, f)
 
     def test_defaults(self):
-        self.assertEqual(load_config()["elements"], ["taskbar", "tray"])
+        self.assertEqual(load_config()["elements"], ["tray"] if IS_MAC else ["taskbar", "tray"])
 
     def test_mode_of_version_020_becomes_elements(self):
         self.write({"mode": "desktop"})

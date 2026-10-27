@@ -64,7 +64,8 @@ class SetGetTest(IsolatedConfig):
         cfg = load_config()
         self.assertEqual((cfg["unit"], cfg["high"], cfg["language"]), ("mmol/L", 200, "de"))
         code, out, _ = self.run_cli("get", "high", "elements")
-        self.assertEqual(out.split("\n")[:2], ["high = 200", "elements = taskbar,tray"])
+        self.assertEqual(out.split("\n")[:2],
+                         ["high = 200", "elements = " + ",".join(DEFAULT_CONFIG["elements"])])
 
     def test_set_rejects_and_changes_nothing(self):
         code, _out, err = self.run_cli("set", "unit=mmol/L", "low=999")
@@ -109,7 +110,7 @@ class WizardTest(IsolatedConfig):
     def test_full_wizard(self):
         term = FakeTerm(
             ["enter"]                                    # lingua: italiano (già scelta)
-            + ["down", "down", "space", "enter"]         # aggiunge "finestrella"
+            + ["down", "down", "space", "enter"]         # aggiunge il terzo elemento
             + ["down", "enter"]                          # mmol/L
             + ["down", "enter"]                          # range personalizzato
             + list("80") + ["enter"]                     # soglia bassa (vuota -> cancello)
@@ -123,7 +124,9 @@ class WizardTest(IsolatedConfig):
         with mock.patch.object(cli.autostart, "gui_exe", return_value=None):
             cli.wizard(term, cfg, client_class=FakeClient)
         saved = load_config()
-        self.assertEqual(saved["elements"], ["taskbar", "tray", "window"])
+        # Windows: finestrella (dopo barra e icona); Mac: pannello (dopo barra dei menu e finestrella)
+        self.assertEqual(saved["elements"],
+                         config.normalize_elements(DEFAULT_CONFIG["elements"] + [config.ELEMENTS[2]]))
         self.assertEqual(saved["unit"], "mmol/L")
         self.assertEqual((saved["low"], saved["high"]), (80, 180))
         self.assertEqual(saved["email"], "a@b.c")

@@ -2,11 +2,11 @@
 ; Prima servono l'exe e le anteprime:
 ;   pyinstaller --noconfirm --clean glucobar.spec
 ;   python tools\previews_to_bmp.py
-; Poi: iscc /DAppVersion=0.5.2 installer\glucobar.iss
+; Poi: iscc /DAppVersion=0.6.0 installer\glucobar.iss
 ; Installazione silenziosa con scelte: /VERYSILENT /ELEMENTS=desktop,tray /SENSOR=dexcom /LANG=it
 
 #ifndef AppVersion
-  #define AppVersion "0.5.2"
+  #define AppVersion "0.6.0"
 #endif
 #ifndef RepoUrl
   #define RepoUrl "https://github.com/"

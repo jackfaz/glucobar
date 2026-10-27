@@ -4,7 +4,7 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.6.0] - 2026-10-27
 
 ### Added
 - **Dexcom (beta)**: G6, G7 and ONE+ readings through Dexcom Share, with your own Dexcom
@@ -25,6 +25,8 @@ uses [Semantic Versioning](https://semver.org/).
   yourself), which is the simplest setup.
 - Each sensor service has its own entry in Windows Credential Manager
   (`GlucoBar:LibreLinkUp`, `GlucoBar:Dexcom`); deleting everything removes both.
+- `glucobar report` shows the real display scaling, and the log records where the value on
+  the taskbar really is and why it is hidden, to track down cases where it does not appear.
 - The PyInstaller bootloader is built from source in CI, and test builds can be scanned on
   VirusTotal (*Run workflow* → *scan*), with the results shown in the build summary.
 
@@ -140,6 +142,6 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
-[Unreleased]: https://github.com/jackfaz/glucobar/compare/v0.5.2...HEAD
+[0.6.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.6.0
 [0.5.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.5.2
 [0.5.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.5.1

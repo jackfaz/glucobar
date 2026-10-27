@@ -54,11 +54,11 @@ the reading is more than 15 minutes old. Thresholds can be changed.
 |---|---|---|
 | FreeStyle Libre (Libre 2, Libre 3 and their Plus versions) | LibreLinkUp | Supported |
 | Dexcom G6, G7, ONE+ | Dexcom Share | Beta, testers wanted |
-| Any sensor uploading to Nightscout (Medtronic, Eversense, xDrip+, Juggluco, AndroidAPS, …) | Nightscout | Planned |
+| Any sensor uploading to Nightscout (Medtronic, Eversense, xDrip+, Juggluco, AndroidAPS, Loop, …) | Nightscout | Beta, testers wanted |
 | Medtronic Guardian / Simplera | CareLink | Being evaluated |
 
-Dexcom support is new and has only been tested against a simulated Dexcom Share server so
-far. If you use a Dexcom, please tell us in [Discussions](../../discussions) or in an
+Dexcom and Nightscout support is new and has only been tested against simulated servers so
+far. If you use them, please tell us in [Discussions](../../discussions) or in an
 [issue](../../issues) whether it works for you.
 
 Would you like another sensor? [Open an issue](../../issues) and tell us which one.
@@ -70,13 +70,17 @@ Would you like another sensor? [Open an issue](../../issues) and tell us which o
      account. It takes five minutes: see [Setting up LibreLinkUp](#setting-up-librelinkup).
    - **Dexcom:** in the **Dexcom** app, turn on **Share** and invite at least one follower.
      GlucoBar signs in with your own Dexcom account, not the follower's.
+   - **Nightscout:** you need a Nightscout site that already receives your readings. If it is
+     not public, create a read-only token: on the site, *Admin Tools → Add new Subject*, role
+     **readable**, and copy its token.
 2. Download `GlucoBar-Setup-x.y.z.exe` from the [Releases](../../releases/latest) page and run
    it. No administrator rights needed.
 3. Choose the setup language, tick what to show (with previews) and whether to start GlucoBar
    with Windows.
 4. On first start, choose your sensor and enter the account: the **LibreLinkUp** email for
    FreeStyle Libre (the same as LibreLink, if you followed the guide below), or your
-   **Dexcom** email, phone number (with country code) or user name.
+   **Dexcom** email, phone number (with country code) or user name, or your **Nightscout** site
+   address and token.
 
 Windows may show *"Windows protected your PC"* because the installer is not code-signed yet:
 click *More info → Run anyway*. Each release lists the installer's SHA-256 and a link to its
@@ -158,7 +162,7 @@ GlucoBar-Setup-0.6.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 
 | Key | Default | Meaning |
 |---|---|---|
-| `source` | `libre` | `libre` (LibreLinkUp) or `dexcom` (Dexcom Share) |
+| `source` | `libre` | `libre` (LibreLinkUp), `dexcom` (Dexcom Share) or `nightscout` |
 | `dexcom_region` | `ous` | Where the Dexcom account was created: `ous` (outside the US), `us`, `jp` |
 | `elements` | `["taskbar", "tray"]` | What to show, any combination of `taskbar`, `tray` (icon next to the clock), `window`, `desktop` |
 | `low` / `high` / `very_high` | 70 / 180 / 250 | Thresholds in mg/dL |
@@ -178,9 +182,10 @@ Log file: `%APPDATA%\GlucoBar\glucobar.log`.
 ## Privacy
 
 - Your password is stored **encrypted in Windows Credential Manager** (entries
-  `GlucoBar:LibreLinkUp` and `GlucoBar:Dexcom`), never in the settings file.
-- GlucoBar talks **only to the servers of your sensor's maker**: Abbott's LibreView or
-  Dexcom Share. No analytics, no other servers.
+  `GlucoBar:LibreLinkUp`, `GlucoBar:Dexcom`, and `GlucoBar:Nightscout` for the token), never
+  in the settings file.
+- GlucoBar talks **only to the servers of your sensor's maker** (Abbott's LibreView or Dexcom
+  Share) **or to your own Nightscout site**. No analytics, no other servers.
 - Uninstalling asks whether to delete settings and the saved password too (also the first version's
   `.glicemia_widget.json`). You can do the same any time with `GlucoBar.exe --forget`.
 
@@ -198,7 +203,7 @@ Only installers built by GitHub Actions from this repository are signed.
 This program will not transfer any information to other networked systems unless
 specifically requested by the user or the person installing or operating it. The only
 connections GlucoBar makes are to the servers of the user's sensor maker (Abbott LibreView
-or Dexcom Share), with the account the user enters.
+or Dexcom Share) or to the user's own Nightscout site, with the account the user enters.
 
 ## Why "on" and not "inside" the taskbar?
 
@@ -228,7 +233,8 @@ Run workflow*, tick *release* to publish the version written in `glucobar/__init
 GlucoBar is an independent open-source project, not affiliated with or endorsed by Abbott
 or Dexcom. FreeStyle, Libre, LibreLink and LibreLinkUp are trademarks of Abbott; Dexcom is a
 trademark of Dexcom, Inc. The LibreLinkUp and Dexcom Share API details come from the work of
-the open-source diabetes community (Nightscout, pydexcom and others).
+the open-source diabetes community (Nightscout, pydexcom and others). Nightscout is an
+open-source project by the Nightscout Foundation; GlucoBar uses its documented API.
 
 GlucoBar is free and will stay free. If it is useful to you and you want to support it, you
 can [donate via PayPal](https://paypal.me/giacomofazioli).

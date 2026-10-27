@@ -23,6 +23,7 @@ def redact(text, cfg=None):
     if cfg and cfg.get("email"):
         text = re.sub(re.escape(cfg["email"]), "<email>", text, flags=re.I)
     text = EMAIL.sub("<email>", text)
+    text = re.sub(r"(token=|api-secret[:=]\s*)[^&\s]+", r"\1<token>", text, flags=re.I)
     return READING.sub("<value>", text)
 
 
@@ -93,6 +94,7 @@ def build_report(cfg, running, log_lines=40):
         enable_dpi_awareness()
     yes = lambda flag: "yes" if flag else "no"  # noqa: E731
     password = bool(cfg.get("email") and credentials.get_password(cfg["email"], cfg["source"]))
+    nightscout = cfg["source"] == "nightscout"
     alignment = _registry_flag(r"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced",
                                "TaskbarAl")
     light = _registry_flag(r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
@@ -113,9 +115,12 @@ def build_report(cfg, running, log_lines=40):
                              f"{yes(cfg['taskbar_transparent'])}, bg {cfg['taskbar_bg'] or 'auto'}"),
         ("Desktop panel", f"{cfg['desktop_w']}x{cfg['desktop_h']}, {cfg['desktop_hours']} h, "
                           f"opacity {cfg['desktop_alpha']}, locked {yes(cfg['desktop_locked'])}"),
-        ("Account", "email and password saved" if password else
+        ("Account", ("site set, " + ("token saved" if password else "no token"))
+                    if nightscout and cfg.get("email") else
+                    "email and password saved" if password else
                     "email saved, password missing" if cfg.get("email") else "not set up"),
         ("Sensor", f"Dexcom Share, region {cfg['dexcom_region']}" if cfg["source"] == "dexcom"
+                   else "Nightscout" if nightscout
                    else f"LibreLinkUp, region {cfg['region']}, app version {cfg['app_version']}"),
         ("Running", yes(running)),
         ("Start with Windows", yes(autostart.is_enabled())),

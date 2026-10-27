@@ -158,6 +158,24 @@ class WizardTest(IsolatedConfig):
         self.assertIn("Account Dexcom", screen)
         self.assertNotIn("vecchio@libre.it", screen)     # account Libre non riproposto
 
+    def test_nightscout_wizard(self):
+        term = FakeTerm(
+            ["enter", "enter", "enter", "enter"]         # lingua, elementi, unità, range
+            + ["down", "down", "enter"]                  # sensore: Nightscout
+            + list("mionome") + ["enter"]                # niente punto: non è un indirizzo
+            + list(".herokuapp.com/") + ["enter"]
+            + list("giusta") + ["enter"])                # token
+        with mock.patch.object(cli.autostart, "gui_exe", return_value=None):
+            cli.wizard(term, load_config(), client_class=FakeClient)
+        saved = load_config()
+        self.assertEqual((saved["source"], saved["email"]),
+                         ("nightscout", "https://mionome.herokuapp.com"))
+        self.assertEqual(self.passwords, {("nightscout", "https://mionome.herokuapp.com"): "giusta"})
+        screen = term.out.getvalue()
+        self.assertIn("Sito Nightscout", screen)
+        self.assertIn("Scrivi l'indirizzo del sito", screen)
+        self.assertNotIn("giusta", screen)
+
     def test_set_source(self):
         code, out, _ = self.run_cli("set", "source=dexcom", "dexcom_region=jp")
         self.assertEqual(code, 0)

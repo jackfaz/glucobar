@@ -9,6 +9,7 @@ from tkinter import simpledialog
 from . import credentials
 from .config import save_config
 from .i18n import t
+from .nightscout import normalize_url
 from .sources import region_options, source_options
 
 BG = "#1e1f22"
@@ -92,8 +93,9 @@ def choose(parent, title, prompt, options, default):
 
 
 def ask_credentials(cfg, parent=None):
-    """Chiede sensore e account (per Dexcom anche la regione). La password va nel
-    Gestione credenziali, in una voce diversa per ogni sensore."""
+    """Chiede sensore e account (per Dexcom anche la regione, per Nightscout indirizzo
+    e token facoltativo). La password va nel Gestione credenziali, in una voce
+    diversa per ogni sensore."""
     owns_root = parent is None
     if owns_root:
         parent = tk.Tk()
@@ -111,20 +113,35 @@ def ask_credentials(cfg, parent=None):
                             region_options(), region)
             if not region:
                 return False
-        title = t("cred_title_dexcom" if dexcom else "cred_title")
+        nightscout = source == "nightscout"
+        title = t("cred_title_dexcom" if dexcom else
+                  "cred_title_nightscout" if nightscout else "cred_title")
+        prompt = t("cred_email_dexcom" if dexcom else
+                   "cred_url_nightscout" if nightscout else "cred_email")
         same_source = source == cfg.get("source", "libre")
-        email = simpledialog.askstring(title, t("cred_email_dexcom" if dexcom else "cred_email"),
+        email = simpledialog.askstring(title, prompt,
                                        initialvalue=cfg.get("email", "") if same_source else "",
                                        parent=parent)
         if not email or not email.strip():
             return False
-        password = simpledialog.askstring(title, t("cred_password"), show="•", parent=parent)
-        if not password:
-            return False
+        if nightscout:
+            email = normalize_url(email)
+            password = simpledialog.askstring(title, t("cred_token_nightscout"), show="•",
+                                              parent=parent)
+            if password is None:   # Annulla; vuoto = sito pubblico
+                return False
+            password = password.strip()
+        else:
+            password = simpledialog.askstring(title, t("cred_password"), show="•", parent=parent)
+            if not password:
+                return False
     finally:
         if owns_root:
             parent.destroy()
     cfg.update(source=source, dexcom_region=region, email=email.strip())
-    credentials.set_password(cfg["email"], password, source)
+    if password:
+        credentials.set_password(cfg["email"], password, source)
+    else:
+        credentials.delete_password(source)   # Nightscout pubblico: niente token vecchi
     save_config(cfg)
     return True

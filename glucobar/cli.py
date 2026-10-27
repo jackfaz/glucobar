@@ -21,8 +21,9 @@ from . import __version__, autostart, credentials, i18n, tui
 from .config import CONFIG_PATH, ELEMENTS, forget_everything, load_config, \
     normalize_elements, save_config
 from .i18n import LANGUAGES, t
-from .sources import DEXCOM_REGIONS, SOURCES, TREND_ARROWS, fetch_safely, make_client, \
-    region_options, source_options
+from .nightscout import normalize_url
+from .sources import DEXCOM_REGIONS, SOURCES, TREND_ARROWS, account_ready, fetch_safely, \
+    make_client, region_options, source_options
 from .ui_common import age_minutes, fmt_value
 
 
@@ -198,22 +199,32 @@ def ask_account(term, cfg, client_class=None):
     Ritorna (email, password o None)."""
     client_class = client_class or make_client
     source = cfg["source"]
-    dexcom = source == "dexcom"
+    dexcom, nightscout = source == "dexcom", source == "nightscout"
     if dexcom:   # Dexcom accetta anche telefono e nome utente
         validate = lambda v: None if v.strip() else t("cli_bad_account")  # noqa: E731
+    elif nightscout:   # l'indirizzo del sito
+        validate = lambda v: None if "." in v and " " not in v.strip() else t("cli_bad_url")  # noqa: E731
     else:
         validate = lambda v: None if "@" in v and "." in v else t("cli_bad_email")  # noqa: E731
+    title, label = {"dexcom": ("cli_account_dexcom", "cli_email_dexcom"),
+                    "nightscout": ("cli_account_nightscout", "cli_url")}.get(
+                        source, ("cli_account", "cli_email"))
     email = cfg.get("email", "")
     while True:
         tui.message(term, "")
-        tui.message(term, t("cli_account_dexcom" if dexcom else "cli_account"), tui.BOLD)
+        tui.message(term, t(title), tui.BOLD)
         # al nuovo tentativo propone l'email appena scritta
-        email = tui.text(term, t("cli_email_dexcom" if dexcom else "cli_email"), default=email,
+        email = tui.text(term, t(label), default=email,
                          validate=validate, hint=t("cli_hint_text")).strip()
+        if nightscout:
+            email = normalize_url(email)
         saved = credentials.get_password(email, source)
-        password = tui.text(term, t("cli_password"), secret=True,
-                            hint=t("cli_keep_password") if saved else t("cli_hint_text"),
-                            validate=lambda v: None if v or saved else t("cli_hint_text"))
+        if nightscout:   # token facoltativo: i siti pubblici non lo chiedono
+            password = tui.text(term, t("cli_token"), secret=True, hint=t("cli_token_hint"))
+        else:
+            password = tui.text(term, t("cli_password"), secret=True,
+                                hint=t("cli_keep_password") if saved else t("cli_hint_text"),
+                                validate=lambda v: None if v or saved else t("cli_hint_text"))
         password = password or None   # None = tieni quella salvata
         tui.message(term, t("cli_testing"), tui.DIM)
         trial = {**cfg, "email": email}
@@ -345,7 +356,7 @@ def cmd_login(_args):
 def cmd_status(_args):
     cfg = load_config()
     i18n.set_language(cfg["language"])
-    if not cfg["email"] or not credentials.get_password(cfg["email"], cfg["source"]):
+    if not account_ready(cfg):
         print(t("cli_no_account"))
         return 1
     current, _history, error = fetch_safely(make_client(cfg))

@@ -71,7 +71,7 @@ it.Desc_tray=Il numero colorato nell'icona vicino all'orologio; passandoci sopra
 it.TaskAutostart=Avvia GlucoBar all'accensione del PC
 it.GroupStartup=Avvio:
 it.LaunchNow=Avvia GlucoBar adesso
-it.RemoveSettings=Vuoi eliminare anche le impostazioni e le password (LibreLinkUp, Dexcom) salvate su questo PC?
+it.RemoveSettings=Vuoi eliminare anche le impostazioni e le password e i token (LibreLinkUp, Dexcom, Nightscout) salvati su questo PC?
 it.NeedOne=Scegli almeno un elemento da mostrare.
 it.PreviewHint=Spunta cosa vuoi vedere: l'anteprima mostra la tua combinazione.
 it.SensorTitle=Quale sensore usi?
@@ -83,6 +83,9 @@ it.Steps_dexcom=1. Nell'app Dexcom attiva la condivisione (Share) e invita almen
 it.GuideLink=Guida con le immagini
 it.GuideUrl_libre=/blob/main/README.it.md#configurare-librelinkup
 it.GuideUrl_dexcom=/blob/main/README.it.md#installazione
+it.Sensor_nightscout=Nightscout (qualsiasi sensore collegato a un sito Nightscout) · beta
+it.Steps_nightscout=1. Ti serve un sito Nightscout già attivo, che riceve le letture del sensore (da xDrip+, Juggluco, AndroidAPS, Loop, Medtronic, Eversense…).%n2. Se il sito non è pubblico, crea un token in sola lettura: nel sito apri Admin Tools, aggiungi un nuovo soggetto con ruolo «readable» e copia il token.%n3. Al primo avvio di GlucoBar inserisci l'indirizzo del sito (es. https://mionome.herokuapp.com) e il token, oppure lascialo vuoto se il sito è pubblico.%n%nIl supporto Nightscout è nuovo: se qualcosa non funziona, faccelo sapere su GitHub.
+it.GuideUrl_nightscout=/blob/main/README.it.md#installazione
 en.ModeTitle=Choose what to show
 en.ModeSubtitle=You can pick more than one and change them any time by right-clicking GlucoBar.
 en.Name_taskbar=On the taskbar
@@ -96,7 +99,7 @@ en.Desc_tray=The colored number in the icon next to the clock; hover it for arro
 en.TaskAutostart=Start GlucoBar when Windows starts
 en.GroupStartup=Startup:
 en.LaunchNow=Start GlucoBar now
-en.RemoveSettings=Do you also want to delete the settings and the passwords (LibreLinkUp, Dexcom) saved on this PC?
+en.RemoveSettings=Do you also want to delete the settings and the passwords and tokens (LibreLinkUp, Dexcom, Nightscout) saved on this PC?
 en.NeedOne=Please choose at least one thing to show.
 en.PreviewHint=Tick what you want to see: the preview shows your combination.
 en.SensorTitle=Which sensor do you use?
@@ -108,6 +111,9 @@ en.Steps_dexcom=1. In the Dexcom app, turn on Share and invite at least one foll
 en.GuideLink=Guide with pictures
 en.GuideUrl_libre=#setting-up-librelinkup
 en.GuideUrl_dexcom=#install
+en.Sensor_nightscout=Nightscout (any sensor that uploads to a Nightscout site) · beta
+en.Steps_nightscout=1. You need a Nightscout site that already receives your sensor readings (from xDrip+, Juggluco, AndroidAPS, Loop, Medtronic, Eversense…).%n2. If the site is not public, create a read-only token: on the site open Admin Tools, add a new subject with the "readable" role and copy its token.%n3. When GlucoBar starts for the first time, enter the site address (e.g. https://yourname.herokuapp.com) and the token, or leave the token empty if the site is public.%n%nNightscout support is new: if something does not work, please tell us on GitHub.
+en.GuideUrl_nightscout=#install
 es.ModeTitle=Elige qué mostrar
 es.ModeSubtitle=Puedes elegir más de uno y cambiarlos cuando quieras con clic derecho en GlucoBar.
 es.Name_taskbar=En la barra de tareas
@@ -121,7 +127,7 @@ es.Desc_tray=El número en color en el icono junto al reloj; pasa el ratón para
 es.TaskAutostart=Iniciar GlucoBar al encender el PC
 es.GroupStartup=Inicio:
 es.LaunchNow=Iniciar GlucoBar ahora
-es.RemoveSettings=¿Quieres borrar también los ajustes y las contraseñas (LibreLinkUp, Dexcom) guardadas en este PC?
+es.RemoveSettings=¿Quieres borrar también los ajustes y las contraseñas y tokens (LibreLinkUp, Dexcom, Nightscout) guardados en este PC?
 es.NeedOne=Elige al menos un elemento para mostrar.
 es.PreviewHint=Marca lo que quieres ver: la vista previa muestra tu combinación.
 es.SensorTitle=¿Qué sensor usas?
@@ -133,6 +139,9 @@ es.Steps_dexcom=1. En la app Dexcom activa Compartir e invita al menos a un segu
 es.GuideLink=Guía con imágenes (en inglés)
 es.GuideUrl_libre=#setting-up-librelinkup
 es.GuideUrl_dexcom=#install
+es.Sensor_nightscout=Nightscout (cualquier sensor que suba datos a un sitio Nightscout) · beta
+es.Steps_nightscout=1. Necesitas un sitio Nightscout que ya reciba las lecturas de tu sensor (desde xDrip+, Juggluco, AndroidAPS, Loop, Medtronic, Eversense…).%n2. Si el sitio no es público, crea un token de solo lectura: en el sitio abre Admin Tools, añade un nuevo sujeto con el rol «readable» y copia su token.%n3. La primera vez que se abra GlucoBar, escribe la dirección del sitio (p. ej. https://tunombre.herokuapp.com) y el token, o déjalo vacío si el sitio es público.%n%nEl soporte de Nightscout es nuevo: si algo no funciona, cuéntanoslo en GitHub.
+es.GuideUrl_nightscout=#install
 fr.ModeTitle=Choisissez quoi afficher
 fr.ModeSubtitle=Vous pouvez en choisir plusieurs et les changer à tout moment par clic droit sur GlucoBar.
 fr.Name_taskbar=Sur la barre des tâches
@@ -146,7 +155,7 @@ fr.Desc_tray=Le chiffre en couleur dans l'icône près de l'horloge ; survolez-l
 fr.TaskAutostart=Lancer GlucoBar au démarrage de Windows
 fr.GroupStartup=Démarrage :
 fr.LaunchNow=Lancer GlucoBar maintenant
-fr.RemoveSettings=Voulez-vous aussi supprimer les réglages et les mots de passe (LibreLinkUp, Dexcom) enregistrés sur ce PC ?
+fr.RemoveSettings=Voulez-vous aussi supprimer les réglages et les mots de passe et jetons (LibreLinkUp, Dexcom, Nightscout) enregistrés sur ce PC ?
 fr.NeedOne=Choisissez au moins un élément à afficher.
 fr.PreviewHint=Cochez ce que vous voulez voir : l'aperçu montre votre combinaison.
 fr.SensorTitle=Quel capteur utilisez-vous ?
@@ -158,6 +167,9 @@ fr.Steps_dexcom=1. Dans l'app Dexcom, activez le Partage et invitez au moins un 
 fr.GuideLink=Guide en images (en anglais)
 fr.GuideUrl_libre=#setting-up-librelinkup
 fr.GuideUrl_dexcom=#install
+fr.Sensor_nightscout=Nightscout (tout capteur envoyé vers un site Nightscout) · bêta
+fr.Steps_nightscout=1. Il vous faut un site Nightscout qui reçoit déjà les mesures de votre capteur (depuis xDrip+, Juggluco, AndroidAPS, Loop, Medtronic, Eversense…).%n2. Si le site n'est pas public, créez un jeton en lecture seule : sur le site, ouvrez Admin Tools, ajoutez un nouveau sujet avec le rôle « readable » et copiez son jeton.%n3. Au premier lancement de GlucoBar, saisissez l'adresse du site (par ex. https://votrenom.herokuapp.com) et le jeton, ou laissez-le vide si le site est public.%n%nLa prise en charge de Nightscout est nouvelle : si quelque chose ne fonctionne pas, dites-le-nous sur GitHub.
+fr.GuideUrl_nightscout=#install
 de.ModeTitle=Wähle, was angezeigt wird
 de.ModeSubtitle=Du kannst mehrere wählen und sie jederzeit per Rechtsklick auf GlucoBar ändern.
 de.Name_taskbar=Auf der Taskleiste
@@ -171,7 +183,7 @@ de.Desc_tray=Die farbige Zahl im Symbol neben der Uhr; mit der Maus darüber sie
 de.TaskAutostart=GlucoBar beim Start von Windows öffnen
 de.GroupStartup=Start:
 de.LaunchNow=GlucoBar jetzt starten
-de.RemoveSettings=Sollen auch die Einstellungen und die auf diesem PC gespeicherten Passwörter (LibreLinkUp, Dexcom) gelöscht werden?
+de.RemoveSettings=Sollen auch die Einstellungen und die auf diesem PC gespeicherten Passwörter und Tokens (LibreLinkUp, Dexcom, Nightscout) gelöscht werden?
 de.NeedOne=Bitte wähle mindestens ein Element aus.
 de.PreviewHint=Kreuze an, was du sehen möchtest: die Vorschau zeigt deine Auswahl.
 de.SensorTitle=Welchen Sensor verwendest du?
@@ -183,6 +195,9 @@ de.Steps_dexcom=1. Aktiviere in der Dexcom-App die Freigabe (Share) und lade min
 de.GuideLink=Anleitung mit Bildern (auf Englisch)
 de.GuideUrl_libre=#setting-up-librelinkup
 de.GuideUrl_dexcom=#install
+de.Sensor_nightscout=Nightscout (jeder Sensor, der zu einer Nightscout-Seite hochlädt) · Beta
+de.Steps_nightscout=1. Du brauchst eine Nightscout-Seite, die deine Sensorwerte bereits empfängt (von xDrip+, Juggluco, AndroidAPS, Loop, Medtronic, Eversense…).%n2. Wenn die Seite nicht öffentlich ist, erstelle ein Token nur zum Lesen: Öffne auf der Seite Admin Tools, füge ein neues Subjekt mit der Rolle „readable“ hinzu und kopiere sein Token.%n3. Gib beim ersten Start von GlucoBar die Adresse der Seite (z. B. https://deinname.herokuapp.com) und das Token ein, oder lass es leer, wenn die Seite öffentlich ist.%n%nDie Nightscout-Unterstützung ist neu: Wenn etwas nicht funktioniert, sag uns bitte auf GitHub Bescheid.
+de.GuideUrl_nightscout=#install
 pt.ModeTitle=Escolha o que mostrar
 pt.ModeSubtitle=Pode escolher mais de um e mudá-los quando quiser com clique direito no GlucoBar.
 pt.Name_taskbar=Na barra de tarefas
@@ -196,7 +211,7 @@ pt.Desc_tray=O número colorido no ícone junto ao relógio; passe o rato para v
 pt.TaskAutostart=Iniciar o GlucoBar ao ligar o PC
 pt.GroupStartup=Arranque:
 pt.LaunchNow=Iniciar o GlucoBar agora
-pt.RemoveSettings=Quer apagar também as definições e as palavras-passe (LibreLinkUp, Dexcom) guardadas neste PC?
+pt.RemoveSettings=Quer apagar também as definições e as palavras-passe e tokens (LibreLinkUp, Dexcom, Nightscout) guardados neste PC?
 pt.NeedOne=Escolha pelo menos um elemento para mostrar.
 pt.PreviewHint=Marque o que quer ver: a pré-visualização mostra a sua combinação.
 pt.SensorTitle=Que sensor utiliza?
@@ -208,6 +223,9 @@ pt.Steps_dexcom=1. Na app Dexcom ative a Partilha e convide pelo menos um seguid
 pt.GuideLink=Guia com imagens (em inglês)
 pt.GuideUrl_libre=#setting-up-librelinkup
 pt.GuideUrl_dexcom=#install
+pt.Sensor_nightscout=Nightscout (qualquer sensor que envie dados para um site Nightscout) · beta
+pt.Steps_nightscout=1. Precisa de um site Nightscout que já receba as leituras do seu sensor (do xDrip+, Juggluco, AndroidAPS, Loop, Medtronic, Eversense…).%n2. Se o site não for público, crie um token só de leitura: no site abra Admin Tools, adicione um novo sujeito com a função «readable» e copie o token.%n3. Na primeira vez que o GlucoBar abrir, introduza o endereço do site (ex. https://onome.herokuapp.com) e o token, ou deixe-o vazio se o site for público.%n%nO suporte Nightscout é novo: se algo não funcionar, diga-nos no GitHub.
+pt.GuideUrl_nightscout=#install
 
 [Tasks]
 Name: "autostart"; Description: "{cm:TaskAutostart}"; GroupDescription: "{cm:GroupStartup}"
@@ -331,17 +349,22 @@ end;
 { Stesso ordine di SOURCES in glucobar/sources.py }
 function SensorId(I: Integer): String;
 begin
-  if I = 1 then
-    Result := 'dexcom'
+  case I of
+    1: Result := 'dexcom';
+    2: Result := 'nightscout';
   else
     Result := 'libre';
+  end;
 end;
 
 function SelectedSensor: Integer;
+var
+  I: Integer;
 begin
   Result := 0;
-  if (GetArrayLength(SensorRadios) = 2) and SensorRadios[1].Checked then
-    Result := 1;
+  for I := 1 to GetArrayLength(SensorRadios) - 1 do
+    if SensorRadios[I].Checked then
+      Result := I;
 end;
 
 procedure UpdateSensor;
@@ -372,7 +395,9 @@ begin
   Result := 0;
   if LoadStringFromFile(ExpandConstant('{userappdata}\GlucoBar\config.json'), Config) then
     if Pos('"source": "dexcom"', Config) > 0 then
-      Result := 1;
+      Result := 1
+    else if Pos('"source": "nightscout"', Config) > 0 then
+      Result := 2;
 end;
 
 procedure CreateSensorPage(After: Integer);
@@ -383,8 +408,8 @@ begin
   SensorPage := CreateCustomPage(After, CustomMessage('SensorTitle'),
                                  CustomMessage('SensorSubtitle'));
   Row := ScaleY(22);
-  SetArrayLength(SensorRadios, 2);
-  for I := 0 to 1 do
+  SetArrayLength(SensorRadios, 3);
+  for I := 0 to 2 do
   begin
     SensorRadios[I] := TNewRadioButton.Create(SensorPage);
     SensorRadios[I].Parent := SensorPage.Surface;
@@ -407,29 +432,31 @@ begin
   SensorSteps := TNewMemo.Create(SensorPage);
   SensorSteps.Parent := SensorPage.Surface;
   SensorSteps.Left := 0;
-  SensorSteps.Top := 2 * Row + ScaleY(6);
+  SensorSteps.Top := 3 * Row + ScaleY(6);
   SensorSteps.Width := SensorPage.SurfaceWidth;
   SensorSteps.Height := SensorLink.Top - SensorSteps.Top - ScaleY(6);
   SensorSteps.ReadOnly := True;
   SensorSteps.WordWrap := True;
   SensorSteps.ScrollBars := ssVertical;
 
-  { da riga di comando (anche winget): /SENSOR=libre o /SENSOR=dexcom }
+  { da riga di comando (anche winget): /SENSOR=libre, dexcom o nightscout }
   Param := Lowercase(ExpandConstant('{param:SENSOR|}'));
   if Param = 'dexcom' then
     Wanted := 1
+  else if Param = 'nightscout' then
+    Wanted := 2
   else if Param = 'libre' then
     Wanted := 0
   else
     Wanted := ConfiguredSensor;
   SensorRadios[Wanted].Checked := True;
   { i clic solo ora: il memo esiste già }
-  for I := 0 to 1 do
+  for I := 0 to 2 do
     SensorRadios[I].OnClick := @SensorClick;
   UpdateSensor;
 end;
 
-{ Usata da [Run]: "libre" o "dexcom" }
+{ Usata da [Run]: "libre", "dexcom" o "nightscout" }
 function SelectedSource(Param: String): String;
 begin
   Result := SensorId(SelectedSensor);
@@ -595,6 +622,8 @@ begin
       Exec(ExpandConstant('{sys}\cmdkey.exe'), '/delete:GlucoBar:LibreLinkUp', '',
            SW_HIDE, ewWaitUntilTerminated, ResultCode);
       Exec(ExpandConstant('{sys}\cmdkey.exe'), '/delete:GlucoBar:Dexcom', '',
+           SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Exec(ExpandConstant('{sys}\cmdkey.exe'), '/delete:GlucoBar:Nightscout', '',
            SW_HIDE, ewWaitUntilTerminated, ResultCode);
       DelTree(ExpandConstant('{userappdata}\GlucoBar'), True, True, True);
       DeleteFile(ExpandConstant('{%USERPROFILE}\.glicemia_widget.json'));

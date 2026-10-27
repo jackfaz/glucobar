@@ -4,6 +4,15 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Nightscout (beta)**: readings from your own Nightscout site, so any sensor that uploads
+  to Nightscout works (Medtronic, Eversense, xDrip+, Juggluco, AndroidAPS, Loop…). Public
+  sites need only the address; private ones a read-only token (or the API secret). The
+  installer, the first start and `glucobar setup` offer it as a third sensor
+  (`/SENSOR=nightscout`, `glucobar set source=nightscout`).
+
 ## [0.6.0] - 2026-10-27
 
 ### Added
@@ -142,6 +151,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[Unreleased]: https://github.com/jackfaz/glucobar/compare/v0.6.0...HEAD
 [0.6.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.6.0
 [0.5.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.5.2
 [0.5.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.5.1

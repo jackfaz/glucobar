@@ -15,11 +15,11 @@ import os
 import sys
 import traceback
 
-from . import __version__, credentials
+from . import __version__
 from .config import ELEMENTS, LOG_PATH, forget_everything, load_config, log, \
     normalize_elements, save_config, trim_log
 from .i18n import LANGUAGES, set_language, t
-from .sources import SOURCES
+from .sources import SOURCES, account_ready
 
 MUTEX_NAME = "GlucoBar"   # lo stesso di AppMutex in installer/glucobar.iss
 _instance_mutex = None    # resta aperto finché il programma gira
@@ -56,7 +56,7 @@ def run(elements):
         cfg["elements"] = elements
     set_language(cfg["language"])
 
-    if not cfg["email"] or not credentials.get_password(cfg["email"], cfg["source"]):
+    if not account_ready(cfg):
         from .ui_common import ask_credentials
         if not ask_credentials(cfg):
             return
@@ -82,8 +82,8 @@ def save_choices(elements, language, source=None):
 def self_test():
     """Per la build: carica tutte le parti nell'exe (moduli mancanti = errore)."""
     try:
-        from . import (controller, desktop, dexcom, librelinkup, notifyicon,  # noqa: F401
-                       taskbar, tray, window)
+        from . import (controller, desktop, dexcom, librelinkup, nightscout,  # noqa: F401
+                       notifyicon, taskbar, tray, window)
         import pystray
         log(f"self-test ok (pystray backend {pystray.Icon.__module__})")
         return 0

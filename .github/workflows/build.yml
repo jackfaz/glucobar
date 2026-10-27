@@ -158,6 +158,7 @@ jobs:
           # dal file in chiaro della prima versione)
           cmdkey /generic:GlucoBar:LibreLinkUp /user:test@example.com /pass:segreta | Out-Null
           cmdkey /generic:GlucoBar:Dexcom /user:+391234567 /pass:segreta | Out-Null
+          cmdkey /generic:GlucoBar:Nightscout /user:https://prova.example.org /pass:token | Out-Null
           '{"email": "test@example.com", "password": "in-chiaro"}' |
               Set-Content "$env:USERPROFILE\.glicemia_widget.json"
           & $gb forget | Out-Null
@@ -165,6 +166,8 @@ jobs:
           Check ($left -notmatch "test@example.com") "password tolta dal Gestione credenziali"
           $left = cmdkey /list:GlucoBar:Dexcom | Out-String
           Check ($left -notmatch "391234567") "password Dexcom tolta dal Gestione credenziali"
+          $left = cmdkey /list:GlucoBar:Nightscout | Out-String
+          Check ($left -notmatch "prova.example.org") "token Nightscout tolto dal Gestione credenziali"
           Check (-not (Test-Path "$env:APPDATA\GlucoBar")) "impostazioni cancellate"
           Check (-not (Test-Path "$env:USERPROFILE\.glicemia_widget.json")) "file della prima versione cancellato"
 

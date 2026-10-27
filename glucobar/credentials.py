@@ -1,5 +1,5 @@
 """Password dell'account del sensore nel Gestione credenziali di Windows (cifrata
-dal sistema), una voce per servizio: LibreLinkUp e Dexcom.
+dal sistema), una voce per servizio: LibreLinkUp, Dexcom e Nightscout (il token).
 
 Su Linux/macOS, usati solo per sviluppo, finisce in un file leggibile solo dall'utente.
 """
@@ -11,7 +11,8 @@ import sys
 from .config import CONFIG_DIR
 
 # sorgente (vedi sources.SOURCES) -> voce nel Gestione credenziali
-TARGETS = {"libre": "GlucoBar:LibreLinkUp", "dexcom": "GlucoBar:Dexcom"}
+TARGETS = {"libre": "GlucoBar:LibreLinkUp", "dexcom": "GlucoBar:Dexcom",
+           "nightscout": "GlucoBar:Nightscout"}   # per Nightscout: il token
 
 if sys.platform == "win32":
     import ctypes

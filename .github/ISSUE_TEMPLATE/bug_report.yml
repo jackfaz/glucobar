@@ -49,6 +49,7 @@ body:
         - Dexcom G6
         - Dexcom G7
         - Dexcom ONE+
+        - Nightscout (any sensor)
         - Other / not sure
 
   - type: textarea

@@ -196,6 +196,8 @@ end;
 
 procedure ShowPreview(I: Integer);
 begin
+  if (ModePreview = nil) or (ModeDescription = nil) then
+    Exit;
   ModePreview.Bitmap.LoadFromFile(ExpandConstant('{tmp}\') + PreviewFile(I));
   ModeDescription.Caption := CustomMessage('Desc_' + ModeId(I));
 end;
@@ -231,10 +233,6 @@ begin
     ModeBoxes[I].Width := ListWidth;
     ModeBoxes[I].OnClick := @ModeClick;
   end;
-  { predefiniti: valore sulla barra + icona vicino all'orologio }
-  ModeBoxes[0].Checked := True;
-  ModeBoxes[1].Checked := True;
-
   ModePreview := TBitmapImage.Create(ModePage);
   ModePreview.Parent := ModePage.Surface;
   ModePreview.Left := ListWidth + Gap;
@@ -257,6 +255,11 @@ begin
   ModeDescription.Width := ListWidth;
   ModeDescription.Height := ModePage.SurfaceHeight - ModeDescription.Top;
 
+  { Predefiniti: valore sulla barra + icona vicino all'orologio.
+    Solo ora: spuntare una casella fa scattare ModeClick, che usa
+    ModePreview e ModeDescription (crearli dopo dava "Could not call proc") }
+  ModeBoxes[0].Checked := True;
+  ModeBoxes[1].Checked := True;
   ShowPreview(0);
 end;
 

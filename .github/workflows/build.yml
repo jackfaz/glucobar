@@ -66,6 +66,29 @@ jobs:
                   installer\glucobar.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      # Compilare non basta: l'installer va anche avviato (la 0.3.0 compilava ma si
+      # bloccava all'avvio con "Could not call proc")
+      - name: Installer test (install, check, uninstall)
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
+          $log = Join-Path $env:RUNNER_TEMP "setup.log"
+          $p = Start-Process $setup.FullName -Wait -PassThru -ArgumentList `
+               "/VERYSILENT", "/SUPPRESSMSGBOXES", "/CURRENTUSER", "/NORESTART", "/LOG=$log"
+          Get-Content $log -Tail 25
+          if ($p.ExitCode -ne 0) { throw "installazione fallita (codice $($p.ExitCode))" }
+          $dir = Join-Path $env:LOCALAPPDATA "Programs\GlucoBar"
+          if (-not (Test-Path "$dir\GlucoBar.exe")) { throw "GlucoBar.exe non installato" }
+          $cfg = Get-Content "$env:APPDATA\GlucoBar\config.json" -Raw | ConvertFrom-Json
+          "elementi salvati: $($cfg.elements -join ',')   lingua: $($cfg.language)"
+          if (($cfg.elements -join ',') -ne 'taskbar,tray') { throw "scelte non salvate" }
+          $u = Start-Process "$dir\unins000.exe" -Wait -PassThru -ArgumentList `
+               "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"
+          if ($u.ExitCode -ne 0) { throw "disinstallazione fallita (codice $($u.ExitCode))" }
+          Start-Sleep -Seconds 3
+          if (Test-Path "$dir\GlucoBar.exe") { throw "GlucoBar.exe ancora presente dopo la disinstallazione" }
+          "installazione e disinstallazione ok"
+
       - uses: actions/upload-artifact@v7
         with:
           name: GlucoBar-Setup-${{ steps.version.outputs.version }}

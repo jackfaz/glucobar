@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/banner.png" alt="GlucoBar: your FreeStyle Libre glucose on the Windows taskbar"></p>
+<p align="center"><img src="docs/banner.png" alt="GlucoBar: your Libre or Dexcom glucose on the Windows taskbar"></p>
 
 <p align="center">
   <a href="https://github.com/jackfaz/glucobar/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/jackfaz/glucobar?include_prereleases&label=release&color=3ecf6e"></a>

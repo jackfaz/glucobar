@@ -87,6 +87,10 @@ def in_path():
 
 
 def build_report(cfg, running, log_lines=40):
+    if sys.platform == "win32":
+        # scala e coordinate reali, come le vede GlucoBar (non quelle "virtuali")
+        from .taskbar import enable_dpi_awareness
+        enable_dpi_awareness()
     yes = lambda flag: "yes" if flag else "no"  # noqa: E731
     password = bool(cfg.get("email") and credentials.get_password(cfg["email"], cfg["source"]))
     alignment = _registry_flag(r"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced",

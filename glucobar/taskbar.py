@@ -55,6 +55,10 @@ if IS_WIN:
     MONITOR_DEFAULTTONEAREST = 2
     GWL_EXSTYLE = -20
     WS_EX_TOOLWINDOW = 0x00000080
+    WS_EX_TOPMOST = 0x00000008
+    GW_HWNDPREV = 3
+    user32.GetWindow.argtypes = [wintypes.HWND, ctypes.c_uint]
+    user32.GetWindow.restype = wintypes.HWND
     HWND_TOPMOST = wintypes.HWND(-1)
     SWP_NOSIZE, SWP_NOMOVE, SWP_NOACTIVATE = 0x1, 0x2, 0x10
 
@@ -130,6 +134,17 @@ def taskbar_colors():
     return ("#eeeeee", "#5f6368") if light else ("#1f1f1f", "#a0a0a0")
 
 
+def windows_above(hwnd, limit=400):
+    """Classi delle finestre sopra `hwnd` nell'ordine di Windows (dalla più vicina)."""
+    above, h = [], hwnd
+    for _ in range(limit):
+        h = user32.GetWindow(h, GW_HWNDPREV)
+        if not h:
+            break
+        above.append(h)
+    return above
+
+
 class TaskbarView:
     def __init__(self, ctl):
         self.ctl = ctl
@@ -139,6 +154,8 @@ class TaskbarView:
         self.last_geometry = None
         self.screen = None   # rettangolo del monitor della barra usata
         self._last_bars = None
+        self._last_state = None   # per annotare nel log solo i cambiamenti
+        self._checks = 0
 
         bg, dim = taskbar_colors()
         self.bg = self.cfg["taskbar_bg"] or bg
@@ -255,35 +272,59 @@ class TaskbarView:
             self.root.geometry(geometry)
             self.last_geometry = geometry
             log(f"barra={bar} icone_da_x={tray_left} -> valore in {geometry}")
+            self._checks = 0   # ricontrolla subito dove è finita davvero
         return visible
 
+    def state(self):
+        """Dove è davvero la finestra del valore e cosa le sta sopra (per il log)."""
+        hwnd = self.own_hwnd()
+        style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+        bars = set(all_taskbars())
+        bar_above = any(h in bars for h in windows_above(hwnd))
+        return (f"finestra reale={window_rect(hwnd)} visibile={bool(user32.IsWindowVisible(hwnd))} "
+                f"topmost={bool(style & WS_EX_TOPMOST)} barra_sopra={bar_above}")
+
     def fullscreen_app_active(self):
+        """Classe della finestra a schermo intero sul monitor della barra, o None."""
         if not IS_WIN:
-            return False
+            return None
         fg = user32.GetForegroundWindow()
         if not fg or fg == self.own_hwnd() or class_name(fg) in DESKTOP_CLASSES:
-            return False
+            return None
         # Schermo intero sullo stesso monitor della barra usata
         l, t_, r, b = window_rect(fg)
         ml, mt, mr, mb = self.screen or monitor_rect(fg)
-        return l <= ml and t_ <= mt and r >= mr and b >= mb
+        if l <= ml and t_ <= mt and r >= mr and b >= mb:
+            return class_name(fg) or "?"
+        return None
 
     def _keep_on_taskbar(self):
         if not self.alive:
             return
         try:
             visible = self.reposition()
-            hide = not visible or self.fullscreen_app_active()
+            fullscreen = self.fullscreen_app_active()
+            hide = not visible or fullscreen
             if hide and not self.hidden:
                 self.root.withdraw()
                 self.hidden = True
+                log("valore nascosto: " + ("barra non visibile" if not visible
+                                           else f"app a schermo intero ({fullscreen})"))
             elif not hide and self.hidden:
                 self.root.deiconify()
                 self.hidden = False
+                log("valore di nuovo visibile")
             if IS_WIN and not self.hidden:
                 # Se clicchi sulla barra, Windows la porta davanti: torna sopra
                 user32.SetWindowPos(self.own_hwnd(), HWND_TOPMOST, 0, 0, 0, 0,
                                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
+                # ogni 30 s (e dopo ogni spostamento) annota se qualcosa è cambiato
+                if self._checks % 60 == 1:
+                    state = self.state()
+                    if state != self._last_state:
+                        self._last_state = state
+                        log("valore sulla barra: " + state)
+                self._checks += 1
         except Exception:
             log("controllo posizione:\n" + traceback.format_exc())
         self.root.after(500, self._keep_on_taskbar)

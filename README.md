@@ -12,6 +12,7 @@
 <p align="center">
   <a href="https://github.com/jackfaz/glucobar/releases/latest"><b>Download for Windows</b></a> ·
   <a href="#install">Install</a> ·
+  <a href="#setting-up-librelinkup">LibreLinkUp setup</a> ·
   <a href="#use">Use</a> ·
   <a href="#sensors">Sensors</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
@@ -84,16 +85,20 @@ VirusTotal scan, so you can check the file before running it.
 ## Setting up LibreLinkUp
 
 GlucoBar reads your FreeStyle Libre through LibreLinkUp, Abbott's app for sharing readings
-with family and carers. You set it up once, on your phone. The simplest way is to share
-with yourself, using the account you already have in the LibreLink app.
+with family and carers. You set it up once, on your phone, in a few minutes. The simplest way
+is to share with yourself, using the account you already have in the LibreLink app.
 
-1. In the **LibreLink** app (the one that reads your sensor), open the menu and go to
-   *Share → Connected Apps → LibreLinkUp → Add connection*.
-2. Enter your name and **the email of your LibreLink account**, then send the invitation.
-3. Install **LibreLinkUp** from the App Store or Google Play and sign in with the **same
-   email and password** you use for LibreLink.
-4. Accept the **invitation** and the **terms of use**. Your reading should now appear in
-   LibreLinkUp.
+![The steps in the LibreLink and LibreLinkUp apps](docs/librelinkup-setup.png)
+<sub>Screenshots from the Italian version of the apps.</sub>
+
+1. In the **LibreLink** app (the one that reads your sensor), open the menu and tap
+   **Connected Apps**.
+2. Next to **LibreLinkUp**, tap **Manage**.
+3. Tap **Add Connection**, enter your name and **the email of your LibreLink account**, and
+   send the invitation.
+4. Install the **LibreLinkUp** app from the App Store or Google Play, tap **Log In** and use
+   the **same email and password** as LibreLink (LibreLinkUp calls it your LibreView
+   account). Accept the invitation and the terms of use: your reading appears in LibreLinkUp.
 5. In GlucoBar, choose *FreeStyle Libre* and enter the same email and password.
 
 After that you can uninstall LibreLinkUp from the phone. GlucoBar will tell you if you ever

@@ -51,6 +51,10 @@ def main():
     # niente finestre della build in vista (la console del runner)
     subprocess.run(["powershell", "-NoProfile", "-Command",
                     "(New-Object -ComObject Shell.Application).MinimizeAll()"], timeout=60)
+    for title in ("System Properties",):   # avvisi della macchina della build
+        hwnd = user32.FindWindowW(None, title)
+        if hwnd:
+            user32.PostMessageW(hwnd, 0x0010, 0, 0)   # WM_CLOSE
     time.sleep(2)
     from glucobar.taskbar import all_taskbars, enable_dpi_awareness, window_rect
     enable_dpi_awareness()
@@ -67,7 +71,7 @@ def main():
                elements=["taskbar", "tray", "window", "desktop"], language="en",
                update_check=False, theme="dark", tray_promoted=True, tray_hint_shown=True,
                desktop_x=panel_x, desktop_y=panel_y, desktop_w=panel_w, desktop_h=panel_h,
-               window_x=window_x, window_y=window_y)
+               window_x=window_x, window_y=window_y, desktop_alpha=1.0)
     config.save_config(cfg)
     from glucobar.i18n import set_language
     set_language("en")

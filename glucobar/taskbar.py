@@ -17,10 +17,11 @@ import traceback
 
 from .config import log, save_config
 from .i18n import t
-from .menus import Item, fill_tk, radio_items
+from .menus import Item, popup, radio_items
 from .sources import TREND_ARROWS
 from .theme import palette, taskbar_light
-from .ui_common import FONT, age_minutes, bind_right_click, fmt_value, is_stale
+from . import stats
+from .ui_common import FONT, age_minutes, bind_right_click, fmt_delta, fmt_value, is_stale
 
 IS_WIN = sys.platform == "win32"
 
@@ -201,20 +202,31 @@ class TaskbarView:
         for lbl in (self.value_lbl, self.arrow_lbl, self.info_lbl):
             lbl.configure(padx=0, pady=0, bd=0)
 
-        self.menu = tk.Menu(self.root, tearoff=0, postcommand=lambda: fill_tk(
-            self.menu, ctl.menu_items(self.menu_items()), ctl.post))
-
-        for w in (self.root, self.box, self.value_lbl, self.arrow_lbl, self.info_lbl):
-            bind_right_click(w, lambda e: self.menu.tk_popup(e.x_root, e.y_root))
+        # Con lo sfondo trasparente Windows fa passare i clic alla barra sotto, tranne che
+        # sulle cifre: il clic destro apriva il menu della barra. Sopra il valore c'è
+        # allora una finestra quasi invisibile (opaca all'1%) che i clic li riceve.
+        self.hit = None
+        if IS_WIN and self.cfg["taskbar_transparent"]:
+            self.hit = tk.Toplevel(ctl.root)
+            self.hit.overrideredirect(True)
+            self.hit.attributes("-topmost", True)
+            self.hit.attributes("-alpha", 0.01)
+            self.hit.configure(bg=self.bg)
+        for w in (self.root, self.box, self.value_lbl, self.arrow_lbl, self.info_lbl,
+                  *([self.hit] if self.hit else [])):
+            bind_right_click(w, lambda e: self.show_menu(e.x_root, e.y_root))
             w.bind("<Double-Button-1>", lambda e: ctl.refresh())
 
         self.root.update_idletasks()
         if IS_WIN:
-            # Niente pulsante nella barra e niente Alt+Tab per questa finestra
-            hwnd = self.own_hwnd()
-            user32.SetWindowLongW(hwnd, GWL_EXSTYLE,
-                                  user32.GetWindowLongW(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW)
+            # Niente pulsante nella barra e niente Alt+Tab per queste finestre
+            for win in (self.root, *([self.hit] if self.hit else [])):
+                win.update_idletasks()
+                hwnd = user32.GetParent(win.winfo_id())
+                user32.SetWindowLongW(hwnd, GWL_EXSTYLE,
+                                      user32.GetWindowLongW(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW)
         self._hwnd = self.own_hwnd() if IS_WIN else None
+        self._hit_hwnd = user32.GetParent(self.hit.winfo_id()) if self.hit else None
         self._bars = set()           # finestre della barra (le aggiorna taskbar_geometry)
         self._events = 0
         self._watch_thread_id = None
@@ -227,14 +239,19 @@ class TaskbarView:
         self.alive = False
         if self._watch_thread_id:
             user32.PostThreadMessageW(self._watch_thread_id, WM_QUIT, 0, 0)
+        if self.hit:
+            self.hit.destroy()
         self.root.destroy()
 
     def raise_now(self):
         """Di nuovo sopra la barra, subito (senza attivare la finestra). Solo Win32:
         si può chiamare da qualsiasi thread."""
         if self.alive and not self.hidden:
-            user32.SetWindowPos(self._hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-                                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
+            # prima il valore, poi la finestra dei clic, che resta sopra di lui
+            for hwnd in (self._hwnd, self._hit_hwnd):
+                if hwnd:
+                    user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+                                        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
 
     def bar_above(self):
         """La barra delle applicazioni è sopra il valore? Solo Win32."""
@@ -301,6 +318,9 @@ class TaskbarView:
         self.info_lbl.configure(font=(FONT, -int(height * 0.21 * min(k, 1.0))))
         return int(height * 1.75 * k), height
 
+    def show_menu(self, x, y):
+        popup(self.root, self.ctl.menu_items(self.menu_items()), self.ctl.post, x, y)
+
     def menu_items(self):
         return [
             Item(t("menu_side"), self.toggle_side),
@@ -308,6 +328,8 @@ class TaskbarView:
             Item(t("menu_size"), children=radio_items(
                 [(scale, t(key)) for scale, key in SIZES], float(self.cfg["taskbar_scale"]),
                 self.set_scale)),
+            Item(t("menu_delta"), self.ctl.toggle_delta,
+                 checked=bool(self.cfg.get("show_delta"))),
         ]
 
     def set_scale(self, scale):
@@ -367,6 +389,8 @@ class TaskbarView:
         geometry = f"{w}x{h}+{x}+{top}"
         if geometry != self.last_geometry:
             self.root.geometry(geometry)
+            if self.hit:
+                self.hit.geometry(geometry)
             self.last_geometry = geometry
             log(f"barra={bar} icone_da_x={tray_left} -> valore in {geometry}")
             self._checks = 0   # ricontrolla subito dove è finita davvero
@@ -386,7 +410,8 @@ class TaskbarView:
         if not IS_WIN:
             return None
         fg = user32.GetForegroundWindow()
-        if not fg or fg == self.own_hwnd() or class_name(fg) in DESKTOP_CLASSES:
+        ours = (self.own_hwnd(), self._hit_hwnd)
+        if not fg or fg in ours or class_name(fg) in DESKTOP_CLASSES:
             return None
         # Schermo intero sullo stesso monitor della barra usata
         l, t_, r, b = window_rect(fg)
@@ -404,11 +429,15 @@ class TaskbarView:
             hide = not visible or fullscreen
             if hide and not self.hidden:
                 self.root.withdraw()
+                if self.hit:
+                    self.hit.withdraw()
                 self.hidden = True
                 log("valore nascosto: " + ("barra non visibile" if not visible
                                            else f"app a schermo intero ({fullscreen})"))
             elif not hide and self.hidden:
                 self.root.deiconify()
+                if self.hit:
+                    self.hit.deiconify()
                 self.hidden = False
                 log("valore di nuovo visibile")
             if IS_WIN and not self.hidden:
@@ -455,6 +484,9 @@ class TaskbarView:
         self.arrow_lbl.config(text="" if stale else " " + TREND_ARROWS.get(c["trend"], ""),
                               fg=color)
         info = t("now") if age == 0 else t("min_short", n=age)
+        delta = stats.delta(self.ctl.history, c) if self.cfg.get("show_delta") else None
+        if delta is not None and not stale:
+            info += " " + fmt_delta(self.cfg, delta)
         if error:
             info = "⚠ " + info
         self.info_lbl.config(text=info, fg=self.c.error if (stale or error) else self.dim)

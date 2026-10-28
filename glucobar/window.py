@@ -7,10 +7,11 @@ import tkinter as tk
 
 from .config import save_config
 from .i18n import t
-from .menus import fill_tk
+from .menus import Item, popup
 from .sources import TREND_ARROWS
 from .theme import palette
-from .ui_common import FONT, age_minutes, bind_right_click, fmt_value, is_stale
+from . import stats
+from .ui_common import FONT, age_minutes, bind_right_click, fmt_delta, fmt_value, is_stale
 
 
 class WindowView:
@@ -52,8 +53,6 @@ class WindowView:
         self.root.geometry(f"{w}x{h}+{x}+{y}")
         self.layout()
 
-        self.menu = tk.Menu(self.root, tearoff=0,
-                            postcommand=lambda: fill_tk(self.menu, ctl.menu_items(), ctl.post))
 
         for wdg in (self.root, self.value_lbl, self.arrow_lbl, self.info_lbl, self.spark):
             wdg.bind("<ButtonPress-1>", self._drag_start)
@@ -128,7 +127,12 @@ class WindowView:
         save_config(self.cfg)
 
     def _show_menu(self, e):
-        self.menu.tk_popup(e.x_root, e.y_root)
+        self.show_menu(e.x_root, e.y_root)
+
+    def show_menu(self, x, y):
+        items = [Item(t("menu_delta"), self.ctl.toggle_delta,
+                      checked=bool(self.cfg.get("show_delta")))]
+        popup(self.root, self.ctl.menu_items(items), self.ctl.post, x, y)
 
     # ---- disegno ----
     def render(self):
@@ -150,6 +154,9 @@ class WindowView:
         self.arrow_lbl.config(text="" if stale else arrow, fg=color)
         when = t("now") if age == 0 else t("min_ago", n=age)
         info = f"{self.cfg['unit']} · {when}"
+        delta = stats.delta(self.ctl.history, c) if self.cfg.get("show_delta") else None
+        if delta is not None and not stale:
+            info += " · " + fmt_delta(self.cfg, delta)
         if error:
             info += " · ⚠ " + error
         self.info_lbl.config(text=info, fg=pal.error if (stale or error) else pal.dim)

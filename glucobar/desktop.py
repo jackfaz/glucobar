@@ -13,7 +13,7 @@ from datetime import datetime
 from . import stats
 from .config import save_config
 from .i18n import t
-from .menus import Item, fill_tk, radio_items
+from .menus import Item, popup, radio_items
 from .sources import TREND_ARROWS
 from .theme import palette
 from .ui_common import FONT, age_minutes, bind_right_click, fmt_value, is_stale
@@ -64,10 +64,8 @@ class DesktopView:
         self.canvas.bind("<ButtonRelease-1>", self._release)
         self.canvas.bind("<Motion>", self._hover)
         self.canvas.bind("<Double-Button-1>", lambda e: ctl.refresh())
-        bind_right_click(self.canvas, lambda e: self.menu.tk_popup(e.x_root, e.y_root))
+        bind_right_click(self.canvas, lambda e: self.show_menu(e.x_root, e.y_root))
 
-        self.menu = tk.Menu(self.root, tearoff=0, postcommand=lambda: fill_tk(
-            self.menu, ctl.menu_items(self.menu_items()), ctl.post))
 
         self.root.update_idletasks()
         if IS_WIN:
@@ -132,6 +130,9 @@ class DesktopView:
         save_config(self.cfg)
 
     # ---- menu ----
+    def show_menu(self, x, y):
+        popup(self.root, self.ctl.menu_items(self.menu_items()), self.ctl.post, x, y)
+
     def menu_items(self):
         cfg = self.cfg
         return [

@@ -41,6 +41,19 @@ def change(points, current, minutes=15, tolerance=6):
     return current["mgdl"] - best["mgdl"]
 
 
+def delta(history, current, oldest=20):
+    """Il "delta" dei CGM: variazione rispetto alla lettura precedente, riportata a
+    5 minuti come fa Nightscout (Dexcom legge ogni 5 minuti; LibreLinkUp nello storico
+    ha un punto ogni 15). None se non c'è una lettura precedente negli ultimi `oldest`
+    minuti."""
+    before = [m for m in history if m["mgdl"]
+              and 60 <= current["time"] - m["time"] <= oldest * 60]
+    if not before:
+        return None
+    previous = max(before, key=lambda m: m["time"])
+    return (current["mgdl"] - previous["mgdl"]) * 300 / (current["time"] - previous["time"])
+
+
 def sensor_days(connection, now=None):
     """Giorni da quando il sensore è stato attivato, se LibreLinkUp lo dice."""
     activated = ((connection or {}).get("sensor") or {}).get("a")

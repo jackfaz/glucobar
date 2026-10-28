@@ -120,7 +120,7 @@ def main():
             grab(name, (x - 20, y - 20, min(sw, x + 520), min(sh, y + 330)))
             key(0x1B, 2)
         threading.Thread(target=shoot, daemon=True).start()
-        view.menu.tk_popup(x, y)
+        view.show_menu(x, y)
         ctl.root.after(800, after)
 
     def restyle(**changes):

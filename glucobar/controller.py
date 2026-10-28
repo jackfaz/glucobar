@@ -33,7 +33,7 @@ LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_
              "taskbar_side", "taskbar_offset", "taskbar_bg", "taskbar_transparent",
              "taskbar_scale", "window_scale", "desktop_hours", "desktop_alpha", "desktop_locked",
              "theme", "palette", "alert_low", "alert_high", "alert_stale", "update_check",
-             "auto_update", "sensor_life_days", "ui_colors", "taskbar_text",
+             "auto_update", "sensor_life_days", "ui_colors", "taskbar_text", "show_delta",
              *COLOR_KEYS.values())
 REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "taskbar_text", "desktop_alpha",
                 "desktop_locked", "window_scale", "theme", "palette", "ui_colors",
@@ -213,6 +213,11 @@ class Controller:
         save_config(self.cfg)
         i18n.set_language(lang)
         self.rebuild_views()
+
+    def toggle_delta(self):
+        self.cfg["show_delta"] = not self.cfg.get("show_delta")
+        save_config(self.cfg)
+        self.render()
 
     def toggle_unit(self):
         self.cfg["unit"] = "mmol/L" if self.cfg["unit"] == "mg/dL" else "mg/dL"

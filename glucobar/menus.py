@@ -59,6 +59,25 @@ def fill_tk(menu, items, post):
     menu._vars = keep   # le variabili devono vivere quanto il menu
 
 
+def popup(owner, items, post, x, y):
+    """Apre il menu col clic destro: costruito adesso, da zero, e preparato del tutto
+    prima di mostrarlo. Ricostruirlo dentro `postcommand`, mentre Windows lo sta già
+    aprendo, lasciava i sottomenu con le voci vecchie: la prima scelta (es. "Aggiorna
+    ogni → 10 s") non faceva niente e funzionava solo la seconda volta (0.8.4)."""
+    old = getattr(owner, "_glucobar_menu", None)
+    if old is not None:
+        try:
+            old.destroy()
+        except tk.TclError:
+            pass
+    menu = tk.Menu(owner, tearoff=0)
+    fill_tk(menu, items, post)
+    owner._glucobar_menu = menu
+    menu.update_idletasks()   # Tk prepara i menu di Windows (anche i sottomenu) adesso
+    menu.tk_popup(x, y)
+    return menu
+
+
 def _poster(post, action, args):
     return lambda: post(action, *args)
 

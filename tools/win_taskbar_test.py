@@ -180,6 +180,16 @@ def menu_checks(app, rect):
     results.append(f"menu aperto: {'sì' if opened else 'NO'}, "
                    f"Update every 10 s al primo colpo: {'sì' if first == 10 else f'NO ({first})'}")
     key(0x1B, 2)
+    if first != 10:   # la seconda volta? (il problema segnalato con la 0.8.4)
+        right_click((x0 + x1) // 2, (y0 + y1) // 2)
+        time.sleep(1.0)
+        key(0x28, 7)
+        key(0x27)
+        time.sleep(0.5)
+        key(0x0D)
+        time.sleep(1.5)
+        results.append(f"al secondo colpo: {read_config().get('refresh_seconds')}")
+        key(0x1B, 2)
     return results, ours == len(points) and opened and first == 10
 
 

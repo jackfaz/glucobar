@@ -25,6 +25,13 @@ def fmt_value(cfg, mgdl):
     return f"{mgdl:.0f}"
 
 
+def fmt_delta(cfg, delta):
+    """Variazione con il segno, nell'unità scelta: "+5", "-12", "+0.3"."""
+    if cfg["unit"] == "mmol/L":
+        return f"{delta / 18.016:+.1f}"
+    return f"{delta:+.0f}"
+
+
 def age_minutes(measurement):
     return max(0, int((time.time() - measurement["time"]) // 60))
 

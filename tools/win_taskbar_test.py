@@ -116,6 +116,73 @@ def click(x, y):
     user32.mouse_event(0x0004, 0, 0, 0, 0)   # sinistro su
 
 
+def key(code, times=1):
+    for _ in range(times):
+        user32.keybd_event(code, 0, 0, 0)
+        user32.keybd_event(code, 0, 2, 0)
+        time.sleep(0.2)
+
+
+def right_click(x, y):
+    user32.SetCursorPos(x, y)
+    user32.mouse_event(0x0008, 0, 0, 0, 0)   # destro giù
+    user32.mouse_event(0x0010, 0, 0, 0, 0)   # destro su
+
+
+def menus_of(pid):
+    """Menu a comparsa aperti (classe #32768) che appartengono al processo `pid`."""
+    found = []
+    proc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+
+    def check(hwnd, _):
+        name = ctypes.create_unicode_buffer(64)
+        user32.GetClassNameW(ctypes.c_void_p(hwnd), name, 64)
+        owner = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(ctypes.c_void_p(hwnd), ctypes.byref(owner))
+        if name.value == "#32768" and owner.value == pid and \
+                user32.IsWindowVisible(ctypes.c_void_p(hwnd)):
+            found.append(hwnd)
+        return True
+    user32.EnumWindows(proc(check), 0)
+    return found
+
+
+def read_config():
+    with open(os.path.join(CONFIG_DIR, "config.json"), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def menu_checks(app, rect):
+    """Clic destro sulle parti trasparenti del valore: deve aprirsi il menu di GlucoBar,
+    non quello della barra. Poi "Update every → 10 s" scelto una volta sola deve bastare."""
+    x0, y0, x1, y1 = rect
+    points = [(x0 + 3, y0 + 3), (x1 - 3, y0 + 3), (x0 + 3, y1 - 3), (x1 - 3, y1 - 3),
+              ((x0 + x1) // 2, y0 + 2)]
+    ours = 0
+    for x, y in points:
+        right_click(x, y)
+        time.sleep(1.0)
+        ours += bool(menus_of(app.pid))
+        key(0x1B, 2)   # chiude il menu, qualunque sia
+        time.sleep(0.5)
+    results = [f"clic destro sul fondo trasparente: menu di GlucoBar {ours}/{len(points)}"]
+    # Refresh now, Move left/right, Move to the other monitor, Size, Show, Switch unit,
+    # Update every: la settima voce, poi il sottomenu e la prima scelta (10 s)
+    right_click((x0 + x1) // 2, (y0 + y1) // 2)
+    time.sleep(1.0)
+    opened = bool(menus_of(app.pid))
+    key(0x28, 7)
+    key(0x27)
+    time.sleep(0.5)
+    key(0x0D)
+    time.sleep(1.5)
+    first = read_config().get("refresh_seconds")
+    results.append(f"menu aperto: {'sì' if opened else 'NO'}, "
+                   f"Update every 10 s al primo colpo: {'sì' if first == 10 else f'NO ({first})'}")
+    key(0x1B, 2)
+    return results, ours == len(points) and opened and first == 10
+
+
 def main(exe, strict):
     FakeNightscout.state = {"auth": "public", "queries": [], "entries": [entry(1, 142, "Flat")]}
     server = HTTPServer(("127.0.0.1", 0), FakeNightscout)
@@ -127,7 +194,8 @@ def main(exe, strict):
     if os.path.exists(LOG):
         os.remove(LOG)
 
-    app = subprocess.Popen([exe])
+    # anche da sorgente (run_glucobar.py), per provare in fretta senza compilare
+    app = subprocess.Popen([sys.executable, exe] if exe.endswith(".py") else [exe])
     time.sleep(10)
     if app.poll() is not None:
         notice("Barra", "GlucoBar si è chiuso all'avvio")
@@ -185,6 +253,10 @@ def main(exe, strict):
             problems += 1
             break
 
+    if app.poll() is None:
+        menu_results, menus_ok = menu_checks(app, rect)
+        results += menu_results
+        problems += not menus_ok
     notice("Valore sulla barra", " | ".join(results))
     with open(LOG, encoding="utf-8") as f:
         tail = [line.strip() for line in f.readlines()[-12:]]

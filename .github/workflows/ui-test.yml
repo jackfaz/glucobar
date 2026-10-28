@@ -1,0 +1,25 @@
+name: UI test
+
+# Prova veloce su Windows, da sorgente e senza compilare: valore sulla barra (visibile,
+# clic destro, menu). La stessa prova gira anche nella build, sull'exe.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ui:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Taskbar value test
+        run: python tools/win_taskbar_test.py run_glucobar.py --strict

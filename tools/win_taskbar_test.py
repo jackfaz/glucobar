@@ -148,13 +148,37 @@ def menus_of(pid):
     return found
 
 
+def windows_of(pid):
+    """Finestre visibili di `pid` dall'alto in basso, con la barra come riferimento."""
+    found = []
+    proc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+
+    def check(hwnd, _):
+        owner = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(ctypes.c_void_p(hwnd), ctypes.byref(owner))
+        name = ctypes.create_unicode_buffer(64)
+        user32.GetClassNameW(ctypes.c_void_p(hwnd), name, 64)
+        if name.value == "Shell_TrayWnd":
+            found.append("BARRA")
+        elif owner.value == pid and user32.IsWindowVisible(ctypes.c_void_p(hwnd)):
+            rect = wintypes.RECT()
+            user32.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(rect))
+            style = user32.GetWindowLongW(ctypes.c_void_p(hwnd), -20)
+            found.append(f"{name.value} {rect.left},{rect.top},{rect.right},{rect.bottom} "
+                         f"ex={style & 0xFFFFFFFF:#x}")
+        return True
+    user32.EnumWindows(proc(check), 0)
+    return found
+
+
 def read_config():
     with open(os.path.join(CONFIG_DIR, "config.json"), encoding="utf-8") as f:
         return json.load(f)
 
 
-def menu_item_center(menu_hwnd, label):
-    """Centro della voce `label` (o None) nel menu a comparsa aperto `menu_hwnd`."""
+def menu_item_center(menu_hwnd, label, index):
+    """Centro della voce `label` nel menu a comparsa aperto `menu_hwnd`. Tk disegna da
+    sé le voci (Windows non ne conosce il testo): se il testo non c'è, vale `index`."""
     user32.SendMessageW.restype = ctypes.c_void_p
     hmenu = user32.SendMessageW(wintypes.HWND(menu_hwnd), 0x01E1, 0, 0)   # MN_GETHMENU
     texts = []
@@ -162,7 +186,7 @@ def menu_item_center(menu_hwnd, label):
         buf = ctypes.create_unicode_buffer(256)
         user32.GetMenuStringW(ctypes.c_void_p(hmenu), i, buf, 256, 0x400)   # MF_BYPOSITION
         texts.append(buf.value)
-        if buf.value.replace("&", "") == label:
+        if buf.value.replace("&", "") == label or (not buf.value and i == index):
             rect = wintypes.RECT()
             user32.GetMenuItemRect(None, ctypes.c_void_p(hmenu), i, ctypes.byref(rect))
             return ((rect.left + rect.right) // 2, (rect.top + rect.bottom) // 2), texts
@@ -177,14 +201,16 @@ def choose_from_menu(app, rect):
     menus = menus_of(app.pid)
     if not menus:
         return "menu non aperto"
-    where, texts = menu_item_center(menus[0], "Update every")
+    # Refresh now, Move left / right, Move to the other monitor, Size, Show the change,
+    # Show, Switch unit, Update every: l'ottava voce
+    where, texts = menu_item_center(menus[0], "Update every", 7)
     if not where:
         key(0x1B, 2)
         return f"voce non trovata tra {texts}"
     click(*where)
     time.sleep(1.0)
     sub = [m for m in menus_of(app.pid) if m not in menus]
-    where, texts = menu_item_center(sub[0], "10 s") if sub else (None, [])
+    where, texts = menu_item_center(sub[0], "10 s", 0) if sub else (None, [])
     if not where:
         key(0x1B, 3)
         return f"sottomenu senza 10 s ({texts})"
@@ -215,7 +241,8 @@ def menu_checks(app, rect):
         key(0x1B, 2)   # chiude il menu, qualunque sia
         time.sleep(0.5)
     results = [f"clic destro sul fondo trasparente: menu di GlucoBar {ours}/{len(points)} "
-               f"(sotto il mouse: {', '.join(under)}; * = GlucoBar)"]
+               f"(sotto il mouse: {', '.join(under)}; * = GlucoBar)",
+               "finestre dall'alto: " + " / ".join(windows_of(app.pid))]
     first = choose_from_menu(app, rect)
     results.append(f"Update every 10 s al primo colpo: {first}")
     second = None

@@ -227,6 +227,8 @@ class TaskbarView:
                                       user32.GetWindowLongW(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW)
         self._hwnd = self.own_hwnd() if IS_WIN else None
         self._hit_hwnd = user32.GetParent(self.hit.winfo_id()) if self.hit else None
+        if self.hit:
+            log(f"finestra per i clic: {self._hit_hwnd}, valore: {self._hwnd}")
         self._bars = set()           # finestre della barra (le aggiorna taskbar_geometry)
         self._events = 0
         self._watch_thread_id = None

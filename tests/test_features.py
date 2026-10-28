@@ -137,6 +137,66 @@ class UpdateTest(unittest.TestCase):
         self.assertFalse(updates.is_newer("nightly", "0.9.0"))
 
 
+class InstallUpdateTest(unittest.TestCase):
+    """Download dell'installer da un server finto, come lo farebbe GlucoBar."""
+
+    def setUp(self):
+        import hashlib
+        import threading
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+        self.body = b"MZ" + b"x" * 5000
+
+        body = self.body
+
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+
+            def do_GET(self):
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(body)
+
+        self.server = HTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        self.addCleanup(self.server.server_close)
+        self.addCleanup(self.server.shutdown)
+        self.url = f"http://127.0.0.1:{self.server.server_port}/GlucoBar-Setup-9.9.9.exe"
+        self.sha = hashlib.sha256(body).hexdigest()
+
+    def test_parse_release_prefers_versioned_installer(self):
+        data = {"tag_name": "v9.9.9", "html_url": "https://example.org/r", "assets": [
+            {"name": "GlucoBar-Setup.exe", "browser_download_url": "fixed"},
+            {"name": "GlucoBar-Setup-9.9.9.exe", "browser_download_url": self.url,
+             "digest": "sha256:" + self.sha.upper()},
+            {"name": "GlucoBar-mac.dmg", "browser_download_url": "dmg"}]}
+        release = updates.parse_release(data)
+        self.assertEqual((release["version"], release["installer"], release["sha256"]),
+                         ("9.9.9", self.url, self.sha))
+        self.assertIsNone(updates.parse_release({"tag_name": "v1.0.0"})["installer"])
+
+    def test_download_checks_the_fingerprint(self):
+        import tempfile
+        folder = tempfile.mkdtemp()
+        release = {"version": "9.9.9", "installer": self.url, "sha256": self.sha}
+        path = updates.download(release, folder)
+        with open(path, "rb") as f:
+            self.assertEqual(f.read(), self.body)
+        with self.assertRaises(ValueError):
+            updates.download(dict(release, sha256="0" * 64), folder)
+
+    def test_installer_scope(self):
+        import os
+        import tempfile
+        from unittest import mock
+        local = tempfile.mkdtemp()
+        with mock.patch.dict(os.environ, {"LOCALAPPDATA": local}):
+            self.assertIn("/CURRENTUSER", updates.installer_args(
+                os.path.join(local, "Programs", "GlucoBar", "GlucoBar.exe")))
+            self.assertIn("/ALLUSERS", updates.installer_args(
+                os.path.join(tempfile.gettempdir(), "Program Files", "GlucoBar.exe")))
+
+
 class RangeTest(unittest.TestCase):
     def test_parse(self):
         cfg = dict(DEFAULT_CONFIG)

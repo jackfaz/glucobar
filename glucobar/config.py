@@ -84,6 +84,8 @@ DEFAULT_CONFIG = {
     "update_check": True,
     "update_checked_at": 0,
     "update_notified": None,
+    "auto_update": False,       # Windows: installa da solo le nuove versioni
+    "last_version": None,       # per dire "aggiornato alla x.y.z" al primo avvio
     # LibreLinkUp: persona seguita (se più d'una) e sensore in uso, per i promemoria di
     # fine sensore e la richiesta di sostituzione
     "patient_id": None,

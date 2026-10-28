@@ -31,7 +31,7 @@ LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_
              "taskbar_side", "taskbar_offset", "taskbar_bg", "taskbar_transparent",
              "taskbar_scale", "window_scale", "desktop_hours", "desktop_alpha", "desktop_locked",
              "theme", "palette", "alert_low", "alert_high", "alert_stale", "update_check",
-             "sensor_life_days")
+             "auto_update", "sensor_life_days")
 REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "desktop_alpha", "desktop_locked",
                 "window_scale", "theme", "palette"}
 ACCOUNT_KEYS = {"source", "dexcom_region", "email"}
@@ -62,7 +62,8 @@ class Controller:
         self._started = time.time()
         self.alerts = AlertWatch()
         self.sensors = sensor.SensorWatch()
-        self.update = None          # (versione, pagina) se ce n'è una più nuova
+        self.update = None          # ultima release, se più nuova (vedi updates.py)
+        self._installing = False
         self._checking_update = False
         self._logged_sensor = None
         self._theme_key = self.theme_key()
@@ -85,6 +86,7 @@ class Controller:
         self.set_elements(elements)
         self.root.after(100, self._drain_calls)
         self._tick()
+        self.root.after(3000, self.announce_version)
         self.root.after(2000, self._watch_config)
         # installer, disinstallazione o `glucobar stop` possono chiedere di chiudere
         self._quit_event = instance.quit_event()
@@ -233,7 +235,12 @@ class Controller:
         cfg = self.cfg
         items = []
         if self.update:
-            items += [Item(t("menu_update", v=self.update[0]), self.open_update), SEPARATOR]
+            version = self.update["version"]
+            if self.can_install_update():
+                items.append(Item(t("menu_update_install", v=version), self.install_update))
+            else:
+                items.append(Item(t("menu_update", v=version), self.open_update))
+            items.append(SEPARATOR)
         items.append(Item(t("menu_refresh"), self.refresh, default=True))
         items += list(view_items)
         items += [
@@ -264,6 +271,11 @@ class Controller:
         items += [
             Item(t("menu_update_check"), self.toggle_update_check,
                  checked=bool(cfg.get("update_check", True))),
+        ]
+        if updates.can_install():
+            items.append(Item(t("menu_auto_update"), self.toggle_auto_update,
+                              checked=bool(cfg.get("auto_update"))))
+        items += [
             SEPARATOR,
             Item(t("menu_quit"), self.quit),
         ]
@@ -383,8 +395,54 @@ class Controller:
         save_config(self.cfg)
         self.render()
 
+    def toggle_auto_update(self):
+        self.cfg["auto_update"] = not self.cfg.get("auto_update")
+        if self.cfg["auto_update"]:
+            self.cfg["update_check"] = True
+        save_config(self.cfg)
+        if self.cfg["auto_update"] and self.can_install_update():
+            self.install_update()
+        self.render()
+
     def open_update(self):
-        webbrowser.open(self.update[1] if self.update else updates.RELEASES)
+        webbrowser.open(self.update["page"] if self.update else updates.RELEASES)
+
+    def can_install_update(self):
+        return bool(self.update and self.update.get("installer") and updates.can_install())
+
+    def install_update(self):
+        """Scarica l'installer della nuova versione e lo avvia in silenzio: chiude
+        GlucoBar, lo aggiorna e lo riapre con le stesse impostazioni."""
+        if self._installing or not self.can_install_update():
+            return
+        self._installing = True
+        release = self.update
+        log(f"scarico la versione {release['version']}")
+        self.notify(t("update_title"), t("update_downloading", v=release["version"]), timeout=20)
+        threading.Thread(target=self._download_worker, args=(release,), daemon=True).start()
+
+    def _download_worker(self, release):
+        try:
+            path = updates.download(release)
+        except Exception as e:
+            log(f"aggiornamento non scaricato: {e}")
+            self.post(self._update_failed, str(e))
+            return
+        self.post(self._start_installer, path, release["version"])
+
+    def _update_failed(self, error):
+        self._installing = False
+        self.notify(t("update_title"), t("update_failed", e=error),
+                    actions=[(t("update_notes"), self.open_update)])
+
+    def _start_installer(self, path, version):
+        log(f"avvio l'installer della versione {version}")
+        try:
+            updates.run_installer(path)
+        except OSError as e:
+            log(f"installer non avviato: {e}")
+            self._update_failed(str(e))
+        # l'installer chiede a GlucoBar di chiudersi (vedi instance.py) e lo riapre
 
     def notify(self, title, text, actions=(), timeout=15):
         from .notify import Toast
@@ -533,15 +591,37 @@ class Controller:
         now = time.time()
         # se GitHub non risponde riprova tra un'ora, non tra un minuto
         self.cfg["update_checked_at"] = now if result else now - updates.INTERVAL + 3600
-        if result and updates.is_newer(result[0]):
+        if result and updates.is_newer(result["version"]):
             self.update = result
-            if self.cfg.get("update_notified") != result[0]:
-                self.cfg["update_notified"] = result[0]
-                log(f"nuova versione disponibile: {result[0]}")
-                self.notify(t("update_title"), t("update_text", v=result[0]),
-                            actions=[(t("update_open"), self.open_update)])
+            version = result["version"]
+            if self.cfg.get("auto_update") and self.can_install_update():
+                save_config(self.cfg)
+                self.install_update()
+            elif self.cfg.get("update_notified") != version:
+                self.cfg["update_notified"] = version
+                log(f"nuova versione disponibile: {version}")
+                if self.can_install_update():
+                    actions = [(t("update_install"), self.install_update),
+                               (t("update_notes"), self.open_update)]
+                else:
+                    actions = [(t("update_open"), self.open_update)]
+                self.notify(t("update_title"), t("update_text", v=version), actions=actions)
         save_config(self.cfg)
         self.render()
+
+    def announce_version(self):
+        """Primo avvio dopo un aggiornamento: lo dice, con le novità a un clic."""
+        from . import __version__
+        previous = self.cfg.get("last_version")
+        if previous == __version__:
+            return
+        self.cfg["last_version"] = __version__
+        save_config(self.cfg)
+        if previous and updates.is_newer(__version__, previous):
+            log(f"aggiornato da {previous} a {__version__}")
+            page = f"https://github.com/jackfaz/glucobar/releases/tag/v{__version__}"
+            self.notify(t("update_title"), t("updated_to", v=__version__),
+                        actions=[(t("update_notes"), lambda: webbrowser.open(page))])
 
     def _tick(self):
         if not self.root:

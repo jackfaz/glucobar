@@ -14,6 +14,7 @@ window (finestrella), desktop (pannello sullo sfondo).
 import argparse
 import os
 import sys
+import time
 import traceback
 
 from . import __version__, instance
@@ -44,6 +45,8 @@ def run(elements):
     from . import autostart
     autostart.refresh()   # Mac: l'app può essere stata spostata
 
+    if not account_ready(cfg) and cfg.get("email"):
+        wait_for_credentials(cfg)
     if not account_ready(cfg):
         from .ui_common import ask_credentials
         if not ask_credentials(cfg):
@@ -51,6 +54,22 @@ def run(elements):
 
     from .controller import Controller
     Controller(cfg).run()
+
+
+def wait_for_credentials(cfg, attempts=10, delay=3):
+    """Account già configurato ma password non letta: all'avvio con Windows il Gestione
+    credenziali può non essere ancora pronto. Riprova per una trentina di secondi prima
+    di chiederla di nuovo, e annota il motivo nel log."""
+    from . import credentials
+    for attempt in range(attempts):
+        log(f"password di {cfg['source']} non letta ({credentials.last_problem}), "
+            f"tentativo {attempt + 1} di {attempts}")
+        if credentials.last_problem == "saved for another account":
+            return   # c'è, ma per un altro account: inutile aspettare
+        time.sleep(delay)
+        if account_ready(cfg):
+            log("password letta dopo l'attesa")
+            return
 
 
 def save_choices(elements, language, source=None):

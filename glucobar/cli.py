@@ -109,6 +109,7 @@ SETTINGS = {
     "alert_high": _bool,
     "alert_stale": _bool,
     "update_check": _bool,
+    "auto_update": _bool,
     "sensor_life_days": _int(10, 15),
     "autostart": _bool,   # nel registro di Windows, non in config.json
 }

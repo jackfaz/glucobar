@@ -11,6 +11,10 @@ import sys
 
 from .config import CONFIG_DIR
 
+# Perché l'ultima get_password ha dato None (per il log): "not found", "saved for another
+# account" o l'errore di Windows
+last_problem = None
+
 # sorgente (vedi sources.SOURCES) -> voce nel Gestione credenziali
 TARGETS = {"libre": "GlucoBar:LibreLinkUp", "dexcom": "GlucoBar:Dexcom",
            "nightscout": "GlucoBar:Nightscout"}   # per Nightscout: il token
@@ -63,13 +67,18 @@ if sys.platform == "win32":
             raise OSError(ctypes.get_last_error(), "CredWriteW non riuscita")
 
     def get_password(email, source="libre"):
+        global last_problem
         p = ctypes.POINTER(CREDENTIALW)()
         if not _advapi32.CredReadW(TARGETS[source], CRED_TYPE_GENERIC, 0, ctypes.byref(p)):
+            code = ctypes.get_last_error()
+            last_problem = "not found" if code == ERROR_NOT_FOUND else f"Windows error {code}"
             return None
         try:
             cred = p.contents
             if (cred.UserName or "").lower() != (email or "").lower():
+                last_problem = "saved for another account"
                 return None
+            last_problem = None
             return ctypes.string_at(cred.CredentialBlob,
                                     cred.CredentialBlobSize).decode("utf-16-le")
         finally:

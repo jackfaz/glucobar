@@ -82,6 +82,32 @@ def dpi():
         return "?"
 
 
+def startup_entries():
+    """Cosa parte all'accesso a Windows e somiglia a GlucoBar (anche la prima versione,
+    lo script con .glicemia_widget.json): voci Run e file nella cartella Esecuzione
+    automatica."""
+    if sys.platform != "win32":
+        return []
+    import winreg
+    found = []
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, autostart.RUN_KEY) as key:
+            for i in range(winreg.QueryInfoKey(key)[1]):
+                name, value, _kind = winreg.EnumValue(key, i)
+                if re.search(r"gluco|glicem", f"{name} {value}", re.I):
+                    found.append(f"Run: {name} = {value}")
+    except OSError:
+        pass
+    folder = os.path.join(os.environ.get("APPDATA", ""), "Microsoft", "Windows", "Start Menu",
+                          "Programs", "Startup")
+    try:
+        found += [f"Startup folder: {name}" for name in os.listdir(folder)
+                  if re.search(r"gluco|glicem|widget", name, re.I)]
+    except OSError:
+        pass
+    return found
+
+
 def in_path():
     folders = os.environ.get("PATH", "").lower().split(os.pathsep)
     return any(f.rstrip("\\/").endswith(os.path.join("glucobar", "bin")) for f in folders)
@@ -135,6 +161,8 @@ def build_report(cfg, running, log_lines=40):
     out += [f"{name + ':':<20} {value}" for name, value in rows]
     for line in screens():
         out.append(f"{'Screen:':<20} {line}")
+    for line in startup_entries():
+        out.append(f"{'At login:':<20} {line}")
     out.append("")
     out.append(f"Last {log_lines} log lines ({LOG_PATH}):")
     try:

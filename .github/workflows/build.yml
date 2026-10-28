@@ -251,7 +251,9 @@ jobs:
 
           $setup = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
           $log = Join-Path $env:RUNNER_TEMP "upgrade.log"
-          $p = Start-Process $setup.FullName -Wait -PassThru -ArgumentList ($silent + "/LOG=$log")
+          # -Wait aspetterebbe anche GlucoBar, che l'installer riapre: si aspetta solo lui
+          $p = Start-Process $setup.FullName -PassThru -ArgumentList ($silent + "/LOG=$log")
+          $p.WaitForExit()
           Get-Content $log -Tail 10
           Check ($p.ExitCode -eq 0) "aggiornamento silenzioso (codice $($p.ExitCode))"
           Start-Sleep -Seconds 8
@@ -276,6 +278,15 @@ jobs:
           $u = Start-Process "$dir\unins000.exe" -Wait -PassThru -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"
           cmdkey /delete:GlucoBar:Nightscout | Out-Null
           Remove-Item -Recurse -Force "$env:APPDATA\GlucoBar" -ErrorAction SilentlyContinue
+
+      # Aggiornamento da dentro GlucoBar: trova una versione nuova su un GitHub finto, la
+      # scarica, controlla l'impronta, la installa e si riapre con le stesse impostazioni
+      - name: In-app update test
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
+          python tools/win_update_test.py $setup.FullName
+          if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - uses: actions/upload-artifact@v7
         with:

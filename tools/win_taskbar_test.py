@@ -411,7 +411,9 @@ def hide_small_window_from_its_menu(app):
         time.sleep(1.5)
         gone = "window" not in read_config().get("elements", []) and \
             not small_window_hwnd(app.pid)
-        tries.append("chiusa" if gone else "ANCORA APERTA")
+        with open(LOG, encoding="utf-8") as f:
+            lines = [line.strip()[11:] for line in f.readlines()[-6:]]
+        tries.append(("chiusa" if gone else "ANCORA APERTA") + f" [log: {'; '.join(lines)}]")
         if gone:
             break
     with open(LOG, encoding="utf-8") as f:

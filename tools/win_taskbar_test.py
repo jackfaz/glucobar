@@ -321,6 +321,103 @@ def panel_on_top_check(app):
             f"di nuovo visibile {'sì' if back else 'NO'}"), above and hidden and back
 
 
+def fullscreen_notepad():
+    """Blocco note aperto e messo a schermo intero (senza bordi, grande come il monitor)."""
+    subprocess.Popen(["notepad.exe"])
+    time.sleep(2.5)
+    user32.GetForegroundWindow.restype = ctypes.c_void_p
+    other = user32.GetForegroundWindow()
+    user32.SetWindowLongW(ctypes.c_void_p(other), -16, 0x90000000 - 2 ** 32)   # WS_POPUP|VISIBLE
+    user32.SetWindowPos(ctypes.c_void_p(other), None, 0, 0, user32.GetSystemMetrics(0),
+                        user32.GetSystemMetrics(1), 0x0020 | 0x0040)
+    time.sleep(2.5)
+    return other
+
+
+def write_config(**changes):
+    cfg = read_config()
+    cfg.update(changes)
+    with open(os.path.join(CONFIG_DIR, "config.json"), "w", encoding="utf-8") as f:
+        json.dump(cfg, f)
+
+
+def panel_extra_checks(app):
+    """Pannello in primo piano: il menu col clic destro resta sopra il pannello; con
+    "anche sopra le app a schermo intero" il pannello resta visibile su un video."""
+    panel = panel_hwnd(app.pid)
+    if not panel:
+        return "pannello: non trovato", False
+    r = wintypes.RECT()
+    user32.GetWindowRect(ctypes.c_void_p(panel), ctypes.byref(r))
+    right_click((r.left + r.right) // 2, (r.top + r.bottom) // 2)
+    time.sleep(2.5)   # più di due giri del "torna davanti" del pannello
+    menus = menus_of(app.pid)
+    order = window_order()
+    menu_above = bool(menus) and order.index(menus[0]) < order.index(panel)
+    key(0x1B, 2)
+    write_config(desktop_over_fullscreen=True)
+    time.sleep(3)   # GlucoBar rilegge le impostazioni ogni 2 secondi
+    other = fullscreen_notepad()
+    stays = bool(user32.IsWindowVisible(ctypes.c_void_p(panel)))
+    order = window_order()
+    over = panel in order and other in order and order.index(panel) < order.index(other)
+    user32.PostMessageW(ctypes.c_void_p(other), 0x0010, 0, 0)   # WM_CLOSE
+    time.sleep(1.5)
+    return (f"menu del pannello sopra il pannello dopo 2,5 s: {'sì' if menu_above else 'NO'}, "
+            f"pannello sopra il video a schermo intero (opzione accesa): "
+            f"{'sì' if stays and over else 'NO'}"), menu_above and stays and over
+
+
+def small_window_hwnd(pid):
+    for hwnd in window_order():
+        owner = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(ctypes.c_void_p(hwnd), ctypes.byref(owner))
+        if owner.value != pid or not user32.IsWindowVisible(ctypes.c_void_p(hwnd)):
+            continue
+        r = wintypes.RECT()
+        user32.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(r))
+        if 150 <= r.right - r.left <= 320 and 80 <= r.bottom - r.top <= 200:
+            return hwnd
+    return None
+
+
+def hide_small_window_from_its_menu(app):
+    """Nel menu della finestrella: Show → Small window. Basta un clic per chiuderla?"""
+    tries = []
+    for _ in range(2):
+        hwnd = small_window_hwnd(app.pid)
+        if not hwnd:
+            break
+        r = wintypes.RECT()
+        user32.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(r))
+        right_click((r.left + r.right) // 2, (r.top + r.bottom) // 2)
+        time.sleep(1.0)
+        menus = menus_of(app.pid)
+        where, _texts = menu_item_center(menus[0], 0, cascade=True) if menus else (None, "")
+        if not where:
+            tries.append("menu o Show non trovati")
+            key(0x1B, 2)
+            break
+        click(*where)
+        time.sleep(1.0)
+        sub = [m for m in menus_of(app.pid) if m not in menus]
+        # Show: On the taskbar, Icon next to the clock, Small window, Desktop panel
+        where, _texts = menu_item_center(sub[0], 2) if sub else (None, "")
+        if not where:
+            tries.append("sottomenu Show senza voci")
+            key(0x1B, 3)
+            break
+        click(*where)
+        time.sleep(1.5)
+        gone = "window" not in read_config().get("elements", []) and \
+            not small_window_hwnd(app.pid)
+        tries.append("chiusa" if gone else "ANCORA APERTA")
+        if gone:
+            break
+    return (f"finestrella chiusa dal suo menu (Show): {' / '.join(tries)}",
+            bool(tries) and tries[0] == "chiusa")
+
+
 def menu_checks(app, rect):
     """Clic destro sulle parti trasparenti del valore: deve aprirsi il menu di GlucoBar,
     non quello della barra. Poi "Update every → 10 s" scelto una volta sola deve bastare."""
@@ -361,8 +458,8 @@ def main(exe, strict):
     os.makedirs(CONFIG_DIR, exist_ok=True)
     with open(os.path.join(CONFIG_DIR, "config.json"), "w", encoding="utf-8") as f:
         json.dump({"source": "nightscout", "email": f"http://127.0.0.1:{server.server_port}",
-                   "elements": ["taskbar", "desktop"], "desktop_on_top": True,
-                   "language": "en"}, f)
+                   "elements": ["taskbar", "desktop", "window"], "desktop_on_top": True,
+                   "window_x": 40, "window_y": 40, "language": "en"}, f)
     if os.path.exists(LOG):
         os.remove(LOG)
 
@@ -444,6 +541,10 @@ def main(exe, strict):
         panel_result, panel_ok = panel_on_top_check(app)
         results.append(panel_result)
         problems += not panel_ok
+        for check in (panel_extra_checks, hide_small_window_from_its_menu):
+            result, ok = check(app)
+            results.append(result)
+            problems += not ok
     notice("Valore sulla barra", " | ".join(results))
     for title, img in photos:
         photo_notice(title, img)

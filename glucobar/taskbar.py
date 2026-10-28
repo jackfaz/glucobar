@@ -249,11 +249,14 @@ class TaskbarView:
         """Di nuovo sopra la barra, subito (senza attivare la finestra). Solo Win32:
         si può chiamare da qualsiasi thread."""
         if self.alive and not self.hidden:
-            # prima il valore, poi la finestra dei clic, che resta sopra di lui
-            for hwnd in (self._hwnd, self._hit_hwnd):
-                if hwnd:
-                    user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-                                        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
+            user32.SetWindowPos(self._hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+                                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
+            if self._hit_hwnd:
+                # la finestra dei clic: sopra il valore e esattamente dov'è lui (la
+                # posizione data a Tk non bastava: restava in alto a sinistra)
+                left, top, right, bottom = window_rect(self._hwnd)
+                user32.SetWindowPos(self._hit_hwnd, HWND_TOPMOST, left, top, right - left,
+                                    bottom - top, SWP_NOACTIVATE)
 
     def bar_above(self):
         """La barra delle applicazioni è sopra il valore? Solo Win32."""

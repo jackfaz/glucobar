@@ -209,14 +209,17 @@ def choose_from_menu(app, rect):
         return f"voce non trovata tra {texts}"
     click(*where)
     time.sleep(1.0)
+    first_click = where
     sub = [m for m in menus_of(app.pid) if m not in menus]
     where, texts = menu_item_center(sub[0], "10 s", 0) if sub else (None, [])
     if not where:
         key(0x1B, 3)
         return f"sottomenu senza 10 s ({texts})"
+    photo_notice("Sottomenu", ImageGrab.grab(bbox=(where[0] - 150, where[1] - 40, where[0] + 150,
+                                                   where[1] + 120), all_screens=True), (300, 160))
     click(*where)
     time.sleep(1.5)
-    return read_config().get("refresh_seconds")
+    return f"{read_config().get('refresh_seconds')} (clic a {first_click} e {where})"
 
 
 def menu_checks(app, rect):
@@ -246,10 +249,10 @@ def menu_checks(app, rect):
     first = choose_from_menu(app, rect)
     results.append(f"Update every 10 s al primo colpo: {first}")
     second = None
-    if first != 10:   # e la seconda volta? (il problema segnalato con la 0.8.4)
+    if not str(first).startswith("10 "):   # e la seconda volta? (il problema segnalato con la 0.8.4)
         second = choose_from_menu(app, rect)
         results.append(f"al secondo colpo: {second}")
-    return results, ours == len(points) and first == 10
+    return results, ours == len(points) and str(first).startswith("10 ")
 
 
 def main(exe, strict):

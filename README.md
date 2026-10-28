@@ -157,8 +157,12 @@ in GlucoBar instead: it works the same way.
 ## Use
 
 - **Right-click any GlucoBar element** (the icon, the value on the taskbar, the window or the
-  panel): refresh, *Show* (tick the elements you want), unit, language, change account, quit.
+  panel): refresh, *Show* (tick the elements you want), *Sensor*, *Settings…*, quit.
   **Double-click**: refresh now.
+- **Settings…** has everything else, in tabs: *General* (account, language, unit, how often
+  to update, start with Windows), *Values and alerts* (thresholds, alerts, delta),
+  *Appearance* (theme and every colour), *Elements* (what to show, taskbar value, desktop
+  panel) and *Updates* (installed version, *Check for updates now*, automatic updates).
 - Windows 11 hides new icons under the **^** arrow: drag the GlucoBar icon onto the taskbar to
   keep it visible.
 - Taskbar mode on a second monitor: enable *Settings → Personalization → Taskbar → Taskbar
@@ -168,9 +172,8 @@ in GlucoBar instead: it works the same way.
   the panel, right-click for the chart period, to lock it in place, or to keep it *Always
   on top* of other windows (it hides while an app is full screen).
 - Value on the taskbar: keep the mouse on it for a second to see the full chart just above
-  it. Right-click → *Size* to make it smaller or larger, and *Show the
-  change (delta)* to add the change since the previous reading (e.g. "3 min +5").
-- *Update every*: how often GlucoBar fetches the value, from 10 seconds to 5 minutes.
+  it. Right-click → *Size* to make it smaller or larger. *Settings → Values and alerts →
+  Show the change (delta)* adds the change since the previous reading (e.g. "3 min +5").
 - *Settings…*: theme (light, dark or automatic, following Windows or macOS), every colour
   (the value in range, high, very high, low and old; backgrounds, text, chart and grid of the
   small window and the panel, for each theme; the background of the value on the taskbar)
@@ -227,7 +230,7 @@ GlucoBar-Setup-0.9.2.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `stale_minutes` | 15 | After this, the value turns grey |
 | `hover_chart` | true | Show the full chart when the mouse rests on the value on the taskbar |
 | `show_delta` | false | Show the change since the previous reading, per 5 minutes, on the taskbar and the small window |
-| `refresh_seconds` | 60 | How often to fetch, from 10 to 3600 seconds (also in the right-click menu: *Update every*) |
+| `refresh_seconds` | 60 | How often to fetch, from 10 to 3600 seconds (also in Settings → General) |
 | `language` | `auto` | `en`, `it`, `es`, `fr`, `de`, `pt` |
 | `taskbar_monitor` | 1 | 1 = main monitor, 2 = second, … |
 | `taskbar_offset` | 0 | Extra pixels (negative = left) |

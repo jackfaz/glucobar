@@ -114,7 +114,7 @@ def main():
 
         def shoot():
             time.sleep(1.2)
-            key(0x28, 4)   # giù fino a "Update every"...
+            key(0x28, 2)   # giù fino a "Show"...
             key(0x27)      # ...e si apre il sottomenu
             time.sleep(1.0)
             grab(name, (x - 20, y - 20, min(sw, x + 520), min(sh, y + 330)))
@@ -175,6 +175,10 @@ def main():
         (500, lambda: popup_menu(ctl.views["window"], "menu", next_step)),
         (None, lambda: ctl.open_settings()),
         (2000, lambda: grab("settings", frame(SettingsWindow.current.win))),
+        *[step for n, name in enumerate(("general", "values", "look", "elements", "updates"))
+          for step in ((300, lambda n=n: SettingsWindow.current.notebook.select(n)),
+                       (900, lambda name=name: grab(f"settings-{name}",
+                                                    frame(SettingsWindow.current.win))))],
         (500, lambda: SettingsWindow.current.close()),
         (500, lambda: restyle(theme="light")),
         (2500, lambda: grab("elements-light", elements_box)),
@@ -185,7 +189,7 @@ def main():
                               color_high="#ffb000", ui_colors={"dark": {
                                   "bg": "#16213e", "panel": "#0f1629", "grid": "#26324f",
                                   "line": "#e0e6ff"}})),
-        (500, lambda: ctl.open_settings()),
+        (500, lambda: SettingsWindow.open(ctl, "look")),
         (2500, lambda: (grab("elements-custom", elements_box),
                         grab("settings-custom", frame(SettingsWindow.current.win)))),
         (500, lambda: SettingsWindow.current.close()),

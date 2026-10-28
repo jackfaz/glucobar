@@ -343,10 +343,6 @@ class TaskbarView:
             Item(t("menu_size"), children=radio_items(
                 [(scale, t(key)) for scale, key in SIZES], float(self.cfg["taskbar_scale"]),
                 self.set_scale)),
-            Item(t("menu_delta"), self.ctl.toggle_delta,
-                 checked=bool(self.cfg.get("show_delta"))),
-            Item(t("menu_hover_chart"), self.ctl.toggle_hover_chart,
-                 checked=bool(self.cfg.get("hover_chart", True))),
         ]
 
     def set_scale(self, scale):

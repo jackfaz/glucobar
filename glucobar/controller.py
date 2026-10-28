@@ -16,11 +16,11 @@ import tkinter as tk
 import traceback
 import webbrowser
 
-from . import autostart, i18n, instance, sensor, support, theme, updates
+from . import i18n, instance, sensor, support, theme, updates
 from .alerts import AlertWatch
 from .config import (ELEMENTS, MIN_REFRESH, REFRESH_CHOICES, log, normalize_elements,
                      peek_config, save_config)
-from .i18n import LANGUAGES, element_name, refresh_label, t
+from .i18n import element_name, refresh_label, t
 from .menus import SEPARATOR, Item, radio_items
 from .sources import fetch_safely, make_client
 from .theme import COLOR_KEYS
@@ -246,7 +246,6 @@ class Controller:
 
     # ---- menu (uguale per clic destro, icona e barra dei menu del Mac) ----
     def menu_items(self, view_items=()):
-        cfg = self.cfg
         items = []
         if self.update:
             version = self.update["version"]
@@ -257,55 +256,22 @@ class Controller:
             items.append(SEPARATOR)
         items.append(Item(t("menu_refresh"), self.refresh, default=True))
         items += list(view_items)
-        items += [
-            Item(t("menu_show"), children=[
-                Item(element_name(e), self.toggle_element, e, checked=self.shown(e))
-                for e in ELEMENTS if self.available(e)]),
-            Item(t("menu_unit"), self.toggle_unit),
-            Item(t("menu_refresh_every"), children=radio_items(
-                [(s, refresh_label(s)) for s in self.refresh_choices()],
-                self.refresh_seconds(), self.set_refresh)),
-            Item(t("menu_alerts"), children=self.alert_items()),
-        ]
+        items.append(Item(t("menu_show"), children=[
+            Item(element_name(e), self.toggle_element, e, checked=self.shown(e))
+            for e in ELEMENTS if self.available(e)]))
         patients = getattr(self.client, "patients", None) or []
         if len(patients) > 1:
             items.append(Item(t("menu_person"), children=radio_items(
                 patients, self.client.patient_id, self.set_patient)))
-        items.append(Item(t("menu_sensor"), children=self.sensor_items()))
+        # il resto (unità, aggiornamento, avvisi, lingua, account, avvio, nuove versioni)
+        # sta nella finestra Impostazioni, divisa per argomento
         items += [
+            Item(t("menu_sensor"), children=self.sensor_items()),
             Item(t("menu_settings"), self.open_settings),
-            Item(t("menu_language"), children=radio_items(
-                list(LANGUAGES.items()), i18n.current_language(), self.set_language)),
-            Item(t("menu_account"), self.change_account),
-        ]
-        if autostart.gui_exe():   # solo nell'app installata, non da sorgente
-            enabled = autostart.is_enabled()
-            label = t("menu_autostart" if sys.platform == "darwin" else "menu_autostart_win")
-            items.append(Item(label, autostart.set_enabled, not enabled, checked=enabled))
-        items += [
-            Item(t("menu_update_check"), self.toggle_update_check,
-                 checked=bool(cfg.get("update_check", True))),
-        ]
-        if updates.can_install():
-            items.append(Item(t("menu_auto_update"), self.toggle_auto_update,
-                              checked=bool(cfg.get("auto_update"))))
-        items += [
             SEPARATOR,
             Item(t("menu_quit"), self.quit),
         ]
         return items
-
-    def alert_items(self):
-        cfg = self.cfg
-        unit = cfg["unit"]
-        labels = {
-            "low": t("alert_menu_low", v=f"{fmt_value(cfg, cfg['low'])} {unit}"),
-            "high": t("alert_menu_high", v=f"{fmt_value(cfg, cfg['very_high'])} {unit}"),
-            "stale": t("alert_menu_stale", n=cfg["stale_minutes"]),
-        }
-        return ([Item(labels[kind], self.toggle_alert, kind,
-                      checked=bool(cfg.get(f"alert_{kind}"))) for kind in labels]
-                + [SEPARATOR, Item(t("alert_menu_note"), enabled=False)])
 
     def sensor_items(self):
         items = []
@@ -467,8 +433,14 @@ class Controller:
             log("rilettura impostazioni:\n" + traceback.format_exc())
         self.root.after(2000, self._watch_config)
 
-    def apply_external(self, saved, changed):
-        log(f"impostazioni cambiate da fuori: {', '.join(changed)}")
+    def set_options(self, **changes):
+        """Impostazioni cambiate dalla finestra Impostazioni: si applicano subito."""
+        self.apply_external(dict(self.cfg, **changes), list(changes), quiet=True)
+        save_config(self.cfg)
+
+    def apply_external(self, saved, changed, quiet=False):
+        if not quiet:
+            log(f"impostazioni cambiate da fuori: {', '.join(changed)}")
         for key in changed:
             self.cfg[key] = saved[key]
         if "language" in changed:
@@ -562,24 +534,26 @@ class Controller:
                 self.notify(t("sensor_msg_title"), text, actions=[
                     (t("replace_open"), lambda sn=data["sn"]: self.request_replacement("libre", sn))])
 
-    def check_updates(self):
+    def check_updates(self, force=False, done=None):
+        """Una volta al giorno; con force=True subito (Impostazioni → Cerca aggiornamenti),
+        e alla fine done(release o None, errore o None)."""
         now = time.time()
-        if (not self.cfg.get("update_check", True) or self._checking_update
-                or now - self._started < 60
-                or now - float(self.cfg.get("update_checked_at") or 0) < updates.INTERVAL):
+        if self._checking_update or (not force and (
+                not self.cfg.get("update_check", True) or now - self._started < 60
+                or now - float(self.cfg.get("update_checked_at") or 0) < updates.INTERVAL)):
             return
         self._checking_update = True
-        threading.Thread(target=self._update_worker, daemon=True).start()
+        threading.Thread(target=self._update_worker, args=(done,), daemon=True).start()
 
-    def _update_worker(self):
+    def _update_worker(self, done):
         try:
-            result = updates.latest_release()
+            result, error = updates.latest_release(), None
         except Exception as e:
             log(f"controllo nuova versione non riuscito: {e}")
-            result = None
-        self.post(self._on_update, result)
+            result, error = None, str(e)
+        self.post(self._on_update, result, done, error)
 
-    def _on_update(self, result):
+    def _on_update(self, result, done=None, error=None):
         self._checking_update = False
         now = time.time()
         # se GitHub non risponde riprova tra un'ora, non tra un minuto
@@ -590,7 +564,7 @@ class Controller:
             if self.cfg.get("auto_update") and self.can_install_update():
                 save_config(self.cfg)
                 self.install_update()
-            elif self.cfg.get("update_notified") != version:
+            elif done is None and self.cfg.get("update_notified") != version:
                 self.cfg["update_notified"] = version
                 log(f"nuova versione disponibile: {version}")
                 if self.can_install_update():
@@ -601,6 +575,8 @@ class Controller:
                 self.notify(t("update_title"), t("update_text", v=version), actions=actions)
         save_config(self.cfg)
         self.render()
+        if done:   # controllo chiesto dalle Impostazioni: risponde lì
+            done(result, error)
 
     def announce_version(self):
         """Primo avvio dopo un aggiornamento: lo dice, con le novità a un clic."""

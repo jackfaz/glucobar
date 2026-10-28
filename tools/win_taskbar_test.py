@@ -198,7 +198,8 @@ def menu_item_center(menu_hwnd, index, cascade=False):
 
 
 def choose_from_menu(app, rect):
-    """Clic destro sul valore, clic su "Update every", clic su "10 s": come una persona."""
+    """Clic destro sul valore, clic su "Size", clic su "Small": come una persona.
+    Ritorna il taskbar_scale salvato (0.85 se la scelta ha funzionato)."""
     x0, y0, x1, y1 = rect
     # su una cifra: così vale anche per le versioni in cui il fondo non prende i clic
     img = ImageGrab.grab(bbox=rect, all_screens=True)
@@ -210,8 +211,8 @@ def choose_from_menu(app, rect):
     menus = menus_of(app.pid)
     if not menus:
         return "menu non aperto"
-    # sottomenu, in ordine: Size, Show, Update every
-    where, texts = menu_item_center(menus[0], 2, cascade=True)
+    # il primo sottomenu del valore sulla barra è Size
+    where, texts = menu_item_center(menus[0], 0, cascade=True)
     if not where:
         key(0x1B, 2)
         return f"voce non trovata tra {texts}"
@@ -222,12 +223,12 @@ def choose_from_menu(app, rect):
     where, texts = menu_item_center(sub[0], 0) if sub else (None, "nessun sottomenu")
     if not where:
         key(0x1B, 3)
-        return f"sottomenu senza 10 s ({texts})"
+        return f"sottomenu senza voci ({texts})"
     photo_notice("Sottomenu", ImageGrab.grab(bbox=(where[0] - 150, where[1] - 40, where[0] + 150,
                                                    where[1] + 120), all_screens=True), (300, 160))
     click(*where)
     time.sleep(1.5)
-    return f"{read_config().get('refresh_seconds')} (clic a {first_click} e {where})"
+    return f"{read_config().get('taskbar_scale')} (clic a {first_click} e {where})"
 
 
 def big_windows(pid):
@@ -343,12 +344,12 @@ def menu_checks(app, rect):
                f"(sotto il mouse: {', '.join(under)}; * = GlucoBar)",
                "finestre dall'alto: " + " / ".join(windows_of(app.pid))]
     first = choose_from_menu(app, rect)
-    results.append(f"Update every 10 s al primo colpo: {first}")
+    results.append(f"Size → Small al primo colpo: {first}")
     second = None
-    if not str(first).startswith("10 "):   # e la seconda volta? (il problema segnalato con la 0.8.4)
+    if not str(first).startswith("0.85 "):   # e la seconda volta? (il problema segnalato con la 0.8.4)
         second = choose_from_menu(app, rect)
         results.append(f"al secondo colpo: {second}")
-    return results, ours == len(points) and str(first).startswith("10 ")
+    return results, ours == len(points) and str(first).startswith("0.85 ")
 
 
 def main(exe, strict):

@@ -7,7 +7,7 @@ import tkinter as tk
 
 from .config import save_config
 from .i18n import t
-from .menus import Item, popup
+from .menus import popup
 from .sources import TREND_ARROWS
 from .theme import palette
 from . import stats
@@ -130,9 +130,7 @@ class WindowView:
         self.show_menu(e.x_root, e.y_root)
 
     def show_menu(self, x, y):
-        items = [Item(t("menu_delta"), self.ctl.toggle_delta,
-                      checked=bool(self.cfg.get("show_delta")))]
-        popup(self.root, self.ctl.menu_items(items), self.ctl.post, x, y)
+        popup(self.root, self.ctl.menu_items(), self.ctl.post, x, y)
 
     # ---- disegno ----
     def render(self):

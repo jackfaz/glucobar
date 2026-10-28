@@ -158,8 +158,13 @@ in GlucoBar: funziona allo stesso modo.
 ## Uso
 
 - **Clic destro su qualsiasi elemento di GlucoBar** (l'icona, il valore sulla barra, la
-  finestrella o il pannello): aggiorna, *Mostra* (spunta gli elementi che vuoi), unità, lingua,
-  cambia account, esci. **Doppio clic**: aggiorna subito.
+  finestrella o il pannello): aggiorna, *Mostra* (spunta gli elementi che vuoi), *Sensore*,
+  *Impostazioni…*, esci. **Doppio clic**: aggiorna subito.
+- **Impostazioni…** contiene tutto il resto, diviso in schede: *Generale* (account, lingua,
+  unità, ogni quanto aggiornare, avvio con Windows), *Valori e avvisi* (soglie, avvisi,
+  delta), *Aspetto* (tema e tutti i colori), *Elementi* (cosa mostrare, valore sulla barra,
+  pannello) e *Aggiornamenti* (versione installata, *Cerca aggiornamenti adesso*,
+  aggiornamenti automatici).
 - Windows 11 nasconde le icone nuove sotto la freccetta **^**: trascina l'icona di GlucoBar
   sulla barra per tenerla sempre visibile.
 - Barra sul secondo monitor: attiva *Impostazioni → Personalizzazione → Barra delle applicazioni →
@@ -170,10 +175,9 @@ in GlucoBar: funziona allo stesso modo.
   bloccarlo o per tenerlo *Sempre in primo piano* sopra le altre finestre (si nasconde
   quando un'app è a schermo intero).
 - Valore sulla barra: tieni il mouse sopra per un secondo e compare il grafico completo
-  subito sopra. Clic destro → *Dimensione* per rimpicciolirlo o ingrandirlo, e
-  *Mostra la variazione (delta)* per aggiungere la variazione dalla lettura precedente
-  (es. "3 min +5").
-- *Aggiorna ogni*: ogni quanto GlucoBar legge il dato, da 10 secondi a 5 minuti.
+  subito sopra. Clic destro → *Dimensione* per rimpicciolirlo o ingrandirlo.
+  *Impostazioni → Valori e avvisi → Mostra la variazione (delta)* aggiunge la variazione
+  dalla lettura precedente (es. "3 min +5").
 - *Impostazioni…*: tema (chiaro, scuro o automatico, segue Windows o macOS), tutti i colori
   (il valore nel range, alto, molto alto, basso e vecchio; sfondi, testi, grafico e griglia
   di finestrella e pannello, per ciascun tema; lo sfondo del valore sulla barra) e soglie.
@@ -231,7 +235,7 @@ GlucoBar-Setup-0.9.2.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `stale_minutes` | 15 | Oltre questo il valore diventa grigio |
 | `hover_chart` | true | Mostra il grafico completo tenendo il mouse sul valore della barra |
 | `show_delta` | false | Mostra la variazione dalla lettura precedente, ogni 5 minuti, sulla barra e nella finestrella |
-| `refresh_seconds` | 60 | Ogni quanto leggere il dato, da 10 a 3600 secondi (anche dal menu col clic destro: *Aggiorna ogni*) |
+| `refresh_seconds` | 60 | Ogni quanto leggere il dato, da 10 a 3600 secondi (anche da Impostazioni → Generale) |
 | `language` | `auto` | `it`, `en`, `es`, `fr`, `de`, `pt` |
 | `taskbar_monitor` | 1 | 1 = monitor principale, 2 = secondo, … |
 | `taskbar_offset` | 0 | Pixel di spostamento (negativo = a sinistra) |

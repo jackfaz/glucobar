@@ -258,13 +258,15 @@ def hover_check(app, rect):
     early = big_windows(app.pid)
     time.sleep(1.4)
     shown = big_windows(app.pid)
+    drawn = green_pixels(ImageGrab.grab(bbox=shown[0], all_screens=True)) if shown else 0
     user32.SetCursorPos(user32.GetSystemMetrics(0) // 2, 200)
     time.sleep(0.8)
     gone = not big_windows(app.pid)
     above = bool(shown) and shown[0][3] <= y0
-    ok = not early and bool(shown) and above and gone
+    ok = not early and bool(shown) and above and gone and drawn >= 300
     return (f"grafico col mouse: dopo 0,4 s {'NO' if not early else 'già visibile'}, "
-            f"dopo 1,8 s {shown[0] if shown else 'NO'}{' sopra il valore' if above else ''}, "
+            f"dopo 1,8 s {shown[0] if shown else 'NO'}{' sopra il valore' if above else ''} "
+            f"con {drawn} pixel verdi disegnati, "
             f"mouse via: {'sparito' if gone else 'ANCORA LÌ'}"), ok
 
 

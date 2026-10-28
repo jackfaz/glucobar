@@ -13,7 +13,7 @@ DELAY_MS = 1000     # quanto tenere il mouse sul valore
 POLL_MS = 100       # ogni quanto si guarda dov'è il mouse
 STEPS = 8           # fotogrammi dell'animazione...
 STEP_MS = 18        # ...uno ogni 18 ms (circa 150 ms in tutto)
-ALPHA = 0.97
+ALPHA = 1.0
 SLIDE = 12          # pixel di scorrimento verso l'alto mentre compare
 WIDTH, HEIGHT = 500, 310
 
@@ -50,6 +50,8 @@ class PeekView(DesktopView):
         self.root.configure(bg=self.c.grid)   # bordo sottile
         self.canvas = tk.Canvas(self.root, bg=self.c.panel, highlightthickness=0)
         self.canvas.pack(fill="both", expand=True, padx=1, pady=1)
+        # su Windows la dimensione vera arriva dopo: si ridisegna quando arriva
+        self.canvas.bind("<Configure>", lambda _e: self.render())
         self.s = max(1.0, self.root.winfo_fpixels("1i") / 96)
         self._styled = False
 
@@ -129,6 +131,8 @@ class PeekView(DesktopView):
         if self.progress == goal:
             if goal == 0:
                 self.root.withdraw()
+            else:
+                self.draw()
             return
         self._anim = self.root.after(STEP_MS, self._step)
 

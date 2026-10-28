@@ -17,8 +17,7 @@
   <a href="#setting-up-librelinkup">LibreLinkUp setup</a> ·
   <a href="#use">Use</a> ·
   <a href="#sensors">Sensors</a> ·
-  <a href="CHANGELOG.md">Changelog</a> ·
-  <a href="README.it.md">Italiano</a>
+  <a href="CHANGELOG.md">Changelog</a>
 </p>
 
 GlucoBar shows your FreeStyle Libre or Dexcom reading on your Windows PC, so you can keep an

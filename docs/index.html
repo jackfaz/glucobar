@@ -81,16 +81,93 @@
 
   /* apertura */
   .hero { padding: 64px 0 40px; }
-  .hero .wrap { display: grid; grid-template-columns: 1fr 1.1fr; gap: 48px; align-items: center; }
+  .hero .wrap { display: grid; grid-template-columns: 1fr; gap: 44px; }
+  .hero .text { max-width: 760px; }
   .hero h1 { font-size: clamp(32px, 5vw, 48px); line-height: 1.12; margin: 0 0 16px;
              letter-spacing: -.02em; }
   .hero h1 em { font-style: normal; color: var(--green); }
   .hero p.lead { font-size: 19px; color: var(--dim); margin: 0 0 28px; max-width: 34em; }
-  .hero .shot { border-radius: 12px; box-shadow: var(--shadow); }
   @media (max-width: 860px) {
     .hero { padding-top: 40px; }
-    .hero .wrap { grid-template-columns: 1fr; gap: 32px; }
+    .hero .wrap { gap: 32px; }
   }
+
+  /* scena animata: un desktop finto in cui passa una giornata in 24 secondi */
+  .demo { margin: 0; }
+  .screen {
+    container-type: inline-size; position: relative; aspect-ratio: 16 / 9; overflow: hidden;
+    border-radius: 14px; box-shadow: var(--shadow); border: 1px solid var(--line);
+    background:
+      radial-gradient(60% 80% at 78% 18%, #3a6fe0 0%, transparent 60%),
+      radial-gradient(55% 70% at 18% 85%, #24489e 0%, transparent 65%),
+      radial-gradient(40% 50% at 50% 50%, #18306b 0%, transparent 80%),
+      linear-gradient(160deg, #0d1c45, #0a1430);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif; color: #f2f2f2;
+    user-select: none;
+  }
+  .screen .doc {
+    position: absolute; left: 3cqw; top: 4cqw; width: 44cqw; height: 37cqw;
+    background: #f3f4f6; border-radius: .8cqw; box-shadow: 0 1cqw 3cqw rgba(0,0,0,.35); overflow: hidden;
+  }
+  .screen .doc .bar { height: 2.6cqw; background: #e3e5e9; display: flex; align-items: center; padding: 0 1.2cqw; gap: .6cqw; }
+  .screen .doc .bar i { width: .9cqw; height: .9cqw; border-radius: 50%; background: #c4c8cf; }
+  .screen .doc .lines { padding: 2.2cqw 2.4cqw; display: grid; gap: 1.25cqw; }
+  .screen .doc .lines b { display: block; height: .9cqw; border-radius: .45cqw; background: #d5d9df; }
+  .screen .doc .lines b.h { height: 1.6cqw; width: 45%; background: #b9bec7; margin-bottom: .6cqw; }
+  .screen .panel {
+    position: absolute; right: 3cqw; top: 4cqw; width: 45cqw; height: 37cqw;
+    background: #15171c; border: 1px solid #2a2d35; border-radius: .5cqw; padding: 1.4cqw 1.6cqw 1cqw;
+    display: grid; grid-template-rows: auto 1fr; box-shadow: 0 1cqw 3cqw rgba(0,0,0,.35);
+  }
+  .screen .head { display: flex; justify-content: space-between; gap: 1cqw; }
+  .screen .big { font-weight: 700; font-size: 5.2cqw; line-height: 1; letter-spacing: -.02em;
+                 display: flex; align-items: baseline; gap: .8cqw; }
+  .screen .big .arrow { font-size: 3.4cqw; }
+  .screen .sub { color: #8a8d93; font-size: 1.15cqw; margin-top: .5cqw; white-space: nowrap; }
+  .screen .stats { display: grid; grid-template-columns: auto auto auto auto; gap: .25cqw 1cqw;
+                   font-size: 1.05cqw; color: #8a8d93; align-content: start; white-space: nowrap; }
+  .screen .stats b { color: #f2f2f2; text-align: right; font-weight: 600; }
+  .screen .stats b.g { color: #3ecf6e; } .screen .stats b.r { color: #ff4d4f; } .screen .stats b.a { color: #f5a524; }
+  .screen .chart { position: relative; min-height: 0; margin-top: .8cqw; }
+  .screen canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .screen .taskbar {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 6cqw;
+    background: rgba(28, 30, 36, .92); border-top: 1px solid rgba(255,255,255,.06);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .screen .apps { display: flex; gap: 1.1cqw; }
+  .screen .apps i { width: 2.6cqw; height: 2.6cqw; border-radius: .5cqw; display: block; }
+  .screen .tray { position: absolute; right: 1.6cqw; top: 0; bottom: 0; display: flex; align-items: center; gap: 1.6cqw; }
+  .screen .gb { text-align: center; line-height: 1; }
+  .screen .gb .v { font-weight: 700; font-size: 2.3cqw; }
+  .screen .gb .v span { font-size: 1.9cqw; margin-left: .3cqw; }
+  .screen .gb .m { font-size: .95cqw; color: #9a9da3; margin-top: .35cqw; }
+  .screen .icons { display: flex; gap: .9cqw; align-items: center; color: #d8dade; font-size: 1.3cqw; }
+  .screen .icons .num { font-weight: 700; font-size: 1.4cqw; }
+  .screen .clock { text-align: right; font-size: 1.1cqw; line-height: 1.35; color: #e8e9eb; font-variant-numeric: tabular-nums; }
+  .screen .toast {
+    position: absolute; right: 1.6cqw; bottom: 7.4cqw; width: 27cqw; padding: 1.2cqw 1.4cqw;
+    background: #23252b; border: 1px solid #34373f; border-radius: .6cqw; box-shadow: 0 1cqw 3cqw rgba(0,0,0,.45);
+    font-size: 1.15cqw; transform: translateY(2cqw); opacity: 0; transition: opacity .35s, transform .35s;
+  }
+  .screen .toast.on { opacity: 1; transform: none; }
+  .screen .toast b { display: block; font-size: 1.25cqw; margin-bottom: .3cqw; }
+  .screen .toast span { color: #c9ccd1; }
+  @media (max-width: 600px) { .screen { aspect-ratio: 4 / 3; } }
+  @container (max-width: 560px) {
+    .screen .doc { display: none; }
+    .screen .panel { left: 4cqw; right: 4cqw; top: 4cqw; width: auto; height: 56cqw; padding: 2.4cqw 3cqw 2cqw; }
+    .screen .big { font-size: 9cqw; } .screen .big .arrow { font-size: 6cqw; }
+    .screen .sub { font-size: 2.4cqw; } .screen .stats { font-size: 2.2cqw; gap: .4cqw 1.6cqw; }
+    .screen .taskbar { height: 10cqw; } .screen .apps { display: none; }
+    .screen .tray { gap: 3cqw; right: 3cqw; }
+    .screen .gb .v { font-size: 4.6cqw; } .screen .gb .v span { font-size: 3.8cqw; } .screen .gb .m { font-size: 2cqw; }
+    .screen .icons { font-size: 2.6cqw; gap: 1.6cqw; } .screen .icons .num { font-size: 2.8cqw; }
+    .screen .clock { font-size: 2.2cqw; }
+    .screen .toast { width: 56cqw; bottom: 12cqw; right: 3cqw; font-size: 2.4cqw; padding: 2cqw 2.4cqw; }
+    .screen .toast b { font-size: 2.6cqw; }
+  }
+  .demo figcaption { font-size: 13px; color: var(--dim); margin-top: 10px; text-align: center; }
   .buttons { display: flex; flex-wrap: wrap; gap: 12px; }
   .btn {
     display: inline-flex; align-items: center; gap: 8px;
@@ -216,7 +293,7 @@
 <main>
 <div class="hero">
   <div class="wrap">
-    <div>
+    <div class="text">
       <h1>Your glucose on the Windows taskbar, <em>next to the clock</em>.</h1>
       <p class="lead">GlucoBar shows your FreeStyle Libre or Dexcom reading on your PC, with the trend
         and how long ago it was measured, so you can keep an eye on it while you work without
@@ -231,8 +308,39 @@
       </div>
       <p class="meta"><span id="version">Latest version</span> · Windows 10 and 11 · free and open source (MIT)</p>
     </div>
-    <img class="shot" src="screenshots/hover-chart.png" width="560" height="398"
-         alt="The value 142 with an up arrow on the Windows taskbar, and above it the full 12-hour chart with average, minimum, maximum and time in range">
+    <figure class="demo">
+      <div class="screen" id="demo" role="img"
+           aria-label="A Windows desktop with GlucoBar: the glucose value on the taskbar next to the clock and a desktop panel with the chart of the day, changing colour as the value goes up and down">
+        <div class="doc" aria-hidden="true">
+          <div class="bar"><i></i><i></i><i></i></div>
+          <div class="lines"><b class="h"></b><b style="width:92%"></b><b style="width:86%"></b><b style="width:95%"></b><b style="width:60%"></b><b style="width:0;height:.6cqw;background:none"></b><b style="width:90%"></b><b style="width:83%"></b><b style="width:70%"></b></div>
+        </div>
+        <div class="panel" aria-hidden="true">
+          <div class="head">
+            <div>
+              <div class="big" id="d-big"><span id="d-val">112</span><span class="arrow" id="d-arrow">→</span></div>
+              <div class="sub" id="d-sub">mg/dL · now</div>
+            </div>
+            <div class="stats">
+              <span>Average</span><b id="d-avg">112</b><span>In range</span><b class="g" id="d-in">100%</b>
+              <span>Min</span><b id="d-min">112</b><span>Below</span><b class="r" id="d-below">0%</b>
+              <span>Max</span><b id="d-max">112</b><span>Above</span><b class="a" id="d-above">0%</b>
+            </div>
+          </div>
+          <div class="chart"><canvas id="d-chart"></canvas></div>
+        </div>
+        <div class="toast" id="d-toast" aria-hidden="true"><b>GlucoBar alert</b><span id="d-toast-text">Low glucose: 64 mg/dL</span></div>
+        <div class="taskbar" aria-hidden="true">
+          <div class="apps"><i style="background:linear-gradient(135deg,#4cc2ff,#0067c0)"></i><i style="background:#3a3d45"></i><i style="background:linear-gradient(135deg,#ffd35c,#e8a317)"></i><i style="background:linear-gradient(135deg,#3ddc97,#0a84c6)"></i><i style="background:linear-gradient(135deg,#7aa7ff,#3d5afe)"></i></div>
+          <div class="tray">
+            <div class="gb"><div class="v" id="d-tb"><span id="d-tbv">112</span><span id="d-tba">→</span></div><div class="m">now</div></div>
+            <div class="icons"><span>^</span><span class="num" id="d-tray">112</span><span>&#9776;</span></div>
+            <div class="clock"><div id="d-clock">00:00</div><div>28/10/2026</div></div>
+          </div>
+        </div>
+      </div>
+      <figcaption>A simulated day, one hour per second. The readings are made up.</figcaption>
+    </figure>
   </div>
 </div>
 
@@ -501,6 +609,109 @@
 </footer>
 
 <script>
+  // Scena in cima: una giornata simulata, un'ora al secondo
+  (function () {
+    var screen = document.getElementById("demo");
+    if (!screen) return;
+    var GREEN = "#3ecf6e", AMBER = "#f5a524", RED = "#ff4d4f", DIM = "#8a8d93", GRID = "#2a2d35", BAND = "#1b3325";
+    var STEPS = 288, DAY_MS = 24000, HOLD_MS = 2500;
+
+    function bump(h, at, width, height) { return height * Math.exp(-Math.pow((h - at) / width, 2)); }
+    var values = [];
+    for (var i = 0; i <= STEPS; i++) {
+      var h = i * 24 / STEPS;
+      var v = 112 + bump(h, 5.8, 1.3, 18) + bump(h, 8.3, .75, 92) + bump(h, 13.4, .85, 62)
+              - bump(h, 16.6, .6, 62) + bump(h, 20.4, .85, 98) - bump(h, 2.8, 1.2, 14)
+              + 4 * Math.sin(i / 3.1) + 3 * Math.sin(i / 7.7);
+      values.push(Math.max(48, Math.min(320, Math.round(v))));
+    }
+    function color(v) { return v < 70 || v > 250 ? RED : v > 180 ? AMBER : GREEN; }
+    function arrow(d) { return d >= 9 ? "\u2191" : d >= 4 ? "\u2197" : d > -4 ? "\u2192" : d > -9 ? "\u2198" : "\u2193"; }
+    function hhmm(i) { var m = i * 5; return String(Math.floor(m / 60) % 24).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); }
+    function $(id) { return document.getElementById(id); }
+
+    var canvas = $("d-chart"), ctx = canvas.getContext("2d"), toast = $("d-toast");
+    function size() {
+      var r = canvas.getBoundingClientRect(), k = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.round(r.width * k)); canvas.height = Math.max(1, Math.round(r.height * k));
+    }
+    function draw(n) {
+      var W = canvas.width, H = canvas.height, f = W / 100;
+      var left = 5.5 * f, right = W - f, top = 2 * f, bottom = H - 5 * f;
+      function x(i) { return left + (right - left) * i / STEPS; }
+      function y(v) { return bottom - (bottom - top) * (v - 40) / 260; }
+      ctx.clearRect(0, 0, W, H);
+      ctx.font = Math.round(2.4 * f) + "px Segoe UI, system-ui, sans-serif";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = BAND; ctx.fillRect(left, y(180), right - left, y(70) - y(180));
+      ctx.lineWidth = Math.max(1, .2 * f);
+      for (var t = 0; t <= 24; t += 6) {
+        ctx.strokeStyle = GRID; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(x(t * 12), top); ctx.lineTo(x(t * 12), bottom); ctx.stroke();
+        ctx.fillStyle = DIM; ctx.textAlign = t === 0 ? "left" : t === 24 ? "right" : "center";
+        ctx.fillText(String(t % 24).padStart(2, "0") + ":00", x(t * 12), bottom + 2.6 * f);
+      }
+      [[180, AMBER], [70, RED]].forEach(function (line) {
+        ctx.strokeStyle = line[1]; ctx.setLineDash([.8 * f, .8 * f]);
+        ctx.beginPath(); ctx.moveTo(left, y(line[0])); ctx.lineTo(right, y(line[0])); ctx.stroke();
+        ctx.setLineDash([]); ctx.fillStyle = line[1]; ctx.textAlign = "right";
+        ctx.fillText(line[0], left - f, y(line[0]));
+      });
+      ctx.fillStyle = DIM; ctx.textAlign = "right"; ctx.fillText("300", left - f, y(300));
+      ctx.lineWidth = .8 * f; ctx.lineCap = "round";
+      for (var i = 1; i <= n; i++) {
+        ctx.strokeStyle = color(values[i]);
+        ctx.beginPath(); ctx.moveTo(x(i - 1), y(values[i - 1])); ctx.lineTo(x(i), y(values[i])); ctx.stroke();
+      }
+      ctx.lineWidth = .45 * f; ctx.strokeStyle = color(values[n]);
+      ctx.beginPath(); ctx.arc(x(n), y(values[n]), 1.2 * f, 0, Math.PI * 2); ctx.stroke();
+    }
+    function show(n) {
+      var v = values[n], c = color(v), a = arrow(v - values[Math.max(0, n - 1)]);
+      var change = v - values[Math.max(0, n - 3)];
+      $("d-val").textContent = v; $("d-arrow").textContent = a; $("d-big").style.color = c;
+      $("d-sub").textContent = "mg/dL \u00b7 now \u00b7 " + (change >= 0 ? "+" : "") + change + " in 15 min";
+      $("d-tbv").textContent = v; $("d-tba").textContent = a; $("d-tb").style.color = c;
+      $("d-tray").textContent = v; $("d-tray").style.color = c;
+      $("d-clock").textContent = hhmm(n);
+      var seen = values.slice(0, n + 1), sum = 0, low = 0, high = 0;
+      seen.forEach(function (s) { sum += s; if (s < 70) low++; else if (s > 180) high++; });
+      $("d-avg").textContent = Math.round(sum / seen.length);
+      $("d-min").textContent = Math.min.apply(null, seen); $("d-max").textContent = Math.max.apply(null, seen);
+      $("d-in").textContent = Math.round(100 * (seen.length - low - high) / seen.length) + "%";
+      $("d-below").textContent = Math.round(100 * low / seen.length) + "%";
+      $("d-above").textContent = Math.round(100 * high / seen.length) + "%";
+      draw(n);
+    }
+
+    var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    size();
+    if (window.ResizeObserver) new ResizeObserver(function () { size(); show(last < 0 ? 0 : last); }).observe(canvas);
+    var last = -1;
+    if (still) { last = 210; show(last); return; }
+
+    var start = null, visible = true, toastShown = false, toastUntil = 0;
+    if (window.IntersectionObserver) {
+      new IntersectionObserver(function (e) { visible = e[0].isIntersecting; }).observe(screen);
+    }
+    function frame(now) {
+      if (start === null) start = now;
+      if (!visible) { start += 16; requestAnimationFrame(frame); return; }
+      var t = now - start;
+      if (t > DAY_MS + HOLD_MS) { start = now; t = 0; toastShown = false; }
+      var n = Math.min(STEPS, Math.floor(t / DAY_MS * STEPS));
+      if (n !== last) { last = n; show(n); }
+      if (!toastShown && values[n] < 70) {
+        toastShown = true; toastUntil = now + 3500;
+        $("d-toast-text").textContent = "Low glucose: " + values[n] + " mg/dL";
+        toast.classList.add("on");
+      }
+      if (toastUntil && now > toastUntil) { toast.classList.remove("on"); toastUntil = 0; }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
+
   // Il numero dell'ultima versione, da GitHub; senza rete resta "Latest version"
   fetch("https://api.github.com/repos/jackfaz/glucobar/releases/latest")
     .then(function (r) { return r.ok ? r.json() : null; })

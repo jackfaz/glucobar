@@ -368,7 +368,17 @@ def main(exe, strict):
     if app.poll() is not None:
         notice("Barra", "GlucoBar si è chiuso all'avvio")
         return 1
-    rect = value_rect()
+    try:
+        rect = value_rect()
+    except (OSError, IndexError):
+        try:
+            with open(LOG, encoding="utf-8") as f:
+                tail = f.read()[-3000:].replace("\n", " | ")
+        except OSError:
+            tail = "(nessun log)"
+        notice("Barra", f"valore non posizionato; log: {tail}", "error")
+        app.kill()
+        return 1
     baseline = green_pixels(ImageGrab.grab(bbox=rect, include_layered_windows=True,
                                            all_screens=True))
     results = [f"valore in {rect}, barra {'chiara' if taskbar_light() else 'scura'}, "

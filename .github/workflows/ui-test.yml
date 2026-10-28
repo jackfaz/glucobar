@@ -36,3 +36,12 @@ jobs:
           }
           python tools/win_taskbar_test.py $app --strict
           if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Tray menu test
+        if: always()
+        shell: pwsh
+        run: |
+          $app = "run_glucobar.py"
+          if ("${{ inputs.app_ref }}") { $app = "app\run_glucobar.py" }
+          python tools/win_tray_test.py $app --strict
+          if ($LASTEXITCODE -ne 0) { exit 1 }

@@ -4,6 +4,22 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.8.3] - 2026-10-28
+
+### Fixed
+- **GlucoBar closed itself when you opened an app or a folder** with the value on the
+  taskbar shown (a regression in 0.8.2): the Windows notification about the foreground
+  window was handled inside Tkinter's event loop.
+- **No more flicker of the value on the taskbar** when you click the taskbar or close a
+  window: GlucoBar now listens in its own thread to Windows' notifications about the window
+  in front and the order of windows, and gets back on top only when the taskbar has gone over
+  it.
+
+### Added
+- The build runs GlucoBar with the value on the taskbar, opens and closes apps and folders,
+  clicks the taskbar and photographs the value every few milliseconds: the release is
+  blocked if GlucoBar closes or the value disappears.
+
 ## [0.8.2] - 2026-10-27
 
 ### Fixed
@@ -206,6 +222,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.8.3]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.3
 [0.8.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.2
 [0.8.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.1
 [0.8.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.0

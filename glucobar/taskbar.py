@@ -506,6 +506,12 @@ class TaskbarView:
     def _keep_on_taskbar(self):
         if not self.alive:
             return
+        if menu_open():
+            # Con la barra nascosta automaticamente, mentre scegli dal menu la barra
+            # torna giù: nascondere il valore adesso faceva perdere le scelte del menu
+            # (funzionava solo Esci, la voce più vicina alla barra). Si aspetta che si chiuda
+            self.root.after(500, self._keep_on_taskbar)
+            return
         try:
             visible = self.reposition()
             fullscreen = self.fullscreen_app_active()

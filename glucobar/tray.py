@@ -18,6 +18,22 @@ from .theme import palette, taskbar_light
 from .ui_common import GREY, age_minutes, asset_path, beside_value, fmt_value, is_stale
 
 ICON_SIZE = 64  # Windows la rimpicciolisce da solo
+WM_RBUTTONUP = 0x0205
+# Su Windows pystray costruisce il menu una volta e lo tiene pronto: va ricostruito al
+# clic destro (vedi _Icon), non dall'esterno
+BUILD_ON_CLICK = hasattr(pystray.Icon, "_on_notify") and hasattr(pystray.Icon, "_update_menu")
+
+
+class _Icon(pystray.Icon):
+    """Il menu viene costruito al clic destro, nel thread dell'icona, appena prima di
+    mostrarlo. Prima lo ricostruiva il controller a ogni lettura (ogni 10-15 secondi), da
+    un altro thread: pystray distruggeva il menu anche mentre era aperto, i sottomenu non
+    si aprivano e funzionava solo Esci."""
+
+    def _on_notify(self, wparam, lparam):
+        if BUILD_ON_CLICK and lparam == WM_RBUTTONUP:
+            self._update_menu()
+        return super()._on_notify(wparam, lparam)
 
 
 def find_font_file():
@@ -70,10 +86,10 @@ class TrayIcon:
         self.ctl = ctl
         self.ready = False   # l'icona esiste davvero solo dopo _setup
         self.logo = logo_icon()
-        self.icon = pystray.Icon("glucobar", self.logo, "GlucoBar", menu=self.build_menu())
+        self.icon = _Icon("glucobar", self.logo, "GlucoBar", menu=self.build_menu())
 
     def build_menu(self):
-        # ricostruito da update_menu() (lo chiama il controller dopo ogni cambiamento)
+        # su Windows ricostruito a ogni clic destro (_Icon), altrove da update_menu()
         return pystray.Menu(lambda: to_pystray(self.ctl.menu_items(), self.ctl.post))
 
     def start(self):
@@ -110,6 +126,8 @@ class TrayIcon:
             log("visibilità dell'icona non cambiata:\n" + traceback.format_exc())
 
     def update_menu(self):
+        if BUILD_ON_CLICK:
+            return   # ci pensa _Icon al prossimo clic destro
         try:
             self.icon.update_menu()
         except Exception:

@@ -4,8 +4,8 @@ Uso: python tools/win_tray_test.py run_glucobar.py|GlucoBar.exe [--strict]
 Avvia GlucoBar con l'icona e la finestrella, collegato a un Nightscout finto che cambia
 valore ogni 10 secondi (aggiornamento ogni 10 s). Apre il menu dell'icona come un clic
 destro (il messaggio che Windows manda all'icona), sceglie Show → Small window con il
-mouse e controlla che la finestrella sparisca. Lo fa due volte: subito, e restando sul menu
-20 secondi prima di scegliere (nel frattempo arrivano letture nuove).
+mouse e controlla che la finestrella sparisca. Lo fa più volte, restando sul menu da mezzo secondo
+a 20 secondi prima di scegliere (nel frattempo arrivano letture nuove).
 """
 
 import ctypes
@@ -113,7 +113,7 @@ def main(app_path, strict):
     app = subprocess.Popen([sys.executable, app_path] if app_path.endswith(".py") else [app_path])
     time.sleep(10)
     results = []
-    for wait in (0.5, 20):
+    for wait in (0.5, 5, 12, 20):
         ok, text = choose_small_window(app, wait)
         results.append(ok)
         notice(f"Menu dell'icona (fermi {wait} s)", f"{'ok' if ok else 'NO'} | {text}")

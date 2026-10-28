@@ -40,10 +40,10 @@ def notice(title, text):
 
 
 def photo_notice(title, img):
-    img = img.copy()
-    img.thumbnail((600, 300))
+    img = img.convert("RGB")
+    img.thumbnail((480, 120))
     buf = io.BytesIO()
-    img.save(buf, "PNG")
+    img.save(buf, "JPEG", quality=70)
     data = base64.b64encode(buf.getvalue()).decode()
     chunks = [data[i:i + 4000] for i in range(0, len(data), 4000)]
     for n, chunk in enumerate(chunks, 1):
@@ -129,10 +129,7 @@ def main(exe, strict):
     rect = value_rect()
     baseline = green_pixels(ImageGrab.grab(bbox=rect, include_layered_windows=True,
                                            all_screens=True))
-    notice("Barra", f"valore in {rect}, pixel verdi all'inizio: {baseline}")
-    photo_notice("Valore all'inizio", ImageGrab.grab(
-        bbox=(rect[0] - 200, rect[1] - 40, rect[2] + 200, rect[3]),
-        include_layered_windows=True, all_screens=True))
+    results = [f"valore in {rect}, pixel verdi all'inizio: {baseline}"]
     if baseline < 20:
         notice("Barra", "valore non visibile già all'inizio: prova non significativa")
         app.kill()
@@ -140,6 +137,7 @@ def main(exe, strict):
 
     watcher = Watcher(rect, max(10, baseline // 3))
     problems = 0
+    photos = 0   # al massimo due foto: gli avvisi per passo sono pochi
     apps = []
 
     def open_notepad():
@@ -158,9 +156,10 @@ def main(exe, strict):
             user32.PostMessageW(hwnd, 0x0010, 0, 0)   # WM_CLOSE
 
     def click_taskbar():
-        # uno spazio vuoto della barra: a metà tra l'inizio e il valore
+        # uno spazio vuoto della barra: un quinto dello schermo da sinistra (prima delle
+        # icone, che sulla barra centrata stanno nel mezzo)
         x0, y0, x1, y1 = rect
-        click(x0 // 2, (y0 + y1) // 2)
+        click(user32.GetSystemMetrics(0) // 5, (y0 + y1) // 2)
 
     for name, action in (("apri app", open_notepad), ("chiudi app", close_notepad),
                          ("apri cartella", open_folder), ("chiudi cartella", close_folder),
@@ -170,14 +169,16 @@ def main(exe, strict):
         ok = seen == total
         problems += not ok
         alive = app.poll() is None
-        notice("Barra", f"{name}: visibile in {seen}/{total} foto"
-                        + ("" if alive else " · GLUCOBAR CHIUSO"))
-        if missing is not None:
+        results.append(f"{name}: visibile in {seen}/{total} foto"
+                       + ("" if alive else " · GLUCOBAR CHIUSO"))
+        if missing is not None and photos < 2:
+            photos += 1
             photo_notice(f"Manca ({name})", missing)
         if not alive:
             problems += 1
             break
 
+    notice("Valore sulla barra", " | ".join(results))
     with open(LOG, encoding="utf-8") as f:
         tail = [line.strip() for line in f.readlines()[-12:]]
     notice("Log di GlucoBar", " | ".join(tail))

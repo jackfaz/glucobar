@@ -12,6 +12,7 @@
 <p align="center">
   <a href="https://github.com/jackfaz/glucobar/releases/latest"><b>Download for Windows</b></a> ·
   <a href="#highlights">Highlights</a> ·
+  <a href="https://jackfaz.github.io/glucobar/">Website</a> ·
   <a href="#install">Install</a> ·
   <a href="#mac-beta">Mac</a> ·
   <a href="#setting-up-librelinkup">LibreLinkUp setup</a> ·

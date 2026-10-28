@@ -414,6 +414,9 @@ def hide_small_window_from_its_menu(app):
         tries.append("chiusa" if gone else "ANCORA APERTA")
         if gone:
             break
+    with open(LOG, encoding="utf-8") as f:
+        failed = f.read().count("comando non riuscito")
+    tries.append(f"comandi non riusciti nel log: {failed}")
     return (f"finestrella chiusa dal suo menu (Show): {' / '.join(tries)}",
             bool(tries) and tries[0] == "chiusa")
 

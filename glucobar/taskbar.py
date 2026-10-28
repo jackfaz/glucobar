@@ -17,7 +17,7 @@ import traceback
 
 from .config import log, save_config
 from .i18n import t
-from .menus import Item, popup, radio_items
+from .menus import Item, menu_open, popup, radio_items
 from .sources import TREND_ARROWS
 from .theme import palette, taskbar_light
 from . import stats
@@ -298,7 +298,7 @@ class TaskbarView:
     def raise_now(self):
         """Di nuovo sopra la barra, subito (senza attivare la finestra). Solo Win32:
         si può chiamare da qualsiasi thread."""
-        if self.alive and not self.hidden:
+        if self.alive and not self.hidden and not menu_open():
             user32.SetWindowPos(self._hwnd, HWND_TOPMOST, 0, 0, 0, 0,
                                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
             if self._hit_hwnd:

@@ -21,7 +21,7 @@ from .alerts import AlertWatch
 from .config import (ELEMENTS, MIN_REFRESH, REFRESH_CHOICES, log, normalize_elements,
                      peek_config, save_config)
 from .i18n import element_name, refresh_label, t
-from .menus import SEPARATOR, Item, radio_items
+from .menus import SEPARATOR, Item, menu_open, radio_items
 from .sources import fetch_safely, make_client
 from .theme import COLOR_KEYS
 from .ui_common import apply_icon, ask_credentials, fmt_value
@@ -34,7 +34,7 @@ LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_
              "taskbar_scale", "window_scale", "desktop_hours", "desktop_alpha", "desktop_locked",
              "theme", "palette", "alert_low", "alert_high", "alert_stale", "update_check",
              "auto_update", "sensor_life_days", "ui_colors", "taskbar_text", "show_delta",
-             "hover_chart", "desktop_on_top",
+             "hover_chart", "desktop_on_top", "desktop_over_fullscreen",
              *COLOR_KEYS.values())
 REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "taskbar_text", "desktop_alpha",
                 "desktop_locked", "desktop_on_top", "window_scale", "theme", "palette", "ui_colors",
@@ -112,7 +112,10 @@ class Controller:
         self._calls.put((fn, args))
 
     def _drain_calls(self):
-        while True:
+        # Su Windows Tk continua a girare mentre un menu col clic destro è aperto: i
+        # comandi aspettano che si chiuda. Chiudere la finestrella dal suo stesso menu
+        # mentre era ancora aperto non riusciva, e la finestrella tornava (0.9.4)
+        while not menu_open():
             try:
                 fn, args = self._calls.get_nowait()
             except queue.Empty:

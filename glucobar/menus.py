@@ -59,6 +59,15 @@ def fill_tk(menu, items, post):
     menu._vars = keep   # le variabili devono vivere quanto il menu
 
 
+_open = 0   # menu col clic destro aperti adesso
+
+
+def menu_open():
+    """C'è un menu aperto? Allora gli elementi "sempre in primo piano" non devono tornare
+    davanti: coprirebbero il menu (0.9.2, pannello in primo piano)."""
+    return _open > 0
+
+
 def popup(owner, items, post, x, y):
     """Apre il menu col clic destro: costruito adesso, da zero, e preparato del tutto
     prima di mostrarlo. Ricostruirlo dentro `postcommand`, mentre Windows lo sta già
@@ -74,7 +83,12 @@ def popup(owner, items, post, x, y):
     fill_tk(menu, items, post)
     owner._glucobar_menu = menu
     menu.update_idletasks()   # Tk prepara i menu di Windows (anche i sottomenu) adesso
-    menu.tk_popup(x, y)
+    global _open
+    _open += 1
+    try:
+        menu.tk_popup(x, y)   # su Windows resta qui finché il menu è aperto
+    finally:
+        _open -= 1
     return menu
 
 

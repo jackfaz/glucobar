@@ -14,7 +14,7 @@ from datetime import datetime
 from . import stats
 from .config import save_config
 from .i18n import t
-from .menus import Item, popup, radio_items
+from .menus import Item, menu_open, popup, radio_items
 from .sources import TREND_ARROWS
 from .theme import palette
 from .ui_common import FONT, age_minutes, bind_right_click, fmt_value, is_stale
@@ -95,13 +95,13 @@ class DesktopView:
         tranne le app a schermo intero sullo stesso monitor, per cui si nasconde."""
         if not self.alive:
             return
-        if IS_WIN and not self.drag:
+        if IS_WIN and not self.drag and not menu_open():
             hwnd = self.own_hwnd()
             if not self.on_top():
                 user32.SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0,
                                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
             else:
-                fullscreen = self.fullscreen_app()
+                fullscreen = self.fullscreen_app() and not self.cfg.get("desktop_over_fullscreen")
                 if fullscreen and not self.hidden:
                     self.hidden = True
                     self.root.withdraw()
@@ -172,6 +172,8 @@ class DesktopView:
                 self.set_hours)),
             Item(t("menu_lock"), self.toggle_locked, checked=bool(cfg["desktop_locked"])),
             Item(t("menu_on_top"), self.toggle_on_top, checked=self.on_top()),
+            Item(t("menu_over_fullscreen"), self.toggle_over_fullscreen,
+                 checked=bool(cfg.get("desktop_over_fullscreen")), enabled=self.on_top()),
         ]
 
     def locked(self):
@@ -191,6 +193,10 @@ class DesktopView:
         self.root.attributes("-topmost", self.on_top())
         if not self.on_top():
             self.root.lower()
+
+    def toggle_over_fullscreen(self):
+        self.cfg["desktop_over_fullscreen"] = not self.cfg.get("desktop_over_fullscreen")
+        save_config(self.cfg)
 
     def toggle_locked(self):
         self.cfg["desktop_locked"] = not self.cfg["desktop_locked"]

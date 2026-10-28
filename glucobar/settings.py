@@ -274,14 +274,37 @@ class SettingsWindow:
                     lambda h: ctl.set_options(desktop_hours=h), side="left")
         self.check(box, t("menu_on_top"), cfg.get("desktop_on_top"),
                    lambda on: self.set_and_lift(desktop_on_top=on))
+        self.check(box, t("menu_over_fullscreen"), cfg.get("desktop_over_fullscreen"),
+                   lambda on: self.ctl.set_options(desktop_over_fullscreen=on))
         self.check(box, t("menu_lock"), cfg.get("desktop_locked"),
                    lambda on: self.set_and_lift(desktop_locked=on))
+        row = tk.Frame(box)
+        row.pack(fill="x", pady=(4, 0))
+        tk.Label(row, text=t("settings_opacity"), font=(FONT, 10)).pack(side="left")
+        # si vede subito sul pannello; si salva quando si lascia il cursore
+        opacity = tk.Scale(row, from_=30, to=100, orient="horizontal", length=200,
+                           showvalue=True, command=self.preview_opacity)
+        opacity.set(round(float(cfg.get("desktop_alpha") or 0.92) * 100))
+        opacity.pack(side="left", padx=(10, 0))
+        opacity.bind("<ButtonRelease-1>", lambda _e: self.save_opacity(opacity.get()))
 
     def toggle_element(self, element):
         self.ctl.toggle_element(element)
         for name, v in self.element_vars.items():   # almeno uno resta acceso
             v.set(self.ctl.shown(name))
         self.win.lift()
+
+    def preview_opacity(self, value):
+        panel = self.ctl.views.get("desktop")
+        if panel is not None:
+            try:
+                panel.root.attributes("-alpha", int(value) / 100)
+            except tk.TclError:
+                pass
+
+    def save_opacity(self, value):
+        self.cfg["desktop_alpha"] = int(value) / 100
+        save_config(self.cfg)
 
     def set_and_lift(self, **changes):
         self.ctl.set_options(**changes)   # ricrea gli elementi: questa finestra resta davanti

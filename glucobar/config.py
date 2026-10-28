@@ -75,6 +75,7 @@ DEFAULT_CONFIG = {
     "desktop_alpha": 0.92,      # trasparenza del pannello (1 = opaco)
     "desktop_locked": False,    # True = non si sposta né si ridimensiona
     "desktop_on_top": False,    # True = sopra le altre finestre invece che dietro
+    "desktop_over_fullscreen": False,   # e anche sopra le app a schermo intero (video)
     # aspetto: tema "auto" (come Windows o macOS), "dark" o "light"; colori del valore
     # "standard" o "colorblind" (adatti al daltonismo)
     "theme": "auto",

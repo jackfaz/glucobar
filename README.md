@@ -166,7 +166,8 @@ in GlucoBar instead: it works the same way.
   monitor*.
 - Desktop panel and small window: drag to move, drag the bottom-right corner to resize. On
   the panel, right-click for the chart period and to lock it in place.
-- Value on the taskbar: right-click → *Size* to make it smaller or larger.
+- Value on the taskbar: right-click → *Size* to make it smaller or larger, and *Show the
+  change (delta)* to add the change since the previous reading (e.g. "3 min +5").
 - *Update every*: how often GlucoBar fetches the value, from 10 seconds to 5 minutes.
 - *Settings…*: theme (light, dark or automatic, following Windows or macOS), every colour
   (the value in range, high, very high, low and old; backgrounds, text, chart and grid of the
@@ -222,6 +223,7 @@ GlucoBar-Setup-0.9.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `low` / `high` / `very_high` | 70 / 180 / 250 | Thresholds in mg/dL |
 | `unit` | `mg/dL` | or `mmol/L` |
 | `stale_minutes` | 15 | After this, the value turns grey |
+| `show_delta` | false | Show the change since the previous reading, per 5 minutes, on the taskbar and the small window |
 | `refresh_seconds` | 60 | How often to fetch, from 10 to 3600 seconds (also in the right-click menu: *Update every*) |
 | `language` | `auto` | `en`, `it`, `es`, `fr`, `de`, `pt` |
 | `taskbar_monitor` | 1 | 1 = main monitor, 2 = second, … |

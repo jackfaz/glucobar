@@ -37,6 +37,10 @@ uses [Semantic Versioning](https://semver.org/).
   (`auto_update`, off by default). Only full releases are offered, not pre-releases. On the
   Mac the notice opens the download page. The check can be turned off (`update_check`).
 - After an update, GlucoBar says so once, with a link to what is new.
+- **Delta**: *Show the change (delta)* in the right-click menu of the value on the taskbar
+  and of the small window adds the change since the previous reading, per 5 minutes as in
+  Nightscout, e.g. "3 min +5" (thanks for the suggestion on Reddit). Off by default
+  (`show_delta`).
 - *Start with Windows* in the menu.
 - The build installs the previous release, opens it and installs the new version over it in
   silence, checking that settings, password and choices stay. It also checks the update from
@@ -46,6 +50,13 @@ uses [Semantic Versioning](https://semver.org/).
   objects do not grow.
 
 ### Fixed
+- Right-clicking the value on the taskbar often opened the taskbar's own menu: with the
+  transparent background, Windows passed every click that did not land exactly on a digit
+  to the taskbar. Now the whole value area opens GlucoBar's menu (thanks for the report on
+  Reddit).
+- Choosing an item in a submenu, for example *Update every → 10 s*, could do nothing.
+  Menus are now built completely before they open. Both fixes are checked in the build by
+  clicking with the mouse on Windows, and the same test fails on 0.8.4.
 - A silent install without `/ELEMENTS` (for example an update with winget) stayed stuck
   forever on an invisible "choose at least one element" message, with GlucoBar still open.
   Now a silent update keeps the current choices, and the guided installer starts with them

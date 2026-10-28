@@ -168,7 +168,9 @@ in GlucoBar: funziona allo stesso modo.
 - Pannello sullo sfondo e finestrella: trascinali per spostarli, trascina l'angolo in basso a
   destra per ridimensionarli. Sul pannello, clic destro per il periodo del grafico e per
   bloccarlo.
-- Valore sulla barra: clic destro → *Dimensione* per rimpicciolirlo o ingrandirlo.
+- Valore sulla barra: clic destro → *Dimensione* per rimpicciolirlo o ingrandirlo, e
+  *Mostra la variazione (delta)* per aggiungere la variazione dalla lettura precedente
+  (es. "3 min +5").
 - *Aggiorna ogni*: ogni quanto GlucoBar legge il dato, da 10 secondi a 5 minuti.
 - *Impostazioni…*: tema (chiaro, scuro o automatico, segue Windows o macOS), tutti i colori
   (il valore nel range, alto, molto alto, basso e vecchio; sfondi, testi, grafico e griglia
@@ -225,6 +227,7 @@ GlucoBar-Setup-0.9.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `low` / `high` / `very_high` | 70 / 180 / 250 | Soglie in mg/dL |
 | `unit` | `mg/dL` | oppure `mmol/L` |
 | `stale_minutes` | 15 | Oltre questo il valore diventa grigio |
+| `show_delta` | false | Mostra la variazione dalla lettura precedente, ogni 5 minuti, sulla barra e nella finestrella |
 | `refresh_seconds` | 60 | Ogni quanto leggere il dato, da 10 a 3600 secondi (anche dal menu col clic destro: *Aggiorna ogni*) |
 | `language` | `auto` | `it`, `en`, `es`, `fr`, `de`, `pt` |
 | `taskbar_monitor` | 1 | 1 = monitor principale, 2 = secondo, … |

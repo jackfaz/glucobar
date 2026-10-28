@@ -36,9 +36,15 @@ from glucobar.theme import palette, taskbar_light  # noqa: E402
 
 CONFIG_DIR = os.path.join(os.environ["APPDATA"], "GlucoBar")
 LOG = os.path.join(CONFIG_DIR, "glucobar.log")
-# il verde "nel range" che GlucoBar usa sopra questa barra (più scuro se la barra è chiara)
+# il verde "nel range" che GlucoBar usa sopra questa barra (più scuro se la barra è chiara;
+# fino alla 0.8.4 era sempre quello chiaro: valgono tutti e due, per provare le vecchie)
 _green = palette(DEFAULT_CONFIG, light=taskbar_light()).in_range
-GREEN = tuple(int(_green[i:i + 2], 16) for i in (1, 3, 5))
+GREENS = {tuple(int(c[i:i + 2], 16) for i in (1, 3, 5))
+          for c in (_green, palette(DEFAULT_CONFIG, light=False).in_range)}
+
+
+def is_green(pixel):
+    return any(all(abs(a - b) < 40 for a, b in zip(pixel, green)) for green in GREENS)
 user32 = ctypes.windll.user32
 
 
@@ -66,11 +72,7 @@ def value_rect():
 
 
 def green_pixels(img):
-    count = 0
-    for r, g, b in img.getdata():
-        if abs(r - GREEN[0]) < 40 and abs(g - GREEN[1]) < 40 and abs(b - GREEN[2]) < 40:
-            count += 1
-    return count
+    return sum(is_green(pixel) for pixel in img.getdata())
 
 
 class Watcher:
@@ -199,8 +201,7 @@ def choose_from_menu(app, rect):
     # su una cifra: così vale anche per le versioni in cui il fondo non prende i clic
     img = ImageGrab.grab(bbox=rect, all_screens=True)
     digit = next(((x0 + i % img.width, y0 + i // img.width)
-                  for i, (r, g, b) in enumerate(img.getdata())
-                  if abs(r - GREEN[0]) < 40 and abs(g - GREEN[1]) < 40 and abs(b - GREEN[2]) < 40),
+                  for i, pixel in enumerate(img.getdata()) if is_green(pixel)),
                  ((x0 + x1) // 2, (y0 + y1) // 2))
     right_click(*digit)
     time.sleep(1.0)

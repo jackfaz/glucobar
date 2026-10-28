@@ -72,9 +72,8 @@ def menu_open():
 
 def popup(owner, items, post, x, y):
     """Apre il menu col clic destro: costruito adesso, da zero, e preparato del tutto
-    prima di mostrarlo. Ricostruirlo dentro `postcommand`, mentre Windows lo sta già
-    aprendo, lasciava i sottomenu con le voci vecchie: la prima scelta (es. "Aggiorna
-    ogni → 10 s") non faceva niente e funzionava solo la seconda volta (0.8.4)."""
+    prima di mostrarlo. Il menu aperto prima dalla stessa finestra viene distrutto: per
+    questo un clic deve aprirne uno solo (vedi ui_common.bind_right_click)."""
     old = getattr(owner, "_glucobar_menu", None)
     if old is not None:
         try:
@@ -98,9 +97,9 @@ def popup(owner, items, post, x, y):
 
 
 def _to_foreground(owner):
-    """Su Windows un menu a comparsa funziona bene solo se la sua finestra è in primo
-    piano: la finestrella e il valore sulla barra non lo diventano col clic destro, e il
-    primo clic in un sottomenu andava perso (Mostra → Finestrella, 0.9.4)."""
+    """Su Windows un menu a comparsa va aperto con la sua finestra in primo piano, come
+    chiede la documentazione di TrackPopupMenu: altrimenti cliccando fuori non si chiude.
+    La finestrella e il valore sulla barra non lo diventano col clic destro."""
     if sys.platform != "win32":
         return None
     try:

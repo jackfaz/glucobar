@@ -113,8 +113,8 @@ class Controller:
 
     def _drain_calls(self):
         # Su Windows Tk continua a girare mentre un menu col clic destro è aperto: i
-        # comandi aspettano che si chiuda. Chiudere la finestrella dal suo stesso menu
-        # mentre era ancora aperto non riusciva, e la finestrella tornava (0.9.4)
+        # comandi aspettano che si chiuda, così non distruggono la finestra del menu
+        # mentre è ancora aperto
         while not menu_open():
             try:
                 fn, args = self._calls.get_nowait()

@@ -1,0 +1,41 @@
+name: Screenshots
+
+# Screenshot di GlucoBar su Windows, in inglese (tools/win_screenshots.py), salvati nel
+# ramo "screenshots" del repository: da lì si prendono a piena qualità per README e post.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Full HD screen
+        continue-on-error: true
+        shell: pwsh
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+
+      - name: Take screenshots
+        run: python tools/win_screenshots.py shots
+
+      - name: Save them in the "screenshots" branch
+        shell: pwsh
+        run: |
+          Set-Location shots
+          git init -q -b screenshots
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -q -m "Screenshots of ${{ github.sha }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" screenshots

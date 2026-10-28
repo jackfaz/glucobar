@@ -43,6 +43,17 @@ class ThemeTest(unittest.TestCase):
         # vale anche sopra la barra chiara
         self.assertEqual(theme.palette(cfg, light=True).value(cfg, 120), "#b066ff")
 
+    def test_interface_colors_per_theme(self):
+        cfg = dict(DEFAULT_CONFIG, theme="dark", color_stale="#777777",
+                   ui_colors={"dark": {"bg": "#000000", "band": "#112233", "pippo": "#ffffff"},
+                              "light": {"bg": "#fafafa"}})
+        dark = theme.palette(cfg)
+        self.assertEqual((dark.bg, dark.band, dark.stale), ("#000000", "#112233", "#777777"))
+        self.assertFalse(hasattr(dark, "pippo"))
+        self.assertEqual(theme.palette(dict(cfg, theme="light")).bg, "#fafafa")
+        cfg["color_in_range"] = "#b066ff"   # la fascia scelta a mano non segue il colore
+        self.assertEqual(theme.palette(cfg).band, "#112233")
+
     def test_unknown_palette_falls_back(self):
         cfg = dict(DEFAULT_CONFIG, theme="dark", palette="rainbow")
         self.assertEqual(theme.palette(cfg).in_range,

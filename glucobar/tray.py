@@ -132,7 +132,8 @@ class TrayIcon:
         stale = is_stale(cfg, c)
         value = fmt_value(cfg, c["mgdl"])
         arrow = "" if stale else TREND_ARROWS.get(c["trend"], "")
-        color = GREY if stale else palette(cfg, light=taskbar_light()).value(cfg, c["mgdl"])
+        pal = palette(cfg, light=taskbar_light())
+        color = pal.stale if stale else pal.value(cfg, c["mgdl"])
         self.icon.icon = make_icon(value, color)
         when = t("now") if age == 0 else t("min_ago", n=age)
         title = f"{value} {arrow} {cfg['unit']} · {when}"

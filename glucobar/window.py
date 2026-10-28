@@ -142,7 +142,7 @@ class WindowView:
 
         age = age_minutes(c)
         stale = is_stale(self.cfg, c)
-        color = pal.dim if stale else pal.value(self.cfg, c["mgdl"])
+        color = pal.stale if stale else pal.value(self.cfg, c["mgdl"])
         value = fmt_value(self.cfg, c["mgdl"])
         arrow = TREND_ARROWS.get(c["trend"], "")
 

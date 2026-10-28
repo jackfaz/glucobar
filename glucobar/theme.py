@@ -3,8 +3,10 @@ due tavolozze per il valore, quella standard (verde, arancione, rosso) e una per
 distingue male il rosso dal verde (blu, giallo/arancione, vermiglione: colori di
 Okabe e Ito, leggibili con tutte le forme comuni di daltonismo).
 
-Ognuno dei quattro colori del valore (nel range, alto, molto alto, basso) si può anche
-scegliere a mano dalla finestra Impostazioni: vale sopra la tavolozza scelta."""
+Dalla finestra Impostazioni si può scegliere a mano ogni colore: quelli del valore (nel
+range, alto, molto alto, basso, vecchio) valgono con tutti e due i temi; quelli di
+finestrella e pannello (sfondi, testi, grafico...) sono diversi per tema chiaro e scuro,
+in cfg["ui_colors"]["dark"|"light"]."""
 
 import subprocess
 import sys
@@ -14,7 +16,9 @@ THEMES = ("auto", "dark", "light")
 PALETTES = ("standard", "colorblind")
 # colore del valore -> chiave in config.json (None = quello della tavolozza)
 COLOR_KEYS = {"in_range": "color_in_range", "high": "color_high",
-              "very_high": "color_very_high", "low": "color_low"}
+              "very_high": "color_very_high", "low": "color_low", "stale": "color_stale"}
+# colori di finestrella, pannello e messaggi che si possono cambiare, per tema
+UI_KEYS = ("bg", "panel", "fg", "dim", "line", "grid", "band", "error")
 
 _BASE = {
     False: dict(bg="#1e1f22", fg="#f2f2f2", dim="#8a8d93", grey="#9a9da3", panel="#15171c",
@@ -50,11 +54,13 @@ class Palette:
             setattr(self, name, value)
         self.in_range, self.high, danger, self.band = _VALUES[(palette, light)]
         self.very_high = self.low = danger
-        for name, value in (custom or {}).items():
+        self.stale = self.grey
+        custom = custom or {}
+        for name, value in custom.items():
             if is_color(value):
                 setattr(self, name, value.lower())
-        if (custom or {}).get("in_range") and is_color(custom["in_range"]):
-            self.band = mix(self.in_range, self.panel, 0.16)
+        if is_color(custom.get("in_range")) and not is_color(custom.get("band")):
+            self.band = mix(self.in_range, self.panel, 0.16)   # la fascia segue il colore
 
     def value(self, cfg, mgdl):
         """Colore di una misura: basso, molto alto, sopra l'obiettivo o nel range."""
@@ -128,5 +134,8 @@ def palette(cfg, light=None):
     name = cfg.get("palette", "standard")
     if name not in PALETTES:
         name = "standard"
+    light = is_light(cfg) if light is None else bool(light)
     custom = {kind: cfg.get(key) for kind, key in COLOR_KEYS.items() if cfg.get(key)}
-    return Palette(name, is_light(cfg) if light is None else bool(light), custom)
+    ui = (cfg.get("ui_colors") or {}).get("light" if light else "dark") or {}
+    custom.update((key, value) for key, value in ui.items() if key in UI_KEYS)
+    return Palette(name, light, custom)

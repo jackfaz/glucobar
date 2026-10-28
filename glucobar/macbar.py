@@ -91,7 +91,8 @@ class MacMenuBar:
             stale = is_stale(cfg, c)
             arrow = "" if stale else " " + TREND_ARROWS.get(c["trend"], "")
             text = fmt_value(cfg, c["mgdl"]) + arrow
-            color = GREY if stale else palette(cfg, light=taskbar_light()).value(cfg, c["mgdl"])
+            pal = palette(cfg, light=taskbar_light())
+            color = pal.stale if stale else pal.value(cfg, c["mgdl"])
             age = age_minutes(c)
             tooltip = f"{text} {cfg['unit']} · " + (t("now") if age == 0 else t("min_ago", n=age))
             if stale:

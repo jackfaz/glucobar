@@ -7,6 +7,7 @@ Tutto ciò che tocca Tkinter avviene nel thread principale: le richieste che
 arrivano dal thread dell'icona o da quello dei dati passano per `post()`.
 """
 
+import json
 import queue
 import sys
 import threading
@@ -32,9 +33,11 @@ LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_
              "taskbar_side", "taskbar_offset", "taskbar_bg", "taskbar_transparent",
              "taskbar_scale", "window_scale", "desktop_hours", "desktop_alpha", "desktop_locked",
              "theme", "palette", "alert_low", "alert_high", "alert_stale", "update_check",
-             "auto_update", "sensor_life_days", *COLOR_KEYS.values())
-REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "desktop_alpha", "desktop_locked",
-                "window_scale", "theme", "palette", *COLOR_KEYS.values()}
+             "auto_update", "sensor_life_days", "ui_colors", "taskbar_text",
+             *COLOR_KEYS.values())
+REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "taskbar_text", "desktop_alpha",
+                "desktop_locked", "window_scale", "theme", "palette", "ui_colors",
+                *COLOR_KEYS.values()}
 ACCOUNT_KEYS = {"source", "dexcom_region", "email"}
 
 
@@ -328,6 +331,7 @@ class Controller:
 
     def theme_key(self):
         return (theme.is_light(self.cfg), theme.taskbar_light(), self.cfg.get("palette"),
+                json.dumps(self.cfg.get("ui_colors"), sort_keys=True),
                 *(self.cfg.get(key) for key in COLOR_KEYS.values()))
 
     def toggle_alert(self, kind):

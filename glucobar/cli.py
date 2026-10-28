@@ -109,6 +109,8 @@ SETTINGS = {
     "color_high": _color,
     "color_very_high": _color,
     "color_low": _color,
+    "color_stale": _color,
+    "taskbar_text": _color,
     "alert_low": _bool,
     "alert_high": _bool,
     "alert_stale": _bool,

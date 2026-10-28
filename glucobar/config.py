@@ -61,6 +61,7 @@ DEFAULT_CONFIG = {
     "taskbar_side": "right",    # "right" = vicino all'orologio
     "taskbar_offset": 0,        # spostamento extra in pixel
     "taskbar_bg": None,         # es. "#202020" per forzare il colore di sfondo
+    "taskbar_text": None,       # colore dei minuti sotto il valore (None = come la barra)
     "taskbar_transparent": True,
     "taskbar_scale": 1.0,       # dimensione del valore sulla barra (0.85 - 1.25)
     # pannello sullo sfondo
@@ -80,6 +81,10 @@ DEFAULT_CONFIG = {
     "color_high": None,
     "color_very_high": None,
     "color_low": None,
+    "color_stale": None,
+    # colori di finestrella, pannello e messaggi scelti a mano, per tema:
+    # {"dark": {"bg": "#101010", ...}, "light": {...}} (vedi theme.UI_KEYS)
+    "ui_colors": {},
     # avvisi facoltativi (spenti di default): glicemia bassa, molto alta, nessun dato
     "alert_low": False,
     "alert_high": False,

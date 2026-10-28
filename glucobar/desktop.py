@@ -186,7 +186,7 @@ class DesktopView:
         # --- valore grande, freccia, sottotitolo ---
         if c:
             stale = is_stale(cfg, c)
-            color = pal.dim if stale else pal.value(cfg, c["mgdl"])
+            color = pal.stale if stale else pal.value(cfg, c["mgdl"])
             value = fmt_value(cfg, c["mgdl"])
             arrow = "" if stale else TREND_ARROWS.get(c["trend"], "")
             age = age_minutes(c)

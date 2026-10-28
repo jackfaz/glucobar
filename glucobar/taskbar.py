@@ -176,7 +176,7 @@ class TaskbarView:
 
         bg, dim = taskbar_colors()
         self.bg = self.cfg["taskbar_bg"] or bg
-        self.dim = dim
+        self.dim = self.cfg.get("taskbar_text") or dim
         self.c = palette(self.cfg, light=taskbar_light())   # colori leggibili sulla barra
 
         self.root = tk.Toplevel(ctl.root)
@@ -450,7 +450,7 @@ class TaskbarView:
             return
         age = age_minutes(c)
         stale = is_stale(self.cfg, c)
-        color = self.dim if stale else self.c.value(self.cfg, c["mgdl"])
+        color = self.c.stale if stale else self.c.value(self.cfg, c["mgdl"])
         self.value_lbl.config(text=fmt_value(self.cfg, c["mgdl"]), fg=color)
         self.arrow_lbl.config(text="" if stale else " " + TREND_ARROWS.get(c["trend"], ""),
                               fg=color)

@@ -42,8 +42,10 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 ; Niente AppMutex: invece di chiedere all'utente di chiudere GlucoBar, l'installer e la
-; disinstallazione lo chiudono da soli (vedi CloseGlucoBar più sotto)
-CloseApplications=yes
+; disinstallazione lo chiudono da soli (vedi CloseGlucoBar più sotto).
+; Niente Gestione riavvio di Windows: provava a chiudere GlucoBar prima di CloseGlucoBar,
+; non ci riusciva e l'installazione restava ferma (da 0.7.2 a 0.8.4, con GlucoBar aperto)
+CloseApplications=no
 ; chiede sempre la lingua all'avvio: diventa anche la lingua di GlucoBar
 ShowLanguageDialog=yes
 ; il comando "glucobar" va nel PATH dell'utente: avvisa i terminali nuovi

@@ -153,12 +153,20 @@ def ask_range(cfg, parent):
 
 
 def bind_right_click(widget, callback):
-    """Clic destro: Button-3 su Windows e Linux; sul Mac Button-2 e Ctrl+clic."""
+    """Clic destro: Button-3 su Windows e Linux; sul Mac Button-2 e Ctrl+clic.
+
+    Il clic si ferma qui ("break"): Tk lo passa anche alla finestra che contiene il
+    widget, e se anche lei ha il menu se ne aprivano due di fila. Il secondo distruggeva
+    il primo prima che Windows ne eseguisse la scelta: la prima scelta andava persa
+    (Mostra → Finestrella, e nella 0.8.4 "Aggiorna ogni" sul valore della barra)."""
+    def handler(event):
+        callback(event)
+        return "break"
     if sys.platform == "darwin":
-        widget.bind("<Button-2>", callback)
-        widget.bind("<Control-Button-1>", callback)
+        widget.bind("<Button-2>", handler)
+        widget.bind("<Control-Button-1>", handler)
     else:
-        widget.bind("<Button-3>", callback)
+        widget.bind("<Button-3>", handler)
 
 
 def ask_credentials(cfg, parent=None):

@@ -253,15 +253,16 @@ def hover_check(app, rect):
     x0, y0, x1, y1 = rect
     user32.SetCursorPos(user32.GetSystemMetrics(0) // 2, 200)
     time.sleep(0.8)
+    before = set(big_windows(app.pid))   # il pannello sullo sfondo, se c'è
     user32.SetCursorPos((x0 + x1) // 2, (y0 + y1) // 2)
     time.sleep(0.4)
-    early = big_windows(app.pid)
+    early = [w for w in big_windows(app.pid) if w not in before]
     time.sleep(1.4)
-    shown = big_windows(app.pid)
+    shown = [w for w in big_windows(app.pid) if w not in before]
     drawn = green_pixels(ImageGrab.grab(bbox=shown[0], all_screens=True)) if shown else 0
     user32.SetCursorPos(user32.GetSystemMetrics(0) // 2, 200)
     time.sleep(0.8)
-    gone = not big_windows(app.pid)
+    gone = not [w for w in big_windows(app.pid) if w not in before]
     above = bool(shown) and shown[0][3] <= y0
     ok = not early and bool(shown) and above and gone and drawn >= 300
     return (f"grafico col mouse: dopo 0,4 s {'NO' if not early else 'già visibile'}, "

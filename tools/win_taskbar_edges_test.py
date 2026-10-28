@@ -144,14 +144,18 @@ def main(app_path, strict):
     time.sleep(3)
     value, visible = value_window(app.pid)
     case("auto-hide (barra nascosta)", not visible)
-    # mouse sul bordo, con movimenti veri: SetCursorPos da solo non fa ricomparire la barra
-    for y in range(sh - 40, sh, 4):
-        user32.mouse_event(0x8001, (sw // 2) * 65535 // sw, y * 65535 // sh, 0, 0)
-        time.sleep(0.05)
+    # Win+T: la barra va in primo piano e si mostra (sulla macchina della build il mouse
+    # sul bordo non basta a farla ricomparire)
+    user32.keybd_event(0x5B, 0, 0, 0)
+    user32.keybd_event(0x54, 0, 0, 0)
+    user32.keybd_event(0x54, 0, 2, 0)
+    user32.keybd_event(0x5B, 0, 2, 0)
     time.sleep(2.5)
     value, visible = value_window(app.pid)
     bar = taskbar()["bar"]
     case("auto-hide (barra mostrata)", visible and inside(value, bar))
+    user32.keybd_event(0x1B, 0, 0, 0)
+    user32.keybd_event(0x1B, 0, 2, 0)
     user32.SetCursorPos(sw // 2, sh // 2)
     set_autohide(False)
     time.sleep(2)

@@ -36,9 +36,10 @@ uses [Semantic Versioning](https://semver.org/).
   objects do not grow.
 
 ### Fixed
-- Installing a new version while GlucoBar was open could stay stuck forever, with GlucoBar
-  still running (since 0.7.2). The installer now closes GlucoBar itself, without the Windows
-  Restart Manager, and reopens it. The build now tests exactly this.
+- A silent install without `/ELEMENTS` (for example an update with winget) stayed stuck
+  forever on an invisible "choose at least one element" message, with GlucoBar still open.
+  Now a silent update keeps the current choices, and the guided installer starts with them
+  ticked. The build now tests exactly this, both from the installer and from GlucoBar.
 - Started with Windows, GlucoBar could ask for the password again: if Windows Credential
   Manager does not answer yet right after login, GlucoBar now waits up to 30 seconds before
   asking, and writes the reason in the log. `glucobar report` also lists what starts at login

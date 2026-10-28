@@ -43,8 +43,7 @@ SolidCompression=yes
 WizardStyle=modern
 ; Niente AppMutex: invece di chiedere all'utente di chiudere GlucoBar, l'installer e la
 ; disinstallazione lo chiudono da soli (vedi CloseGlucoBar più sotto).
-; Niente Gestione riavvio di Windows: provava a chiudere GlucoBar prima di CloseGlucoBar,
-; non ci riusciva e l'installazione restava ferma (da 0.7.2 a 0.8.4, con GlucoBar aperto)
+; Niente Gestione riavvio di Windows: GlucoBar lo chiude CloseGlucoBar, che poi lo riapre
 CloseApplications=no
 ; chiede sempre la lingua all'avvio: diventa anche la lingua di GlucoBar
 ShowLanguageDialog=yes
@@ -407,6 +406,32 @@ begin
       Result := 2;
 end;
 
+{ Elementi scelti nell'installazione attuale, es. ",taskbar,tray," ('' se non c'è) }
+function ConfiguredElements: String;
+var
+  Config: AnsiString;
+  Start, Stop: Integer;
+  List: String;
+begin
+  Result := '';
+  if not LoadStringFromFile(ExpandConstant('{userappdata}\GlucoBar\config.json'), Config) then
+    Exit;
+  Start := Pos('"elements": [', Config);
+  if Start = 0 then
+    Exit;
+  List := Copy(Config, Start + 13, 200);
+  Stop := Pos(']', List);
+  if Stop > 0 then
+    List := Copy(List, 1, Stop);
+  Result := ',';
+  if Pos('"taskbar"', List) > 0 then Result := Result + 'taskbar,';
+  if Pos('"tray"', List) > 0 then Result := Result + 'tray,';
+  if Pos('"window"', List) > 0 then Result := Result + 'window,';
+  if Pos('"desktop"', List) > 0 then Result := Result + 'desktop,';
+  if Result = ',' then
+    Result := '';
+end;
+
 procedure CreateSensorPage(After: Integer);
 var
   I, Row, Wanted: Integer;
@@ -536,12 +561,17 @@ begin
   ModeDescription.Width := ListWidth;
   ModeDescription.Height := ModePage.SurfaceHeight - ModeDescription.Top;
 
-  { Nessuna casella spuntata all'inizio: si sceglie guardando l'anteprima.
-    Da riga di comando (anche winget): /ELEMENTS=desktop,tray }
+  { Prima installazione: nessuna casella spuntata, si sceglie guardando l'anteprima.
+    Aggiornamento: le scelte di adesso. Da riga di comando (anche winget):
+    /ELEMENTS=desktop,tray }
   Elements := Lowercase(ExpandConstant('{param:ELEMENTS|}'));
   if Elements <> '' then
+    Elements := ',' + Elements + ','
+  else
+    Elements := ConfiguredElements;
+  if Elements <> '' then
     for I := 0 to 3 do
-      ModeBoxes[I].Checked := Pos(',' + ModeId(I) + ',', ',' + Elements + ',') > 0;
+      ModeBoxes[I].Checked := Pos(',' + ModeId(I) + ',', Elements) > 0;
   UpdatePreview;
 
   CreateSensorPage(ModePage.ID);
@@ -553,7 +583,9 @@ var
   I: Integer;
 begin
   Result := True;
-  if CurPageID = ModePage.ID then
+  { in silenzio nessuno può rispondere a un messaggio: senza /ELEMENTS restano le
+    scelte di prima (0.8.x: l'aggiornamento silenzioso restava fermo qui per sempre) }
+  if (CurPageID = ModePage.ID) and not WizardSilent then
   begin
     Result := False;
     for I := 0 to 3 do

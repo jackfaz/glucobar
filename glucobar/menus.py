@@ -4,6 +4,8 @@
 ricostruisce quando si apre, così spunte e voci (es. "nuova versione") sono sempre
 aggiornate."""
 
+import ctypes
+import sys
 import tkinter as tk
 
 
@@ -83,13 +85,32 @@ def popup(owner, items, post, x, y):
     fill_tk(menu, items, post)
     owner._glucobar_menu = menu
     menu.update_idletasks()   # Tk prepara i menu di Windows (anche i sottomenu) adesso
+    hwnd = _to_foreground(owner)
     global _open
     _open += 1
     try:
         menu.tk_popup(x, y)   # su Windows resta qui finché il menu è aperto
     finally:
         _open -= 1
+        if hwnd:   # come chiede la documentazione di TrackPopupMenu
+            ctypes.windll.user32.PostMessageW(hwnd, 0, 0, 0)   # WM_NULL
     return menu
+
+
+def _to_foreground(owner):
+    """Su Windows un menu a comparsa funziona bene solo se la sua finestra è in primo
+    piano: la finestrella e il valore sulla barra non lo diventano col clic destro, e il
+    primo clic in un sottomenu andava perso (Mostra → Finestrella, 0.9.4)."""
+    if sys.platform != "win32":
+        return None
+    try:
+        user32 = ctypes.windll.user32
+        user32.GetParent.restype = ctypes.c_void_p
+        hwnd = user32.GetParent(owner.winfo_id())
+        user32.SetForegroundWindow(ctypes.c_void_p(hwnd))
+        return ctypes.c_void_p(hwnd)
+    except (OSError, tk.TclError):
+        return None
 
 
 def _poster(post, action, args):

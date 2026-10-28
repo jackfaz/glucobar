@@ -107,7 +107,11 @@ def _to_foreground(owner):
         user32 = ctypes.windll.user32
         user32.GetParent.restype = ctypes.c_void_p
         hwnd = user32.GetParent(owner.winfo_id())
-        user32.SetForegroundWindow(ctypes.c_void_p(hwnd))
+        ok = user32.SetForegroundWindow(ctypes.c_void_p(hwnd))
+        user32.GetForegroundWindow.restype = ctypes.c_void_p
+        from .config import log
+        log(f"menu: primo piano richiesto={bool(ok)} ottenuto="
+            f"{user32.GetForegroundWindow() == hwnd}")
         return ctypes.c_void_p(hwnd)
     except (OSError, tk.TclError):
         return None

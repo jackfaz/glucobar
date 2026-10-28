@@ -84,6 +84,11 @@ jobs:
                 $info.ProductVersion -ne "${{ steps.version.outputs.version }}") { exit 1 }
           }
 
+      # Il valore sulla barra resta visibile mentre si aprono app e cartelle e si clicca
+      # sulla barra? Foto ogni ~50 ms; risultati negli avvisi del job
+      - name: Taskbar value test
+        run: python tools/win_taskbar_test.py dist\GlucoBar\GlucoBar.exe
+
       - name: Installer previews
         run: python tools/previews_to_bmp.py
 

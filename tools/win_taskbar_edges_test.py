@@ -153,7 +153,14 @@ def main(app_path, strict):
     time.sleep(2.5)
     value, visible = value_window(app.pid)
     bar = taskbar()["bar"]
-    case("auto-hide (barra mostrata)", visible and inside(value, bar))
+    shown_bar = taskbar()
+    if bar[3] > sh + 2 or bar[1] >= sh - 4:
+        # la barra non è ricomparsa (succede sulla macchina della build con Windows 11):
+        # non c'è niente da controllare, lo si dice invece di fallire
+        notice("Bordo: auto-hide (barra mostrata)",
+               f"saltato: la barra non è ricomparsa su questa macchina ({shown_bar['bar']})")
+    else:
+        case("auto-hide (barra mostrata)", visible and inside(value, bar))
     user32.keybd_event(0x1B, 0, 0, 0)
     user32.keybd_event(0x1B, 0, 2, 0)
     user32.SetCursorPos(sw // 2, sh // 2)

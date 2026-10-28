@@ -4,6 +4,20 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.9.4] - 2026-10-28
+
+### Fixed
+- **Taskbar on the left, right or top** (Windows 10): the value now sits on the taskbar
+  wherever it is. On a vertical taskbar it is as wide as the taskbar, just above the clock
+  (or below Start with *Move left / right*), and the chart on hover opens beside it. Before,
+  it stayed at the bottom of the screen, or even off screen (thanks for the report on Reddit).
+- **"Automatically hide the taskbar"**: the value now hides together with the taskbar on
+  every edge, and comes back when the taskbar does. With auto-hide on, GlucoBar also checks
+  whether the mouse is on the taskbar or the taskbar is in use, for systems where Windows
+  hides it without moving it.
+- The build has a new test that moves the taskbar to every edge and turns auto-hide on, on
+  Windows 10 and Windows 11.
+
 ## [0.9.3] - 2026-10-28
 
 ### Added
@@ -337,6 +351,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.9.4]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.4
 [0.9.3]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.3
 [0.9.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.2
 [0.9.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.1

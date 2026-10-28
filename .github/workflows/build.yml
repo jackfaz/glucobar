@@ -215,77 +215,19 @@ jobs:
           Check ($path -notlike "*$dir\bin*") "bin tolto dal PATH"
           Check ($null -eq (Get-ItemProperty $run).GlucoBar) "avvio con Windows tolto"
 
-      # Il percorso di quasi tutti gli utenti: l'ultima versione pubblicata è installata e
-      # aperta, con le sue impostazioni e la password, e la nuova si installa sopra in
-      # silenzio (come winget). Deve restare tutto, e GlucoBar deve riaprirsi una volta sola.
-      - name: Upgrade test (previous release, then this one)
+      # Aggiornamenti, il percorso di quasi tutti gli utenti (vedi tools/win_upgrade_test.py):
+      # la nuova versione sopra l'ultima release aperta, in silenzio come winget, e
+      # l'aggiornamento da dentro GlucoBar con un GitHub finto. Deve restare tutto.
+      - name: Upgrade tests
         shell: pwsh
+        timeout-minutes: 20
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          function Check($ok, $msg) { if (-not $ok) { throw $msg } else { "ok: $msg" } }
-          function Procs { @(Get-Process GlucoBar -ErrorAction SilentlyContinue) }
           $prev = Join-Path $env:RUNNER_TEMP "previous"
           gh release download --repo $env:GITHUB_REPOSITORY --pattern GlucoBar-Setup.exe --dir $prev
-          if ($LASTEXITCODE -ne 0) { "::notice title=Upgrade test::nessuna release precedente da scaricare"; exit 0 }
-          $old = (Get-Item "$prev\GlucoBar-Setup.exe").VersionInfo.ProductVersion
-          Remove-Item -Recurse -Force "$env:APPDATA\GlucoBar" -ErrorAction SilentlyContinue
-          $silent = "/VERYSILENT", "/SUPPRESSMSGBOXES", "/CURRENTUSER", "/NORESTART"
-          $p = Start-Process "$prev\GlucoBar-Setup.exe" -Wait -PassThru -ArgumentList ($silent + "/ELEMENTS=taskbar,window", "/SENSOR=nightscout", "/LANG=it")
-          Check ($p.ExitCode -eq 0) "versione precedente ($old) installata"
-          $dir = Join-Path $env:LOCALAPPDATA "Programs\GlucoBar"
-          # impostazioni cambiate nell'app e una password salvata
-          $cfgPath = "$env:APPDATA\GlucoBar\config.json"
-          $cfg = Get-Content $cfgPath -Raw | ConvertFrom-Json
-          $cfg | Add-Member -Force email "https://glucobar-test.invalid"
-          $cfg | Add-Member -Force unit "mmol/L"
-          $cfg | Add-Member -Force low 80
-          $cfg | Add-Member -Force elements @("window", "desktop")
-          $cfg | Add-Member -Force language "fr"
-          $cfg | ConvertTo-Json | Set-Content $cfgPath
-          cmdkey /generic:GlucoBar:Nightscout /user:https://glucobar-test.invalid /pass:token | Out-Null
-          Start-Process "$dir\GlucoBar.exe"
-          Start-Sleep -Seconds 8
-          Check ((Procs).Count -eq 1) "versione precedente aperta"
-          $oldPid = (Procs)[0].Id
-
           $setup = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
-          $log = Join-Path $env:RUNNER_TEMP "upgrade.log"
-          # -Wait aspetterebbe anche GlucoBar, che l'installer riapre: si aspetta solo lui
-          $p = Start-Process $setup.FullName -PassThru -ArgumentList ($silent + "/LOG=$log")
-          $p.WaitForExit()
-          Get-Content $log -Tail 10
-          Check ($p.ExitCode -eq 0) "aggiornamento silenzioso (codice $($p.ExitCode))"
-          Start-Sleep -Seconds 8
-          $new = (Get-Item "$dir\GlucoBar.exe").VersionInfo.ProductVersion
-          Check ($new -eq "${{ steps.version.outputs.version }}") "GlucoBar.exe aggiornato ($old -> $new)"
-          $after = Procs
-          Check ($after.Count -eq 1) "GlucoBar riaperto una volta sola ($($after.Count) processi)"
-          Check ($after[0].Id -ne $oldPid) "è la nuova copia, non quella vecchia"
-          $cfg = Get-Content $cfgPath -Raw | ConvertFrom-Json
-          Check ($cfg.unit -eq "mmol/L" -and $cfg.low -eq 80) "impostazioni rimaste"
-          Check (($cfg.elements -join ',') -eq 'window,desktop') "elementi scelti rimasti ($($cfg.elements -join ','))"
-          Check ($cfg.language -eq 'fr') "lingua rimasta ($($cfg.language))"
-          Check ($cfg.source -eq 'nightscout' -and $cfg.email -eq 'https://glucobar-test.invalid') "account rimasto"
-          $left = cmdkey /list:GlucoBar:Nightscout | Out-String
-          Check ($left -match "glucobar-test.invalid") "password rimasta nel Gestione credenziali"
-          $keys = Get-ChildItem HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall |
-                  Where-Object { (Get-ItemProperty $_.PSPath).DisplayName -like "GlucoBar*" }
-          Check (@($keys).Count -eq 1) "una sola voce in App installate"
-          "::notice title=Upgrade test::${old} -> ${new}: impostazioni, elementi, lingua, account e password rimasti; GlucoBar riaperto una volta"
-
-          & "$dir\bin\glucobar.cmd" stop | Out-Null
-          $u = Start-Process "$dir\unins000.exe" -Wait -PassThru -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"
-          cmdkey /delete:GlucoBar:Nightscout | Out-Null
-          Remove-Item -Recurse -Force "$env:APPDATA\GlucoBar" -ErrorAction SilentlyContinue
-
-      # Aggiornamento da dentro GlucoBar: trova una versione nuova su un GitHub finto, la
-      # scarica, controlla l'impronta, la installa e si riapre con le stesse impostazioni
-      - name: In-app update test
-        shell: pwsh
-        run: |
-          $setup = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
-          python tools/win_update_test.py $setup.FullName
+          python tools/win_upgrade_test.py $setup.FullName "$prev\GlucoBar-Setup.exe"
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - uses: actions/upload-artifact@v7

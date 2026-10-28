@@ -4,6 +4,16 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.9.8] - 2026-10-28
+
+### Fixed
+- The right-click menu of the icon next to the clock only ran *Quit*: its submenus did not
+  open. GlucoBar rebuilt that menu at every reading and every 15 seconds, from another
+  thread, and the old one was destroyed even while it was open. The menu is now built when
+  you right-click the icon (thanks for the report on Reddit). A new test on Windows opens
+  it and chooses *Show → Small window* after 0.5, 5, 12 and 20 seconds, with readings
+  arriving every 10 seconds.
+
 ## [0.9.7] - 2026-10-28
 
 ### Added
@@ -391,6 +401,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.9.8]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.8
 [0.9.7]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.7
 [0.9.6]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.6
 [0.9.5]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.5

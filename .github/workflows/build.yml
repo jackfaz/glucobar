@@ -89,6 +89,11 @@ jobs:
       - name: Taskbar value test
         run: python tools/win_taskbar_test.py dist\GlucoBar\GlucoBar.exe --strict
 
+      # Il menu dell'icona vicino all'orologio: le scelte funzionano anche mentre arrivano
+      # letture nuove?
+      - name: Tray menu test
+        run: python tools/win_tray_test.py dist\GlucoBar\GlucoBar.exe --strict
+
       - name: Installer previews
         run: python tools/previews_to_bmp.py
 

@@ -4,6 +4,20 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.9.7] - 2026-10-28
+
+### Added
+- **Delta next to the value**: *Settings → Values and alerts → Next to the value* shows the
+  change since the previous reading in place of the trend arrow ("142 +5"), or both
+  ("142 ↗ +5"), on the taskbar, the small window, the desktop panel, the icon's tooltip and
+  the Mac menu bar (thanks for the suggestion on Reddit). From the terminal:
+  `glucobar set trend_style=delta`. The arrow stays until there is a previous reading to
+  compare with.
+
+### Fixed
+- Includes the fix from 0.9.6, which was held back as a pre-release: with an auto-hidden
+  taskbar, the right-click menu of the value only ran *Quit*.
+
 ## [0.9.6] - 2026-10-28
 
 ### Fixed
@@ -377,6 +391,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.9.7]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.7
 [0.9.6]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.6
 [0.9.5]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.5
 [0.9.4]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.4

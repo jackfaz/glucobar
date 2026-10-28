@@ -88,7 +88,8 @@ high, very high, low and old, backgrounds, text, chart and grid.
 
 ### And also
 
-- **Delta**: the change since the previous reading under the value, e.g. "3 min +5".
+- **Delta**: the change since the previous reading, next to the value instead of the arrow
+  ("142 +5"), next to the arrow, or under the value ("3 min +5").
 - **Update every** 10 seconds to 5 minutes.
 - **Desktop panel always on top**, hidden while a video or a game is full screen, or kept
   over it like picture-in-picture, with adjustable opacity.
@@ -263,7 +264,7 @@ If GlucoBar is running, it applies the new settings within two seconds.
 Silent install with your choices (handy for scripts and winget):
 
 ```text
-GlucoBar-Setup-0.9.6.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
+GlucoBar-Setup-0.9.7.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
 ```
 
 ## Settings
@@ -279,6 +280,7 @@ GlucoBar-Setup-0.9.6.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `unit` | `mg/dL` | or `mmol/L` |
 | `stale_minutes` | 15 | After this, the value turns grey |
 | `hover_chart` | true | Show the full chart when the mouse rests on the value on the taskbar |
+| `trend_style` | arrow | Next to the value: `arrow`, `delta` (the change instead of the arrow) or `both` |
 | `show_delta` | false | Show the change since the previous reading, per 5 minutes, on the taskbar and the small window |
 | `refresh_seconds` | 60 | How often to fetch, from 10 to 3600 seconds (also in Settings → General) |
 | `language` | `auto` | `en`, `it`, `es`, `fr`, `de`, `pt` |
@@ -350,12 +352,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.9.6 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.9.7 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow*, tick *release* to publish the version written in `glucobar/__init__.py`
-(pushing a tag like `v0.9.6` works too). The mode previews are made with
+(pushing a tag like `v0.9.7` works too). The mode previews are made with
 `tools/compose_previews.py`.
 
 Each build also installs the previous release, opens it and installs the new version over it

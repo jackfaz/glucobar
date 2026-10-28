@@ -20,17 +20,26 @@ uses [Semantic Versioning](https://semver.org/).
 - **Alerts**, off by default: low glucose, very high glucose, no new data. One message per
   episode. They do not replace your sensor's alarms, and GlucoBar says so the first time.
 - **Person**: if your LibreLinkUp account follows more than one person, choose who to show.
-- **New version notice**: once a day GlucoBar asks GitHub for the latest version and, if
-  there is a newer one, offers to download it. Can be turned off from the menu
-  (`update_check`).
+- **Updates from GlucoBar**: once a day GlucoBar asks GitHub for the latest version. On
+  Windows, *Install now* downloads the installer, checks its SHA-256 fingerprint against the
+  one GitHub publishes, and installs it in silence: GlucoBar closes and reopens with the same
+  settings. *Install new versions automatically* in the menu does it without asking
+  (`auto_update`, off by default). Only full releases are offered, not pre-releases. On the
+  Mac the notice opens the download page. The check can be turned off (`update_check`).
+- After an update, GlucoBar says so once, with a link to what is new.
 - *Start with Windows* in the menu.
 - The build installs the previous release, opens it and installs the new version over it in
-  silence, checking that settings, password and choices stay. New workflows: a daily check of
+  silence, checking that settings, password and choices stay. It also checks the update from
+  inside GlucoBar against a fake GitHub: download, fingerprint, install, reopen. New workflows: a daily check of
   the real LibreLinkUp, Dexcom Share and Nightscout services, and a weekly soak test that
   keeps GlucoBar open with a reading every 10 seconds and checks that memory and graphics
   objects do not grow.
 
 ### Fixed
+- Started with Windows, GlucoBar could ask for the password again: if Windows Credential
+  Manager does not answer yet right after login, GlucoBar now waits up to 30 seconds before
+  asking, and writes the reason in the log. `glucobar report` also lists what starts at login
+  and looks like GlucoBar (for example the first script version).
 - A silent update (for example with winget) reset what to show to "taskbar and icon" and the
   language to the installer's one. Now it keeps your choices, unless you pass `/ELEMENTS`,
   `/LANG` or `/SENSOR`.

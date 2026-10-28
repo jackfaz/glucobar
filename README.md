@@ -180,8 +180,10 @@ in GlucoBar instead: it works the same way.
   manufacturer's page for your country and copies the serial number, ready to paste into
   the form.
 - *Person*: if your LibreLinkUp account follows more than one person, choose who to show.
-- When a new version is out, the first menu item offers to download it (you can turn this
-  off in the menu).
+- When a new version is out, GlucoBar tells you and the first menu item installs it: on
+  Windows it downloads the installer, checks its SHA-256 fingerprint and installs it in
+  silence, then reopens with the same settings. Tick *Install new versions automatically* to
+  skip the question. On the Mac it opens the download page.
 
 ## Terminal
 
@@ -233,6 +235,7 @@ GlucoBar-Setup-0.9.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `palette` | `standard` | `standard` or `colorblind` |
 | `alert_low` / `alert_high` / `alert_stale` | false | Alerts for low (below `low`), very high (above `very_high`) and no data (`stale_minutes`) |
 | `update_check` | true | Check once a day whether a new version is out |
+| `auto_update` | false | Windows: install new versions without asking |
 | `sensor_life_days` | 14 | LibreLinkUp: how long your sensor lasts, for the end reminders (15 for Plus sensors) |
 
 Log file: `%APPDATA%\GlucoBar\glucobar.log`.
@@ -245,8 +248,8 @@ Log file: `%APPDATA%\GlucoBar\glucobar.log`.
 - GlucoBar talks **only to the servers of your sensor's maker** (Abbott's LibreView or Dexcom
   Share) **or to your own Nightscout site**. No analytics.
 - Once a day it asks GitHub which is the latest GlucoBar version (a public request that sends
-  no data about you or your readings). Turn it off from the menu or with
-  `glucobar set update_check=false`.
+  no data about you or your readings), and downloads the installer from GitHub only when you
+  install an update. Turn it off from the menu or with `glucobar set update_check=false`.
 - *Request a sensor replacement…* only opens the manufacturer's page in your browser and
   copies the serial number to your clipboard: GlucoBar sends nothing itself.
 - Uninstalling asks whether to delete settings and the saved password too (also the first version's

@@ -183,8 +183,10 @@ in GlucoBar: funziona allo stesso modo.
   sensore…* apre la pagina del produttore per il tuo paese e copia il numero di serie, pronto
   da incollare nel modulo.
 - *Persona*: se il tuo account LibreLinkUp segue più persone, scegli chi mostrare.
-- Quando esce una nuova versione, la prima voce del menu propone di scaricarla (si può
-  spegnere dal menu).
+- Quando esce una nuova versione GlucoBar te lo dice e la prima voce del menu la installa: su
+  Windows scarica l'installer, ne controlla l'impronta SHA-256 e lo installa in silenzio, poi
+  si riapre con le stesse impostazioni. Spunta *Installa da solo le nuove versioni* per non
+  sentirti chiedere niente. Sul Mac apre la pagina da cui scaricarla.
 
 ## Terminale
 
@@ -236,6 +238,7 @@ GlucoBar-Setup-0.9.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `palette` | `standard` | `standard` oppure `colorblind` (adatta al daltonismo) |
 | `alert_low` / `alert_high` / `alert_stale` | false | Avvisi per valore basso (sotto `low`), molto alto (sopra `very_high`) e nessun dato (`stale_minutes`) |
 | `update_check` | true | Controlla una volta al giorno se c'è una nuova versione |
+| `auto_update` | false | Windows: installa le nuove versioni senza chiedere |
 | `sensor_life_days` | 14 | LibreLinkUp: quanto dura il sensore, per i promemoria di fine (15 per i sensori Plus) |
 
 Log: `%APPDATA%\GlucoBar\glucobar.log`.
@@ -251,7 +254,8 @@ GlucoBar importa da solo impostazioni e password. Poi puoi cancellare quel file.
 - GlucoBar comunica **solo con i server del produttore del sensore** (LibreView di Abbott o
   Dexcom Share) **o con il tuo sito Nightscout**. Nessuna statistica.
 - Una volta al giorno chiede a GitHub qual è l'ultima versione di GlucoBar (una richiesta
-  pubblica che non manda dati su di te o sulle tue letture). Si spegne dal menu o con
+  pubblica che non manda dati su di te o sulle tue letture), e scarica l'installer da GitHub
+  solo quando installi un aggiornamento. Si spegne dal menu o con
   `glucobar set update_check=false`.
 - *Chiedi la sostituzione del sensore…* apre solo la pagina del produttore nel browser e copia
   il numero di serie negli appunti: GlucoBar non invia niente.

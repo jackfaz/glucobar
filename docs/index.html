@@ -174,6 +174,98 @@
   .c-panel .gpanel { --u: .86cqw; left: 7cqw; top: 3.7cqw; }
   .c-tray .gbar { --u: .84cqw; left: 8cqw; top: 33cqw; }
   .c-tray .gtip { --u: .84cqw; left: 26cqw; top: 17cqw; }
+
+  /* immagini delle sezioni */
+  .feature .stage { border-radius: 14px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .f-hover, .f-menu { aspect-ratio: 16 / 11; }
+  .f-colours { aspect-ratio: 16 / 11; }
+  .f-messages { aspect-ratio: 16 / 13.5; }
+  .glabel { position: absolute; font-size: 2.1cqw; color: #c9ccd1; background: rgba(255, 255, 255, .07);
+            border: 1px solid rgba(255, 255, 255, .1); border-radius: 99px; padding: .35cqw 1.4cqw; white-space: nowrap; }
+  .gwin.t-light { background: #ffffff; border-color: #e1e3e6; color: #1d1f23; }
+  .gwin.t-light .wsub { color: #62666d; }
+  .gwin.t-custom { background: #16213e; border-color: #26324f; }
+  .gwin.t-custom .wsub { color: #8f9bc4; }
+  .gbtn { display: inline-block; padding: calc(var(--u) * 1.3) calc(var(--u) * 3); margin: calc(var(--u) * 3) calc(var(--u) * 2) 0 0; border: 1px solid #4a4d55;
+          background: #2f3239; border-radius: calc(var(--u) * 1); font-size: calc(var(--u) * 3.6); color: #f2f2f2; }
+  .cursor { position: absolute; width: 2.6cqw; height: auto; filter: drop-shadow(0 .3cqw .5cqw rgba(0,0,0,.5)); }
+
+  .f-hover .gbar { --u: .8cqw; left: 10cqw; top: 47cqw; }
+  .f-hover .gpanel { --u: .6cqw; left: 6cqw; top: 4cqw; animation: peek 7s infinite; }
+  .f-hover .cursor { animation: point 7s infinite; }
+  @keyframes peek {
+    0%, 30% { opacity: 0; transform: translateY(1.5cqw); }
+    38%, 76% { opacity: 1; transform: none; }
+    84%, 100% { opacity: 0; transform: translateY(1.5cqw); }
+  }
+  @keyframes point {
+    0% { left: 70cqw; top: 70cqw; }
+    16%, 78% { left: 22cqw; top: 59.5cqw; }
+    92%, 100% { left: 70cqw; top: 70cqw; }
+  }
+
+  .f-colours .gset { --u: .54cqw; right: 5cqw; top: 6cqw; height: auto; padding-bottom: calc(var(--u) * 4); }
+  .f-colours .gwin { --u: .35cqw; left: 4cqw; top: 44cqw; }
+  .gset .row { display: flex; align-items: center; gap: calc(var(--u) * 2.4); margin: calc(var(--u) * 1.8) 0; color: #c9ccd1; }
+  .gset .row .sw { margin-left: auto; width: calc(var(--u) * 10); height: calc(var(--u) * 4.2); border: 1px solid rgba(255,255,255,.15); }
+  .gset .row .chg { font-size: calc(var(--u) * 2.8); border: 1px solid #4a4d55; border-radius: calc(var(--u) * 0.8); padding: calc(var(--u) * 0.6) calc(var(--u) * 1.8); color: #c9ccd1; }
+  [data-pal="rainbow"] .gwin, .gwin[data-pal="rainbow"] { background: var(--rb-bg, #16213e); border-color: var(--rb-grid, #26324f); }
+  [data-pal="rainbow"] .wsub { color: var(--rb-dim, #8f9bc4); }
+
+  .themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 20px; }
+  @media (max-width: 800px) { .themes { grid-template-columns: repeat(2, 1fr); } }
+  .themes figure { margin: 0; }
+  .themes figcaption { font-size: 14px; color: var(--dim); margin-top: 8px; text-align: center; }
+  .themes .stage { aspect-ratio: 1 / 1; border-radius: 12px; border: 1px solid var(--line); }
+  .themes .gwin { --u: .72cqw; left: 14cqw; top: 10cqw; }
+  .themes .gbar { --u: .84cqw; left: 8cqw; top: 66cqw; }
+  .stage.s-light { background:
+      radial-gradient(55% 80% at 100% 0%, rgba(46, 170, 96, .22), transparent 70%),
+      radial-gradient(50% 75% at 0% 100%, rgba(200, 70, 80, .18), transparent 70%), #e8ebf0; }
+  .gbar.t-light .strip { background: #f3f4f6; }
+  .gbar.t-light .gicons, .gbar.t-light .gclock { color: #1d1f23; }
+  .gbar.t-light .gvm { color: #62666d; }
+  .gwin.t-light { box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 9) rgba(30, 40, 60, .22); }
+
+  .f-messages .stack { --u: .58cqw; position: absolute; left: 21cqw; top: 4.5cqw; display: grid; gap: 2.2cqw; }
+  .f-messages .gtoast { position: relative; animation: arrive 9s infinite backwards; }
+  .f-messages .gtoast:nth-child(2) { animation-delay: .7s; }
+  .f-messages .gtoast:nth-child(3) { animation-delay: 1.4s; }
+  @keyframes arrive {
+    0% { opacity: 0; transform: translateX(4cqw); }
+    7%, 86% { opacity: 1; transform: none; }
+    94%, 100% { opacity: 0; transform: none; }
+  }
+
+  .gset { --u: .56cqw; position: absolute; right: 4cqw; top: 5cqw; width: calc(var(--u) * 100); height: calc(var(--u) * 106);
+          background: #202227; border: 1px solid #34373f; border-radius: calc(var(--u) * 1.6); overflow: hidden;
+          box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 9) rgba(0, 0, 0, .55); font-size: calc(var(--u) * 3.4); color: #e6e7ea; }
+  .gset .title { background: #1a1c20; padding: calc(var(--u) * 2.4) calc(var(--u) * 4); font-size: calc(var(--u) * 3.4); color: #c9ccd1; }
+  .gset .tabs { display: flex; gap: calc(var(--u) * 4); padding: calc(var(--u) * 3) calc(var(--u) * 4) 0; border-bottom: 1px solid #34373f; color: #8a8d93; font-size: calc(var(--u) * 3.2); }
+  .gset .tabs span { padding-bottom: calc(var(--u) * 2); white-space: nowrap; }
+  .gset .tabs .on { color: #f2f2f2; border-bottom: 2px solid #3ecf6e; }
+  .gset .group { margin: calc(var(--u) * 4) calc(var(--u) * 4) 0; border: 1px solid #34373f; border-radius: calc(var(--u) * 1.2); padding: calc(var(--u) * 3) calc(var(--u) * 4); }
+  .gset .group b { display: block; font-weight: 600; margin-bottom: calc(var(--u) * 2); }
+  .gset .opt { display: flex; align-items: center; gap: calc(var(--u) * 2.4); margin: calc(var(--u) * 1.6) 0; color: #c9ccd1; }
+  .gset .opt i { width: calc(var(--u) * 3.4); height: calc(var(--u) * 3.4); border: 1px solid #6b6f78; border-radius: 50%; flex: none; }
+  .gset .opt i.on { border-color: #3ecf6e; box-shadow: inset 0 0 0 calc(var(--u) * 0.9) #202227; background: #3ecf6e; }
+  .gset .opt i.box { border-radius: calc(var(--u) * 0.6); }
+  .gset .sw { width: calc(var(--u) * 7); height: calc(var(--u) * 3.4); border-radius: calc(var(--u) * 0.6); margin-left: auto; }
+  .gmenu { --u: .44cqw; position: absolute; width: calc(var(--u) * 56); background: #2b2d33; border: 1px solid #3d4048; border-radius: calc(var(--u) * 1.6);
+           padding: calc(var(--u) * 1.4); font-size: calc(var(--u) * 4.2); color: #e6e7ea; box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 9) rgba(0, 0, 0, .6); }
+  .gmenu div { padding: calc(var(--u) * 1.6) calc(var(--u) * 3) calc(var(--u) * 1.6) calc(var(--u) * 7); border-radius: calc(var(--u) * 1); position: relative; white-space: nowrap; }
+  .gmenu div.sub::after { content: "\203A"; position: absolute; right: calc(var(--u) * 3); }
+  .gmenu div.hl { background: #3a3d45; }
+  .gmenu div.ck::before { content: "\2713"; position: absolute; left: calc(var(--u) * 2.4); }
+  .gmenu hr { border: 0; border-top: 1px solid #3d4048; margin: calc(var(--u) * 1.2) calc(var(--u) * 2); }
+  .f-menu .gwin { --u: .3cqw; left: 6cqw; top: 8cqw; }
+  .f-menu .gmenu.main { left: 22cqw; top: 22cqw; }
+  .f-menu .gmenu.side { left: 46cqw; top: 26.4cqw; width: calc(var(--u) * 68); }
+  .f-menu .cursor { left: 36cqw; top: 29cqw; }
+  @media (prefers-reduced-motion: reduce) {
+    .f-hover .gpanel, .f-hover .cursor, .f-messages .gtoast { animation: none; }
+    .f-hover .cursor { left: 22cqw; top: 59.5cqw; }
+  }
   .buttons { display: flex; flex-wrap: wrap; gap: 12px; }
   .btn {
     display: inline-flex; align-items: center; gap: 8px;
@@ -219,11 +311,6 @@
     .feature.flip .text { order: 0; }
   }
 
-  .themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 8px; }
-  .themes figure { margin: 0; }
-  .themes figcaption { font-size: 13px; color: var(--dim); margin-top: 6px; text-align: center; }
-  .themes img { border-radius: 8px; }
-  @media (max-width: 800px) { .themes { grid-template-columns: repeat(2, 1fr); } }
 
   .more { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   @media (max-width: 800px) { .more { grid-template-columns: 1fr 1fr; } }
@@ -407,8 +494,22 @@
         <p>Next to the value you can show the trend arrow, the change since the previous reading
           (the delta, as in "142 +5"), or both.</p>
       </div>
-      <img src="screenshots/elements-delta.png" width="584" height="562" loading="lazy"
-           alt="The small window, the desktop panel and the taskbar showing 142 +22: the delta instead of the arrow">
+      <div class="stage f-hover" role="img" aria-label="The mouse rests on the value on the taskbar and the full chart opens above it"><div aria-hidden="true">
+        <div class="gpanel">
+            <div class="ph">
+              <div><div class="pbig js-col"><span class="js-val">112</span><span class="parrow js-arrow">&#8594;</span></div>
+                <div class="psub js-sub">mg/dL &#183; now</div></div>
+              <div class="pstats"><span>Average</span><b class="js-avg">112</b><span>In range</span><b class="g js-in">100%</b>
+                <span>Min</span><b class="js-min">112</b><span>Below</span><b class="r js-below">0%</b>
+                <span>Max</span><b class="js-max">112</b><span>Above</span><b class="a js-above">0%</b></div>
+            </div>
+            <div class="pchart"><canvas class="js-chart" data-kind="day"></canvas></div>
+          </div>
+        <div class="gbar"><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span><span class="gva js-delta">+0</span></div><div class="gvm">now</div></div>
+          <div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div>
+          <div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div>
+        <svg class="cursor" viewBox="0 0 20 28"><path d="M2 2v21l5.5-5.2 3.6 8.2 3.4-1.5-3.6-8h7.6z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      </div></div>
     </div>
 
     <div class="feature flip">
@@ -419,14 +520,21 @@
           everything: the value in range, high, very high, low and old, backgrounds, text, chart and grid.</p>
         <p>Thresholds are yours too: the defaults are 70 and 180 mg/dL, with very high above 250.</p>
       </div>
-      <img src="screenshots/settings-custom.png" width="661" height="620" loading="lazy"
-           alt="The Settings window, Appearance tab, with custom colours">
+      <div class="stage f-colours" data-pal="rainbow" role="img" aria-label="The Appearance tab of the Settings window: the colours change and the small window follows them right away"><div aria-hidden="true">
+        <div class="gset">
+          <div class="title">GlucoBar settings</div>
+          <div class="tabs"><span>General</span><span>Values and alerts</span><span class="on">Appearance</span><span>Elements</span></div>
+          <div class="group"><b>Value colours</b><div class="row">In range<span class="sw" data-rb="in"></span><span class="chg">Change&#8230;</span></div><div class="row">High<span class="sw" data-rb="high"></span><span class="chg">Change&#8230;</span></div><div class="row">Low<span class="sw" data-rb="low"></span><span class="chg">Change&#8230;</span></div></div>
+          <div class="group"><b>Small window and panel</b><div class="row">Background<span class="sw" data-rb="bg"></span><span class="chg">Change&#8230;</span></div><div class="row">Chart line<span class="sw" data-rb="line"></span><span class="chg">Change&#8230;</span></div></div>
+        </div>
+        <div class="gwin "><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; now</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div>
+      </div></div>
     </div>
     <div class="themes">
-      <figure><img src="screenshots/elements-dark.png" width="584" height="562" loading="lazy" alt="Dark theme"><figcaption>Dark</figcaption></figure>
-      <figure><img src="screenshots/elements-light.png" width="584" height="562" loading="lazy" alt="Light theme"><figcaption>Light</figcaption></figure>
-      <figure><img src="screenshots/elements-colorblind.png" width="584" height="562" loading="lazy" alt="Colour-blind friendly palette"><figcaption>Colour-blind friendly</figcaption></figure>
-      <figure><img src="screenshots/elements-custom.png" width="584" height="562" loading="lazy" alt="Custom colours"><figcaption>Your own</figcaption></figure>
+      <figure><div class="stage" data-pal="standard" role="img" aria-label="Dark theme"><div aria-hidden="true"><div class="gwin "><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; now</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div><div class="gbar "><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">now</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div></div></div><figcaption>Dark</figcaption></figure>
+      <figure><div class="stage s-light" data-pal="standard" data-light="1" role="img" aria-label="Light theme"><div aria-hidden="true"><div class="gwin t-light"><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; now</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div><div class="gbar t-light"><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">now</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div></div></div><figcaption>Light</figcaption></figure>
+      <figure><div class="stage" data-pal="colorblind" role="img" aria-label="Colour-blind friendly colours"><div aria-hidden="true"><div class="gwin "><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; now</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div><div class="gbar "><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">now</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div></div></div><figcaption>Colour-blind friendly</figcaption></figure>
+      <figure><div class="stage" data-pal="rainbow" role="img" aria-label="Your own colours, changing continuously"><div aria-hidden="true"><div class="gwin "><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; now</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div><div class="gbar "><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">now</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div></div></div><figcaption>Your own, any colour</figcaption></figure>
     </div>
   </div>
 </section>
@@ -446,8 +554,13 @@
             your settings.</li>
         </ul>
       </div>
-      <img src="screenshots/messages.png" width="368" height="356" loading="lazy" style="max-width:368px;margin:0 auto"
-           alt="Three messages: a new version is available, the sensor has stopped, and low glucose">
+      <div class="stage f-messages" role="img" aria-label="Three GlucoBar messages: a new version is available, the sensor has stopped, and low glucose"><div aria-hidden="true">
+        <div class="stack">
+          <div class="gtoast on"><b>New version</b><span>GlucoBar 0.9.8 is available.</span><br><span class="gbtn">Install now</span><span class="gbtn">What's new</span></div>
+          <div class="gtoast on"><b>Sensor</b><span>No data for over an hour. If the sensor has stopped, you can ask Abbott for a replacement. Serial number: 0M00A1B2C3D.</span><br><span class="gbtn">Request a replacement</span></div>
+          <div class="gtoast on"><b>GlucoBar alert</b><span>Low glucose: 64 mg/dL</span></div>
+        </div>
+      </div></div>
     </div>
     <div class="feature flip">
       <div class="text">
@@ -455,11 +568,23 @@
         <p>Right-click any GlucoBar element for the quick actions: refresh, what to show, sensor,
           settings. Everything else is in the Settings window, in tabs, and every change shows right away.</p>
       </div>
-      <img src="screenshots/menu.png" width="540" height="350" loading="lazy"
-           alt="The right-click menu with the Update every submenu open">
+      <div class="stage f-menu" role="img" aria-label="The right-click menu of the small window with the Show submenu open, in front of the Settings window"><div aria-hidden="true">
+        <div class="gset">
+          <div class="title">GlucoBar settings</div>
+          <div class="tabs"><span>General</span><span class="on">Values and alerts</span><span>Appearance</span><span>Elements</span></div>
+          <div class="group"><b>Alerts</b>
+            <div class="opt"><i class="box on"></i>Low glucose</div><div class="opt"><i class="box"></i>Very high glucose</div><div class="opt"><i class="box on"></i>No data for 15 minutes</div></div>
+          <div class="group"><b>Next to the value</b>
+            <div class="opt"><i></i>Trend arrow</div><div class="opt"><i></i>Change (delta) instead of the arrow</div><div class="opt"><i class="on"></i>Arrow and change</div></div>
+        </div>
+        <div class="gwin " data-pal="standard"><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; now</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div>
+        <div class="gmenu main"><div>Refresh now</div><div class="sub hl">Show</div><div class="sub">Sensor</div><div>Settings&#8230;</div><hr><div>Quit GlucoBar</div></div>
+        <div class="gmenu side"><div class="ck">On the taskbar</div><div class="ck">Icon next to the clock</div><div class="ck">Small window</div><div>Desktop panel</div></div>
+        <svg class="cursor" viewBox="0 0 20 28"><path d="M2 2v21l5.5-5.2 3.6 8.2 3.4-1.5-3.6-8h7.6z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      </div></div>
     </div>
     <div class="more">
-      <div class="card"><h3>Update every 10 s to 5 min</h3><p>From the menu. The default is one minute.</p></div>
+      <div class="card"><h3>Update every 10 s to 5 min</h3><p>In Settings. The default is one minute.</p></div>
       <div class="card"><h3>Over full-screen apps</h3><p>The desktop panel can stay on top of a video or a game, like picture-in-picture, with adjustable opacity.</p></div>
       <div class="card"><h3>More than one person</h3><p>Follow several people with the same LibreLinkUp account and switch from the menu.</p></div>
       <div class="card"><h3>mg/dL or mmol/L</h3><p>Change the unit any time from Settings.</p></div>
@@ -646,6 +771,30 @@
       values.push(Math.max(48, Math.min(320, Math.round(v))));
     }
     function color(v) { return v < 70 || v > 250 ? RED : v > 180 ? AMBER : GREEN; }
+    var PALETTES = {   // nel range, alto, basso o molto alto: come in GlucoBar
+      standard: [GREEN, AMBER, RED], "standard-light": ["#1e9e4a", "#c77800", "#d32f2f"],
+      colorblind: ["#56b4e9", "#f0e442", "#e66100"], custom: ["#b066ff", "#ffb000", "#ff4d4f"]
+    };
+    var hue = 280;   // "i tuoi colori": cambiano di continuo, come se qualcuno li stesse scegliendo
+    function rainbow() {
+      var back = 200 + 60 * Math.sin(hue * Math.PI / 180);   // sfondi tra verde acqua, blu e viola
+      return {
+        "in": "hsl(" + hue + ", 85%, 64%)", high: "hsl(" + (hue + 50) + ", 90%, 60%)", low: "hsl(" + (hue + 160) + ", 85%, 62%)",
+        bg: "hsl(" + back + ", 45%, 15%)", grid: "hsl(" + back + ", 35%, 26%)",
+        line: "hsl(" + (hue + 20) + ", 70%, 85%)", dim: "hsl(" + back + ", 25%, 65%)"
+      };
+    }
+    function colorFor(el, v) {
+      var box = el.closest("[data-pal]"), name = box ? box.dataset.pal : "standard";
+      if (name === "rainbow") { var r = rainbow(); return v < 70 || v > 250 ? r.low : v > 180 ? r.high : r["in"]; }
+      if (box && box.dataset.light) name += "-light";
+      return PALETTES[name][v < 70 || v > 250 ? 2 : v > 180 ? 1 : 0];
+    }
+    function lineFor(el) {
+      var box = el.closest("[data-pal]");
+      if (box && box.dataset.pal === "rainbow") return rainbow().line;
+      return !box ? "#c9ccd1" : box.dataset.light ? "#4d5157" : box.dataset.pal === "custom" ? "#e0e6ff" : "#c9ccd1";
+    }
     function arrow(d) { return d >= 9 ? "↑" : d >= 4 ? "↗" : d > -4 ? "→" : d > -9 ? "↘" : "↓"; }
     function hhmm(i) { var m = i * 5; return String(Math.floor(m / 60) % 24).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); }
     function all(sel, fn) { Array.prototype.forEach.call(document.querySelectorAll(sel), fn); }
@@ -692,22 +841,33 @@
       function x(i) { return pad + (W - 2 * pad) * (i - (n - SPARK)) / SPARK; }
       function y(v) { return H - pad - (H - 2 * pad) * (v - 40) / 280; }
       ctx.clearRect(0, 0, W, H);
-      ctx.lineWidth = Math.max(1, .9 * f); ctx.lineCap = ctx.lineJoin = "round"; ctx.strokeStyle = "#c9ccd1";
+      ctx.lineWidth = Math.max(1, .9 * f); ctx.lineCap = ctx.lineJoin = "round"; ctx.strokeStyle = lineFor(canvas);
       ctx.beginPath(); ctx.moveTo(x(from), y(values[from]));
       for (var i = from + 1; i <= n; i++) ctx.lineTo(x(i), y(values[i]));
       ctx.stroke();
-      ctx.fillStyle = color(values[n]);
+      ctx.fillStyle = colorFor(canvas, values[n]);
       ctx.beginPath(); ctx.arc(x(n), y(values[n]), 1.6 * f, 0, Math.PI * 2); ctx.fill();
     }
     function drawCharts(n) {
       charts.forEach(function (c) { if (c.width > 1) (c.dataset.kind === "spark" ? spark : day)(c, n); });
+    }
+    var rbBoxes = Array.prototype.slice.call(document.querySelectorAll('[data-pal="rainbow"]'));
+    function paintRainbow() {
+      var r = rainbow(), v = values[last];
+      rbBoxes.forEach(function (box) {
+        box.style.setProperty("--rb-bg", r.bg); box.style.setProperty("--rb-grid", r.grid); box.style.setProperty("--rb-dim", r.dim);
+        box.querySelectorAll(".js-col").forEach(function (e) { e.style.color = colorFor(e, v); });
+        box.querySelectorAll("[data-rb]").forEach(function (e) { e.style.background = r[e.dataset.rb]; });
+        box.querySelectorAll(".js-chart").forEach(function (c) { if (c.width > 1) spark(c, last); });
+      });
     }
     function show(n) {
       var v = values[n], c = color(v), a = arrow(v - values[Math.max(0, n - 1)]);
       var change = v - values[Math.max(0, n - 3)];
       all(".js-val", function (e) { e.textContent = v; });
       all(".js-arrow", function (e) { e.textContent = a; });
-      all(".js-col", function (e) { e.style.color = c; });
+      all(".js-col", function (e) { e.style.color = colorFor(e, v); });
+      all(".js-delta", function (e) { var d = v - values[Math.max(0, n - 1)]; e.textContent = (d >= 0 ? "+" : "") + d; });
       all(".js-clock", function (e) { e.textContent = hhmm(n); });
       all(".js-sub", function (e) { e.textContent = "mg/dL · now · " + (change >= 0 ? "+" : "") + change + " in 15 min"; });
       var seen = values.slice(0, n + 1), sum = 0, low = 0, high = 0;
@@ -731,7 +891,7 @@
       charts.forEach(function (c) { ro.observe(c); });
     }
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      last = 210; show(last); return;
+      last = 210; show(last); paintRainbow(); return;
     }
 
     var start = null, visible = 0, toastShown = false, toastUntil = 0;
@@ -749,6 +909,7 @@
       if (t > DAY_MS + HOLD_MS) { start = now; t = 0; toastShown = false; }
       var n = Math.min(STEPS, Math.floor(t / DAY_MS * STEPS));
       if (n !== last) { last = n; show(n); }
+      hue = (280 + (now - start) / 25) % 360; paintRainbow();
       if (!toastShown && values[n] < 70) {
         toastShown = true; toastUntil = now + 3500;
         all(".js-toast-text", function (e) { e.textContent = "Low glucose: " + values[n] + " mg/dL"; });

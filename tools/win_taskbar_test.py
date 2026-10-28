@@ -381,9 +381,6 @@ def small_window_hwnd(pid):
     return None
 
 
-pending_photos = []   # foto da mettere negli avvisi dopo il riepilogo
-
-
 def hide_small_window_from_its_menu(app):
     """Nel menu della finestrella: Show → Small window. Basta un clic per chiuderla?"""
     tries = []
@@ -406,10 +403,6 @@ def hide_small_window_from_its_menu(app):
         sub = [m for m in menus_of(app.pid) if m not in menus]
         # Show: On the taskbar, Icon next to the clock, Small window, Desktop panel
         where, _texts = menu_item_center(sub[0], 2) if sub else (None, "")
-        if not tries and where:   # prima volta: foto del menu prima del clic
-            pending_photos.append(("Menu Show", ImageGrab.grab(
-                bbox=(max(0, r.left - 20), max(0, r.top - 20), where[0] + 220, where[1] + 120),
-                all_screens=True)))
         if not where:
             tries.append("sottomenu Show senza voci")
             key(0x1B, 3)
@@ -427,7 +420,7 @@ def hide_small_window_from_its_menu(app):
         failed = f.read().count("comando non riuscito")
     tries.append(f"comandi non riusciti nel log: {failed}")
     return (f"finestrella chiusa dal suo menu (Show): {' / '.join(tries)}",
-            bool(tries) and tries[0] == "chiusa")
+            bool(tries) and tries[0].startswith("chiusa"))
 
 
 def menu_checks(app, rect):
@@ -558,8 +551,8 @@ def main(exe, strict):
             results.append(result)
             problems += not ok
     notice("Valore sulla barra", " | ".join(results))
-    for title, img in photos + pending_photos:
-        photo_notice(title, img, (420, 300))
+    for title, img in photos:
+        photo_notice(title, img)
     with open(LOG, encoding="utf-8") as f:
         tail = [line.strip() for line in f.readlines()[-12:]]
     notice("Log di GlucoBar", " | ".join(tail))

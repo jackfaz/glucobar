@@ -206,8 +206,9 @@
   .colours-intro { max-width: 760px; margin: 0 0 24px; }
   .colours-intro p { color: var(--dim); margin: 0; }
   .f-colours { aspect-ratio: 16 / 10.4; border-radius: 16px; border: 1px solid var(--line); box-shadow: var(--shadow); }
-  .f-colours .gwin { --u: .27cqw; left: 3.5cqw; top: 10cqw; }
-  .f-colours .gbar { --u: .3cqw; left: 2.5cqw; top: 33cqw; }
+  .f-colours .gpanel { --u: .33cqw; left: 2.5cqw; top: 4cqw; }
+  .f-colours .gwin { --u: .25cqw; left: 4cqw; top: 29cqw; }
+  .f-colours .gbar { --u: .31cqw; left: 2.5cqw; top: 48cqw; }
   .gset.gappear { --u: .52cqw; right: 3.5cqw; top: 3cqw; width: calc(var(--u) * 118); height: auto; font-size: calc(var(--u) * 2.2); }
   .gset.gappear .row { margin: calc(var(--u) * 0.9) 0; }
   .gset.gappear .chg { padding: calc(var(--u) * 0.4) calc(var(--u) * 1.4); }
@@ -236,18 +237,24 @@
   @media (max-width: 700px) { .f-colours { aspect-ratio: 100 / 101; } }
   @container (max-width: 640px) {
     .gset.gappear { --u: .79cqw; right: 3.5cqw; top: 3.5cqw; }
-    .f-colours .gwin, .f-colours .gbar { display: none; }
+    .f-colours .gwin, .f-colours .gbar, .f-colours .gpanel { display: none; }
   }
   [data-pal="rainbow"] .gwin, .gwin[data-pal="rainbow"] { background: var(--rb-bg, #16213e); border-color: var(--rb-grid, #26324f); }
+  [data-pal="rainbow"] .gpanel { background: var(--rb-panel, #0f1629); border-color: var(--rb-grid, #26324f); }
+  [data-pal="rainbow"] .psub, [data-pal="rainbow"] .pstats span { color: var(--rb-dim, #8f9bc4); }
   [data-pal="rainbow"] .wsub { color: var(--rb-dim, #8f9bc4); }
 
   .themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 20px; }
   @media (max-width: 800px) { .themes { grid-template-columns: repeat(2, 1fr); } }
   .themes figure { margin: 0; }
   .themes figcaption { font-size: 14px; color: var(--dim); margin-top: 8px; text-align: center; }
-  .themes .stage { aspect-ratio: 1 / 1; border-radius: 12px; border: 1px solid var(--line); }
-  .themes .gwin { --u: .72cqw; left: 14cqw; top: 10cqw; }
-  .themes .gbar { --u: .84cqw; left: 8cqw; top: 66cqw; }
+  .themes .stage { aspect-ratio: 1 / 1.06; border-radius: 12px; border: 1px solid var(--line); }
+  .themes .gwin { --u: .36cqw; right: 6cqw; top: 3cqw; }
+  .themes .gpanel { --u: .86cqw; left: 7cqw; top: 25.5cqw; }
+  .themes .gbar { --u: .72cqw; left: 14cqw; top: 85.5cqw; }
+  .s-light .gpanel { background: #ffffff; border-color: #e1e3e6; color: #1d1f23; box-shadow: 0 1cqw 3cqw rgba(30, 40, 60, .2); }
+  .s-light .gpanel .psub, .s-light .gpanel .pstats span { color: #62666d; }
+  .s-light .gpanel .pstats b { color: #1d1f23; }
   .stage.s-light { background:
       radial-gradient(55% 80% at 100% 0%, rgba(46, 170, 96, .22), transparent 70%),
       radial-gradient(50% 75% at 0% 100%, rgba(200, 70, 80, .18), transparent 70%), #e8ebf0; }
@@ -550,6 +557,16 @@
         180 mg/dL, with very high above 250.</p>
     </div>
     <div class="stage f-colours" data-pal="rainbow" role="img" aria-label="The Appearance tab of the Settings window: the colours change, and the small window and the value on the taskbar follow them right away"><div aria-hidden="true">
+      <div class="gpanel">
+            <div class="ph">
+              <div><div class="pbig js-col"><span class="js-val">112</span><span class="parrow js-arrow">&#8594;</span></div>
+                <div class="psub js-sub">mg/dL &#183; 1 min ago</div></div>
+              <div class="pstats"><span>Average</span><b class="js-avg">112</b><span>In range</span><b class="g js-in" data-rbc="in">100%</b>
+                <span>Min</span><b class="js-min">112</b><span>Below</span><b class="r js-below" data-rbc="low">0%</b>
+                <span>Max</span><b class="js-max">112</b><span>Above</span><b class="a js-above" data-rbc="high">0%</b></div>
+            </div>
+            <div class="pchart"><canvas class="js-chart" data-kind="day"></canvas></div>
+          </div>
       <div class="gwin"><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; 1 min ago</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div>
       <div class="gbar"><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">1 min</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div>
       <div class="gset gappear">
@@ -576,10 +593,10 @@
       </div>
     </div></div>
     <div class="themes">
-      <figure><div class="stage" data-pal="standard" role="img" aria-label="Dark theme"><div aria-hidden="true"><div class="gwin "><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; 1 min ago</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div><div class="gbar "><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">1 min</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div></div></div><figcaption>Dark</figcaption></figure>
-      <figure><div class="stage s-light" data-pal="standard" data-light="1" role="img" aria-label="Light theme"><div aria-hidden="true"><div class="gwin t-light"><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; 1 min ago</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div><div class="gbar t-light"><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">1 min</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div></div></div><figcaption>Light</figcaption></figure>
-      <figure><div class="stage" data-pal="colorblind" role="img" aria-label="Colour-blind friendly colours"><div aria-hidden="true"><div class="gwin "><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; 1 min ago</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div><div class="gbar "><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">1 min</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div></div></div><figcaption>Colour-blind friendly</figcaption></figure>
-      <figure><div class="stage" data-pal="rainbow" role="img" aria-label="Your own colours, changing continuously"><div aria-hidden="true"><div class="gwin "><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; 1 min ago</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div><div class="gbar "><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">1 min</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div></div></div><figcaption>Your own, any colour</figcaption></figure>
+      <figure><div class="stage" data-pal="standard" role="img" aria-label="Dark theme"><div aria-hidden="true"><div class="gpanel"><div class="ph"><div><div class="pbig js-col"><span class="js-val">112</span><span class="parrow js-arrow">&#8594;</span></div><div class="psub js-sub">mg/dL &#183; 1 min ago</div></div><div class="pstats"><span>Average</span><b class="js-avg">112</b><span>In range</span><b class="g js-in">100%</b><span>Min</span><b class="js-min">112</b><span>Below</span><b class="r js-below">0%</b><span>Max</span><b class="js-max">112</b><span>Above</span><b class="a js-above">0%</b></div></div><div class="pchart"><canvas class="js-chart" data-kind="day"></canvas></div></div><div class="gwin "><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; 1 min ago</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div><div class="gbar "><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">1 min</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div></div></div><figcaption>Dark</figcaption></figure>
+      <figure><div class="stage s-light" data-pal="standard" data-light="1" role="img" aria-label="Light theme"><div aria-hidden="true"><div class="gpanel"><div class="ph"><div><div class="pbig js-col"><span class="js-val">112</span><span class="parrow js-arrow">&#8594;</span></div><div class="psub js-sub">mg/dL &#183; 1 min ago</div></div><div class="pstats"><span>Average</span><b class="js-avg">112</b><span>In range</span><b class="g js-in">100%</b><span>Min</span><b class="js-min">112</b><span>Below</span><b class="r js-below">0%</b><span>Max</span><b class="js-max">112</b><span>Above</span><b class="a js-above">0%</b></div></div><div class="pchart"><canvas class="js-chart" data-kind="day"></canvas></div></div><div class="gwin t-light"><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; 1 min ago</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div><div class="gbar t-light"><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">1 min</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div></div></div><figcaption>Light</figcaption></figure>
+      <figure><div class="stage" data-pal="colorblind" role="img" aria-label="Colour-blind friendly colours"><div aria-hidden="true"><div class="gpanel"><div class="ph"><div><div class="pbig js-col"><span class="js-val">112</span><span class="parrow js-arrow">&#8594;</span></div><div class="psub js-sub">mg/dL &#183; 1 min ago</div></div><div class="pstats"><span>Average</span><b class="js-avg">112</b><span>In range</span><b class="g js-in">100%</b><span>Min</span><b class="js-min">112</b><span>Below</span><b class="r js-below">0%</b><span>Max</span><b class="js-max">112</b><span>Above</span><b class="a js-above">0%</b></div></div><div class="pchart"><canvas class="js-chart" data-kind="day"></canvas></div></div><div class="gwin "><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; 1 min ago</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div><div class="gbar "><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">1 min</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div></div></div><figcaption>Colour-blind friendly</figcaption></figure>
+      <figure><div class="stage" data-pal="rainbow" role="img" aria-label="Your own colours, changing continuously"><div aria-hidden="true"><div class="gpanel"><div class="ph"><div><div class="pbig js-col"><span class="js-val">112</span><span class="parrow js-arrow">&#8594;</span></div><div class="psub js-sub">mg/dL &#183; 1 min ago</div></div><div class="pstats"><span>Average</span><b class="js-avg">112</b><span>In range</span><b class="g js-in">100%</b><span>Min</span><b class="js-min">112</b><span>Below</span><b class="r js-below">0%</b><span>Max</span><b class="js-max">112</b><span>Above</span><b class="a js-above">0%</b></div></div><div class="pchart"><canvas class="js-chart" data-kind="day"></canvas></div></div><div class="gwin "><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; 1 min ago</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div><div class="gbar "><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">1 min</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div></div></div><figcaption>Your own, any colour</figcaption></figure>
     </div>
   </div>
 </section>
@@ -844,6 +861,10 @@
       if (box.dataset.pal === "rainbow") return rainbow().band;
       return box.dataset.light ? "#e2f4e8" : box.dataset.pal === "colorblind" ? "#1b2c38" : BAND;
     }
+    function rainbowBox(el) { var box = el.closest("[data-pal]"); return box && box.dataset.pal === "rainbow"; }
+    function lightBox(el) { var box = el.closest("[data-pal]"); return box && box.dataset.light; }
+    function gridFor(el) { return rainbowBox(el) ? rainbow().grid : lightBox(el) ? "#e1e3e6" : GRID; }
+    function dimFor(el) { return rainbowBox(el) ? rainbow().dim : lightBox(el) ? "#62666d" : DIM; }
     function lineFor(el) {
       var box = el.closest("[data-pal]");
       if (box && box.dataset.pal === "rainbow") return rainbow().line;
@@ -881,13 +902,14 @@
         ctx.setLineDash([]); ctx.fillStyle = line[1]; ctx.textAlign = "right"; ctx.textBaseline = "middle";
         ctx.fillText(line[0], left - f, y(line[0]));
       });
-      ctx.fillStyle = DIM; ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillText(hi, left - f, y(hi));
-      ctx.strokeStyle = GRID; ctx.textAlign = "center";
+      var dim = dimFor(canvas);
+      ctx.fillStyle = dim; ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillText(hi, left - f, y(hi));
+      ctx.strokeStyle = gridFor(canvas); ctx.textAlign = "center";
       for (var i = Math.ceil(from / 12) * 12 + 12; i < n; i += 12) {   // un'ora ogni 12 letture da 5 minuti
         var hour = (((i / 12) % 24) + 24) % 24;
         if (hour % 3) continue;
         ctx.beginPath(); ctx.moveTo(x(i), top); ctx.lineTo(x(i), bottom); ctx.stroke();
-        ctx.fillStyle = DIM; ctx.fillText(String(hour).padStart(2, "0") + ":00", x(i), bottom + .8 * f);
+        ctx.fillStyle = dim; ctx.fillText(String(hour).padStart(2, "0") + ":00", x(i), bottom + .8 * f);
       }
       ctx.strokeStyle = lineFor(canvas); ctx.lineWidth = Math.max(1, .3 * f); ctx.lineJoin = ctx.lineCap = "round";
       ctx.beginPath();
@@ -900,7 +922,7 @@
       });
       ctx.strokeStyle = colorFor(canvas, V(n)); ctx.lineWidth = Math.max(1, .35 * f);
       ctx.beginPath(); ctx.arc(x(n), y(V(n)), 2.2 * r, 0, Math.PI * 2); ctx.stroke();
-      ctx.fillStyle = DIM; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+      ctx.fillStyle = dim; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
       ctx.fillText("Last 12 hours \u00b7 Sensor: day 7 \u00b7 updated at " + hhmm(n), 0, H);
     }
     function spark(canvas, n) {   // le ultime 3 ore, come la finestrella
@@ -925,11 +947,15 @@
     function paintRainbow() {
       var r = rainbow(), v = V(last);
       rbBoxes.forEach(function (box) {
-        box.style.setProperty("--rb-bg", r.bg); box.style.setProperty("--rb-grid", r.grid); box.style.setProperty("--rb-dim", r.dim);
+        box.style.setProperty("--rb-panel", r.panel); box.style.setProperty("--rb-bg", r.bg); box.style.setProperty("--rb-grid", r.grid); box.style.setProperty("--rb-dim", r.dim);
         box.querySelectorAll(".js-col").forEach(function (e) { e.style.color = colorFor(e, v); });
         box.querySelectorAll("[data-rb]").forEach(function (e) { e.style.background = r[e.dataset.rb]; });
         box.querySelectorAll("[data-rbc]").forEach(function (e) { e.style.color = r[e.dataset.rbc]; });
-        box.querySelectorAll(".js-chart").forEach(function (c) { if (c.width > 1) spark(c, last); });
+        box.querySelectorAll(".js-min, .js-max").forEach(function (e) { e.style.color = colorFor(e, +e.textContent); });
+        box.querySelectorAll(".js-in").forEach(function (e) { e.style.color = r["in"]; });
+        box.querySelectorAll(".js-below").forEach(function (e) { e.style.color = r.low; });
+        box.querySelectorAll(".js-above").forEach(function (e) { e.style.color = r.high; });
+        box.querySelectorAll(".js-chart").forEach(function (c) { if (c.width > 1) (c.dataset.kind === "spark" ? spark : day)(c, last); });
       });
     }
     function show(n) {
@@ -951,6 +977,9 @@
       Object.keys(stats).forEach(function (k) { all(".js-" + k, function (e) { e.textContent = stats[k]; }); });
       all(".js-min", function (e) { e.style.color = colorFor(e, lo); });
       all(".js-max", function (e) { e.style.color = colorFor(e, hi); });
+      all(".js-in", function (e) { e.style.color = colorFor(e, 120); });
+      all(".js-below", function (e) { e.style.color = colorFor(e, 60); });
+      all(".js-above", function (e) { e.style.color = colorFor(e, 200); });
       drawCharts(n);
     }
 

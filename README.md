@@ -104,13 +104,14 @@ high, very high, low and old, backgrounds, text, chart and grid.
 | Sensor | Read through | Status |
 |---|---|---|
 | FreeStyle Libre (Libre 2, Libre 3 and their Plus versions) | LibreLinkUp | Supported |
-| Dexcom G6, G7, ONE+ | Dexcom Share | Beta, testers wanted |
+| Dexcom G6, G7, ONE+ | Dexcom Share | Beta: works with a G7, G6 and ONE+ testers wanted |
 | Any sensor uploading to Nightscout or Nocturne (Medtronic, Eversense, xDrip+, Juggluco, AndroidAPS, Loop, …) | Nightscout API | Beta, testers wanted |
 | Medtronic Guardian / Simplera | CareLink | Being evaluated |
 
-Dexcom and Nightscout support is new and has only been tested against simulated servers so
-far. If you use them, please tell us in [Discussions](../../discussions) or in an
-[issue](../../issues) whether it works for you.
+Dexcom support has been confirmed by a G7 user; G6 and ONE+ have not been tried yet.
+Nightscout and Nocturne have so far been tested against simulated servers. If you use any of
+them, please tell us in [Discussions](../../discussions) or in an [issue](../../issues)
+whether it works for you, even just "works fine".
 
 Would you like another sensor? [Open an issue](../../issues) and tell us which one.
 

@@ -379,6 +379,21 @@
   .side h3 { margin-top: 0; }
   .side p { color: var(--dim); font-size: 15px; }
   .side img { border-radius: 10px; border: 1px solid var(--line); }
+  .side h3 + a, .side .table-box { display: block; margin: 10px 0 14px; }
+  .side h3 { margin-top: 22px; } .side h3:first-child { margin-top: 0; }
+  .side .small { font-size: 14px; }
+  .side table { font-size: 14px; }
+  .side td { padding: 9px 12px; }
+  .side td:first-child { color: var(--fg); width: 38%; }
+  .side td:last-child { color: var(--dim); }
+  .tabbar { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; margin: 0 0 24px;
+            background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  .tab { font: inherit; font-size: 15px; font-weight: 600; padding: 9px 16px; border: 0; border-radius: 7px;
+         background: none; color: var(--dim); cursor: pointer; }
+  .tab:hover { color: var(--fg); }
+  .tab[aria-selected="true"] { background: var(--green); color: var(--green-ink); }
+  .tab:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  .tabpanel[hidden] { display: none; }
 
   details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0 18px; }
   details + details { margin-top: 10px; }
@@ -679,42 +694,124 @@
 <section id="install">
   <div class="wrap">
     <h2>Install</h2>
-    <p class="intro">About five minutes, most of it on the phone. No administrator rights needed.</p>
-    <div class="two">
+    <p class="intro">About five minutes, most of it on the phone. Choose your sensor:</p>
+    <div class="tabbar" role="tablist" aria-label="Your sensor">
+      <button class="tab" role="tab" id="tab-libre" aria-controls="inst-libre" aria-selected="true">FreeStyle Libre</button>
+      <button class="tab" role="tab" id="tab-dexcom" aria-controls="inst-dexcom" aria-selected="false">Dexcom</button>
+      <button class="tab" role="tab" id="tab-nightscout" aria-controls="inst-nightscout" aria-selected="false">Nightscout / Nocturne</button>
+      <button class="tab" role="tab" id="tab-mac" aria-controls="inst-mac" aria-selected="false">Mac (beta)</button>
+    </div>
+
+    <div class="tabpanel two" id="inst-libre" role="tabpanel" aria-labelledby="tab-libre">
       <ol class="steps">
-        <li><h3>Turn on sharing on your phone (once)</h3>
+        <li><h3>Share your readings with LibreLinkUp (once)</h3>
+          <p>LibreLinkUp is Abbott's app for sharing readings with family and carers. The simplest way is to share with yourself:</p>
           <ul>
-            <li><strong>FreeStyle Libre:</strong> in the LibreLink app, share your readings with
-              LibreLinkUp using your own account (<a href="https://github.com/jackfaz/glucobar#setting-up-librelinkup">step-by-step guide</a>).</li>
-            <li><strong>Dexcom:</strong> in the Dexcom app, turn on Share and invite at least one follower.</li>
-            <li><strong>Nightscout or Nocturne:</strong> a site that already receives your readings,
-              and a read-only token if it is not public.</li>
+            <li>In the <strong>LibreLink</strong> app, open the menu and tap <em>Connected Apps</em>.</li>
+            <li>Next to <strong>LibreLinkUp</strong>, tap <em>Manage</em>, then <em>Add Connection</em>.</li>
+            <li>Enter your name and <strong>the email of your LibreLink account</strong>, and send the invitation.</li>
+            <li>Install <strong>LibreLinkUp</strong>, tap <em>Log In</em> with the same email and password as LibreLink,
+              and accept the invitation and the terms of use.</li>
           </ul>
-        </li>
-        <li><h3>Download and run the installer</h3>
-          <p><a href="https://github.com/jackfaz/glucobar/releases/latest/download/GlucoBar-Setup.exe">GlucoBar-Setup.exe</a>
-            always gives you the latest version. Windows may say <em>"Windows protected your PC"</em>
-            because the installer is not code-signed yet: click <em>More info</em>, then <em>Run anyway</em>.</p>
-        </li>
-        <li><h3>Choose what to show</h3>
-          <p>Tick where you want the value (with previews) and whether to start GlucoBar with Windows.</p>
-        </li>
-        <li><h3>Sign in</h3>
-          <p>Choose your sensor and enter the account: the same email and password as LibreLink, or
-            your Dexcom account, or your Nightscout address and token.</p>
-        </li>
+          <p>Afterwards you can uninstall LibreLinkUp from the phone.</p></li>
+          <li><h3>Download and run the installer</h3>
+            <p><a href="https://github.com/jackfaz/glucobar/releases/latest/download/GlucoBar-Setup.exe">GlucoBar-Setup.exe</a> always gives you the latest version. No administrator rights needed. Windows may say
+              <em>"Windows protected your PC"</em> because the installer is not code-signed yet: click
+              <em>More info</em>, then <em>Run anyway</em>.</p></li>
+          <li><h3>Choose what to show</h3>
+            <p>Pick your sensor, tick where you want the value (with previews) and whether to start GlucoBar with Windows.</p></li>
+          <li><h3>Sign in</h3><p>Choose <em>FreeStyle Libre</em> and enter the same email and password as LibreLink.</p></li>
       </ol>
       <div class="side">
-        <h3>Setting up LibreLinkUp</h3>
-        <p>In LibreLink: <em>Connected Apps → LibreLinkUp → Manage → Add Connection</em>. Then sign in to
-          LibreLinkUp once with the same account and accept the invitation.</p>
-        <a href="https://github.com/jackfaz/glucobar#setting-up-librelinkup">
-          <img src="librelinkup-setup.png" width="1420" height="725" loading="lazy" alt="The LibreLink and LibreLinkUp screens to share your readings"></a>
-        <h3 id="mac" style="margin-top:28px">Mac (beta)</h3>
-        <p>The value sits in the menu bar, next to the clock; the small window and the desktop panel
-          work as on Windows. Apple silicon, macOS 11 or later.
-          <a href="https://github.com/jackfaz/glucobar/releases/latest/download/GlucoBar-mac.dmg">Download GlucoBar-mac.dmg</a>.
-          The first time, allow it in <em>System Settings → Privacy &amp; Security → Open Anyway</em>.</p>
+        <h3>In the LibreLink and LibreLinkUp apps</h3>
+        <a href="librelinkup-setup.png"><img src="librelinkup-setup.png" width="1420" height="725" loading="lazy" alt="The LibreLink and LibreLinkUp screens to share your readings"></a>
+        <p class="small">Works with Libre 2, Libre 3 and their Plus versions. You can also invite a family
+          member's email and use that account in GlucoBar.</p>
+        <h3>If GlucoBar shows an error</h3>
+        <div class="table-box">
+          <table>
+            <tr><td><em>Wrong email or password</em></td><td>Check that you can sign in to the LibreLinkUp app with the same email and password.</td></tr>
+            <tr><td><em>No patient linked</em></td><td>The invitation has not been accepted yet: accept it in LibreLinkUp, or send it again from LibreLink.</td></tr>
+            <tr><td><em>Accept the terms of use</em></td><td>Open LibreLinkUp, accept, then right-click GlucoBar and choose <em>Refresh now</em>.</td></tr>
+            <tr><td>The value stays grey</td><td>No new reading for 15 minutes: check that the phone is near the sensor and online.</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabpanel two" id="inst-dexcom" role="tabpanel" aria-labelledby="tab-dexcom">
+      <ol class="steps">
+        <li><h3>Turn on Share (once)</h3>
+          <p>In the <strong>Dexcom</strong> app, turn on <em>Share</em> and invite at least one follower. GlucoBar
+            reads the same data your followers see.</p></li>
+          <li><h3>Download and run the installer</h3>
+            <p><a href="https://github.com/jackfaz/glucobar/releases/latest/download/GlucoBar-Setup.exe">GlucoBar-Setup.exe</a> always gives you the latest version. No administrator rights needed. Windows may say
+              <em>"Windows protected your PC"</em> because the installer is not code-signed yet: click
+              <em>More info</em>, then <em>Run anyway</em>.</p></li>
+          <li><h3>Choose what to show</h3>
+            <p>Pick your sensor, tick where you want the value (with previews) and whether to start GlucoBar with Windows.</p></li>
+          <li><h3>Sign in</h3><p>Choose <em>Dexcom</em> and enter <strong>your own</strong> Dexcom account, not the follower's: email, phone number with country code, or user name, and the password. Then choose where the account was created: in Europe and most other countries it is <em>Outside the United States</em>.</p></li>
+      </ol>
+      <div class="side">
+        <h3>Good to know</h3>
+        <p>Works with Dexcom G6, G7 and ONE+ wherever Share is available. A G7 user has confirmed it
+          works; G6 and ONE+ have not been tried yet.</p>
+        <p>A Dexcom sends a new reading every five minutes, so GlucoBar shows a new value about every
+          five minutes too.</p>
+        <p>Dexcom support is still in beta: if it works for you, or if it doesn't, please
+          <a href="https://github.com/jackfaz/glucobar/discussions">tell us</a>. Even "works fine" helps.</p>
+      </div>
+    </div>
+
+    <div class="tabpanel two" id="inst-nightscout" role="tabpanel" aria-labelledby="tab-nightscout">
+      <ol class="steps">
+        <li><h3>Have a site that receives your readings</h3>
+          <p>A <strong>Nightscout</strong> or <strong>Nocturne</strong> site that your sensor already uploads to,
+            through xDrip+, Juggluco, AndroidAPS, Loop, Medtronic, Eversense or anything else.</p></li>
+        <li><h3>Create a read-only token (if the site is not public)</h3>
+          <ul>
+            <li><strong>Nightscout:</strong> <em>Admin Tools → Add new Subject</em>, role <em>readable</em>, then copy its token.</li>
+            <li><strong>Nocturne:</strong> <em>Settings → Connectors → API tokens → Create API token</em>, with read permission for <em>Blood glucose</em>.</li>
+          </ul></li>
+          <li><h3>Download and run the installer</h3>
+            <p><a href="https://github.com/jackfaz/glucobar/releases/latest/download/GlucoBar-Setup.exe">GlucoBar-Setup.exe</a> always gives you the latest version. No administrator rights needed. Windows may say
+              <em>"Windows protected your PC"</em> because the installer is not code-signed yet: click
+              <em>More info</em>, then <em>Run anyway</em>.</p></li>
+          <li><h3>Choose what to show</h3>
+            <p>Pick your sensor, tick where you want the value (with previews) and whether to start GlucoBar with Windows.</p></li>
+          <li><h3>Sign in</h3><p>Choose <em>Nightscout or Nocturne</em> and enter the site address, the one you open in the browser (for example <code>https://yourname.herokuapp.com</code>), and the token. Leave the token empty if the site is public.</p></li>
+      </ol>
+      <div class="side">
+        <h3>Good to know</h3>
+        <p>GlucoBar only reads glucose entries from your site and never writes anything. The token
+          stays encrypted in Windows Credential Manager.</p>
+        <p>New readings show up as soon as your uploader sends them; GlucoBar checks every minute by
+          default, or as often as every 10 seconds.</p>
+        <p>Nightscout and Nocturne support is still in beta: please
+          <a href="https://github.com/jackfaz/glucobar/discussions">tell us</a> whether it works with your setup.</p>
+      </div>
+    </div>
+
+    <div class="tabpanel two" id="inst-mac" role="tabpanel" aria-labelledby="tab-mac">
+      <ol class="steps">
+        <li><h3>Turn on sharing on your phone (once)</h3>
+          <p>The same as on Windows: <a href="#install" data-tab="libre">FreeStyle Libre</a>,
+            <a href="#install" data-tab="dexcom">Dexcom</a> or <a href="#install" data-tab="nightscout">Nightscout</a>.</p></li>
+        <li><h3>Download and install</h3>
+          <p>Download <a href="https://github.com/jackfaz/glucobar/releases/latest/download/GlucoBar-mac.dmg">GlucoBar-mac.dmg</a>,
+            open it and drag <strong>GlucoBar</strong> onto <strong>Applications</strong>.</p></li>
+        <li><h3>Open it the first time</h3>
+          <p>GlucoBar is not notarized by Apple yet, so macOS blocks it the first time: open
+            <em>System Settings → Privacy &amp; Security</em>, scroll to the message about GlucoBar and click
+            <em>Open Anyway</em>. You only need to do this once.</p></li>
+        <li><h3>Sign in</h3><p>Choose your sensor and enter the account, as on Windows.</p></li>
+      </ol>
+      <div class="side">
+        <h3>Good to know</h3>
+        <p>On the Mac the value sits in the <strong>menu bar</strong>, next to the clock; click it for the
+          GlucoBar menu. The small window and the desktop panel work as on Windows.</p>
+        <p>Needs a Mac with Apple silicon (M1 or newer) and macOS 11 or later. Turn on <em>Open at login</em>
+          from the menu. Passwords are kept in the macOS Keychain.</p>
       </div>
     </div>
   </div>
@@ -1021,6 +1118,40 @@
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
+  })();
+
+  // Install: una scheda per sensore (senza JavaScript si vedono tutte)
+  (function () {
+    var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+    if (!tabs.length) return;
+    function select(name, focus) {
+      tabs.forEach(function (tab) {
+        var on = tab.id === "tab-" + name;
+        tab.setAttribute("aria-selected", on ? "true" : "false");
+        tab.tabIndex = on ? 0 : -1;
+        document.getElementById(tab.getAttribute("aria-controls")).hidden = !on;
+        if (on && focus) tab.focus();
+      });
+    }
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener("click", function () { select(tab.id.slice(4)); });
+      tab.addEventListener("keydown", function (e) {
+        var step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+        if (step) { e.preventDefault(); select(tabs[(i + step + tabs.length) % tabs.length].id.slice(4), true); }
+      });
+    });
+    document.querySelectorAll("[data-tab]").forEach(function (link) {
+      link.addEventListener("click", function () { select(link.dataset.tab); });
+    });
+    function fromHash() {
+      if (location.hash === "#mac") {
+        select("mac");
+        document.getElementById("install").scrollIntoView();
+      }
+    }
+    select("libre");
+    fromHash();
+    window.addEventListener("hashchange", fromHash);
   })();
 
   // Il numero dell'ultima versione, da GitHub; senza rete resta "Latest version"

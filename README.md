@@ -165,7 +165,8 @@ in GlucoBar instead: it works the same way.
   behaviors → Show my taskbar on all displays*, then right-click the value → *Move to the other
   monitor*.
 - Desktop panel and small window: drag to move, drag the bottom-right corner to resize. On
-  the panel, right-click for the chart period and to lock it in place.
+  the panel, right-click for the chart period, to lock it in place, or to keep it *Always
+  on top* of other windows (it hides while an app is full screen).
 - Value on the taskbar: keep the mouse on it for a second to see the full chart just above
   it. Right-click → *Size* to make it smaller or larger, and *Show the
   change (delta)* to add the change since the previous reading (e.g. "3 min +5").
@@ -209,7 +210,7 @@ If GlucoBar is running, it applies the new settings within two seconds.
 Silent install with your choices (handy for scripts and winget):
 
 ```text
-GlucoBar-Setup-0.9.1.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
+GlucoBar-Setup-0.9.2.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
 ```
 
 ## Settings
@@ -236,6 +237,7 @@ GlucoBar-Setup-0.9.1.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `window_scale` | 1.0 | Size of the small window, 0.8–2.5 (also by dragging its bottom-right corner) |
 | `desktop_hours` | 12 | Desktop panel chart period: 3, 6 or 12 |
 | `desktop_alpha` | 0.92 | Desktop panel opacity (1 = solid) |
+| `desktop_on_top` | false | Keep the desktop panel above other windows (hidden while an app is full screen) |
 | `theme` | `auto` | `auto` (follows Windows or macOS), `dark` or `light` |
 | `palette` | `standard` | `standard` or `colorblind` |
 | `color_in_range` / `color_high` / `color_very_high` / `color_low` / `color_stale` | auto | Your own colour for the value, e.g. `#00c060`; `auto` = the palette's |
@@ -294,12 +296,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.9.1 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.9.2 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow*, tick *release* to publish the version written in `glucobar/__init__.py`
-(pushing a tag like `v0.9.1` works too). The mode previews are made with
+(pushing a tag like `v0.9.2` works too). The mode previews are made with
 `tools/compose_previews.py`.
 
 Each build also installs the previous release, opens it and installs the new version over it

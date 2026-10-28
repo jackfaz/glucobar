@@ -4,6 +4,16 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.9.2] - 2026-10-28
+
+### Added
+- **Desktop panel always on top**: right-click the panel → *Always on top* keeps it over
+  the other windows (for example over the browser) instead of behind them. It hides by itself
+  while an app is full screen on the same monitor (a video, a presentation, a game) and comes
+  back afterwards (thanks for the suggestion on Reddit). Off by default (`desktop_on_top`).
+  The build checks it on Windows: above an app opened after it, hidden when that app goes
+  full screen, visible again when it closes.
+
 ## [0.9.1] - 2026-10-28
 
 ### Added
@@ -311,6 +321,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.9.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.2
 [0.9.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.1
 [0.9.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.0
 [0.8.4]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.4

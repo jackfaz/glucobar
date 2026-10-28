@@ -166,8 +166,9 @@ in GlucoBar: funziona allo stesso modo.
   Comportamenti della barra delle applicazioni → Mostra la barra delle applicazioni su tutti gli
   schermi*, poi clic destro sul valore → *Sposta sull'altro monitor*.
 - Pannello sullo sfondo e finestrella: trascinali per spostarli, trascina l'angolo in basso a
-  destra per ridimensionarli. Sul pannello, clic destro per il periodo del grafico e per
-  bloccarlo.
+  destra per ridimensionarli. Sul pannello, clic destro per il periodo del grafico, per
+  bloccarlo o per tenerlo *Sempre in primo piano* sopra le altre finestre (si nasconde
+  quando un'app è a schermo intero).
 - Valore sulla barra: tieni il mouse sopra per un secondo e compare il grafico completo
   subito sopra. Clic destro → *Dimensione* per rimpicciolirlo o ingrandirlo, e
   *Mostra la variazione (delta)* per aggiungere la variazione dalla lettura precedente
@@ -213,7 +214,7 @@ Se GlucoBar è aperto, applica le nuove impostazioni entro due secondi.
 Installazione silenziosa con le tue scelte (comoda per script e winget):
 
 ```text
-GlucoBar-Setup-0.9.1.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
+GlucoBar-Setup-0.9.2.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
 ```
 
 ## Impostazioni
@@ -240,6 +241,7 @@ GlucoBar-Setup-0.9.1.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `window_scale` | 1.0 | Dimensione della finestrella, 0,8–2,5 (anche trascinando l'angolo in basso a destra) |
 | `desktop_hours` | 12 | Periodo del grafico del pannello: 3, 6 o 12 |
 | `desktop_alpha` | 0.92 | Opacità del pannello (1 = pieno) |
+| `desktop_on_top` | false | Tiene il pannello sopra le altre finestre (nascosto con le app a schermo intero) |
 | `theme` | `auto` | `auto` (segue Windows o macOS), `dark` o `light` |
 | `palette` | `standard` | `standard` oppure `colorblind` (adatta al daltonismo) |
 | `color_in_range` / `color_high` / `color_very_high` / `color_low` / `color_stale` | auto | Un colore tuo per il valore, es. `#00c060`; `auto` = quello della tavolozza |
@@ -302,12 +304,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: avvio senza compilare
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.9.1 installer\glucobar.iss    :: serve Inno Setup 6
+iscc /DAppVersion=0.9.2 installer\glucobar.iss    :: serve Inno Setup 6
 ```
 
 Le release le crea GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow* spunta *release* per pubblicare la versione scritta in `glucobar/__init__.py`
-(funziona anche pubblicando un tag tipo `v0.9.1`). Le anteprime delle modalità si creano con
+(funziona anche pubblicando un tag tipo `v0.9.2`). Le anteprime delle modalità si creano con
 `tools/compose_previews.py`.
 
 Ogni build installa anche l'ultima release pubblicata, la apre e ci installa sopra la nuova in

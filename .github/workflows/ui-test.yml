@@ -4,6 +4,10 @@ name: UI test
 # clic destro, menu). La stessa prova gira anche nella build, sull'exe.
 on:
   workflow_dispatch:
+    inputs:
+      app_ref:
+        description: "Run this tag or commit of GlucoBar instead (e.g. v0.8.4)"
+        default: ""
 
 permissions:
   contents: read
@@ -22,4 +26,13 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Taskbar value test
-        run: python tools/win_taskbar_test.py run_glucobar.py --strict
+        shell: pwsh
+        run: |
+          $app = "run_glucobar.py"
+          if ("${{ inputs.app_ref }}") {
+            git fetch -q --tags origin
+            git worktree add -q app "${{ inputs.app_ref }}"
+            $app = "app\run_glucobar.py"
+          }
+          python tools/win_taskbar_test.py $app --strict
+          if ($LASTEXITCODE -ne 0) { exit 1 }

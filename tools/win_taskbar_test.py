@@ -196,7 +196,13 @@ def menu_item_center(menu_hwnd, label, index):
 def choose_from_menu(app, rect):
     """Clic destro sul valore, clic su "Update every", clic su "10 s": come una persona."""
     x0, y0, x1, y1 = rect
-    right_click((x0 + x1) // 2, (y0 + y1) // 2)
+    # su una cifra: così vale anche per le versioni in cui il fondo non prende i clic
+    img = ImageGrab.grab(bbox=rect, all_screens=True)
+    digit = next(((x0 + i % img.width, y0 + i // img.width)
+                  for i, (r, g, b) in enumerate(img.getdata())
+                  if abs(r - GREEN[0]) < 40 and abs(g - GREEN[1]) < 40 and abs(b - GREEN[2]) < 40),
+                 ((x0 + x1) // 2, (y0 + y1) // 2))
+    right_click(*digit)
     time.sleep(1.0)
     menus = menus_of(app.pid)
     if not menus:

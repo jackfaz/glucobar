@@ -15,6 +15,10 @@ import os
 import sys
 import time
 
+# gli avvisi del job in UTF-8: la console di Windows (cp1252) non stampa frecce e simili
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from glucobar import i18n  # noqa: E402

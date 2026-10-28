@@ -26,6 +26,10 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+# gli avvisi del job in UTF-8: la console di Windows (cp1252) non stampa frecce e simili
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 CONFIG_DIR = os.path.join(os.environ["APPDATA"], "GlucoBar")
 CONFIG = os.path.join(CONFIG_DIR, "config.json")
 LOG = os.path.join(CONFIG_DIR, "glucobar.log")

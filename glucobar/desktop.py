@@ -1,4 +1,5 @@
-"""Modalità "sfondo": pannello sul desktop, dietro le altre finestre.
+"""Modalità "sfondo": pannello sul desktop, dietro le altre finestre (oppure, a scelta,
+sempre in primo piano: si nasconde solo quando un'app è a schermo intero).
 
 Valore grande con freccia e variazione, tabella con media/minimo/massimo e tempo
 nel range, grafico delle ultime ore. Si sposta trascinandolo e si ridimensiona
@@ -22,8 +23,9 @@ from .taskbar import IS_WIN
 if IS_WIN:
     from ctypes import wintypes
 
-    from .taskbar import GWL_EXSTYLE, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, \
-        WS_EX_TOOLWINDOW, user32
+    from .taskbar import DESKTOP_CLASSES, GWL_EXSTYLE, HWND_TOPMOST, SWP_NOACTIVATE, \
+        SWP_NOMOVE, SWP_NOSIZE, WS_EX_TOOLWINDOW, class_name, monitor_rect, user32, \
+        window_rect
     HWND_BOTTOM = wintypes.HWND(1)
 
 HOURS_CHOICES = (3, 6, 12)  # LibreLinkUp fornisce circa 12 ore di storico, Dexcom 24
@@ -39,6 +41,7 @@ class DesktopView:
         self.c = palette(cfg)
         self.alive = True
         self.drag = None
+        self.hidden = False   # nascosto perché un'app è a schermo intero
 
         self.root = tk.Toplevel(ctl.root)
         self.root.title("GlucoBar")
@@ -73,7 +76,8 @@ class DesktopView:
             hwnd = self.own_hwnd()
             user32.SetWindowLongW(hwnd, GWL_EXSTYLE,
                                   user32.GetWindowLongW(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW)
-        self._keep_at_bottom()
+        self.root.attributes("-topmost", self.on_top())
+        self._keep_in_place()
 
     def destroy(self):
         self.alive = False
@@ -83,13 +87,40 @@ class DesktopView:
     def own_hwnd(self):
         return user32.GetParent(self.root.winfo_id())
 
-    def _keep_at_bottom(self):
+    def on_top(self):
+        return bool(self.cfg.get("desktop_on_top"))
+
+    def _keep_in_place(self):
+        """Ogni secondo: dietro a tutto, oppure (sempre in primo piano) davanti a tutto
+        tranne le app a schermo intero sullo stesso monitor, per cui si nasconde."""
         if not self.alive:
             return
         if IS_WIN and not self.drag:
-            user32.SetWindowPos(self.own_hwnd(), HWND_BOTTOM, 0, 0, 0, 0,
-                                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
-        self.root.after(1000, self._keep_at_bottom)
+            hwnd = self.own_hwnd()
+            if not self.on_top():
+                user32.SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0,
+                                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
+            else:
+                fullscreen = self.fullscreen_app()
+                if fullscreen and not self.hidden:
+                    self.hidden = True
+                    self.root.withdraw()
+                elif not fullscreen and self.hidden:
+                    self.hidden = False
+                    self.root.deiconify()
+                if not self.hidden:
+                    user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+                                        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
+        self.root.after(1000, self._keep_in_place)
+
+    def fullscreen_app(self):
+        """C'è un'app a schermo intero (video, presentazione, gioco) sul nostro monitor?"""
+        fg = user32.GetForegroundWindow()
+        if not fg or fg == self.own_hwnd() or class_name(fg) in DESKTOP_CLASSES:
+            return False
+        left, top, right, bottom = window_rect(fg)
+        ml, mt, mr, mb = monitor_rect(self.own_hwnd())
+        return left <= ml and top <= mt and right >= mr and bottom >= mb
 
     def _in_grip(self, e):
         return (e.x >= self.canvas.winfo_width() - self.GRIP and
@@ -140,6 +171,7 @@ class DesktopView:
                 [(h, t("desk_hours", h=h)) for h in HOURS_CHOICES], int(cfg["desktop_hours"]),
                 self.set_hours)),
             Item(t("menu_lock"), self.toggle_locked, checked=bool(cfg["desktop_locked"])),
+            Item(t("menu_on_top"), self.toggle_on_top, checked=self.on_top()),
         ]
 
     def locked(self):
@@ -149,6 +181,16 @@ class DesktopView:
         self.cfg["desktop_hours"] = hours
         save_config(self.cfg)
         self.draw()
+
+    def toggle_on_top(self):
+        self.cfg["desktop_on_top"] = not self.on_top()
+        save_config(self.cfg)
+        if self.hidden:
+            self.hidden = False
+            self.root.deiconify()
+        self.root.attributes("-topmost", self.on_top())
+        if not self.on_top():
+            self.root.lower()
 
     def toggle_locked(self):
         self.cfg["desktop_locked"] = not self.cfg["desktop_locked"]

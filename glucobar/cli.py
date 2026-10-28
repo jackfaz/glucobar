@@ -103,6 +103,7 @@ SETTINGS = {
     "desktop_hours": lambda raw: _choice(3, 6, 12)(raw),
     "desktop_alpha": _float(0.3, 1.0),
     "desktop_locked": _bool,
+    "desktop_on_top": _bool,
     "theme": _choice(*THEMES),
     "palette": _choice(*PALETTES),
     "color_in_range": _color,

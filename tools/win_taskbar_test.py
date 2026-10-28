@@ -270,6 +270,53 @@ def hover_check(app, rect):
             f"mouse via: {'sparito' if gone else 'ANCORA LÌ'}"), ok
 
 
+def window_order():
+    order = []
+    proc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+    user32.EnumWindows(proc(lambda hwnd, _: order.append(hwnd) or True), 0)
+    return order
+
+
+def panel_hwnd(pid):
+    """Il pannello sullo sfondo: la finestra di GlucoBar larga almeno 400 pixel."""
+    for hwnd in window_order():
+        owner = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(ctypes.c_void_p(hwnd), ctypes.byref(owner))
+        if owner.value != pid:
+            continue
+        r = wintypes.RECT()
+        user32.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(r))
+        if r.right - r.left >= 400 and r.bottom - r.top >= 250:
+            return hwnd
+    return None
+
+
+def panel_on_top_check(app):
+    """Pannello "sempre in primo piano": sopra un'app aperta dopo di lui, nascosto con
+    un'app a schermo intero, di nuovo visibile quando questa si chiude."""
+    panel = panel_hwnd(app.pid)
+    if not panel:
+        return "pannello: non trovato", False
+    subprocess.Popen(["notepad.exe"])
+    time.sleep(2.5)
+    user32.GetForegroundWindow.restype = ctypes.c_void_p
+    other = user32.GetForegroundWindow()
+    order = window_order()
+    above = panel in order and other in order and order.index(panel) < order.index(other)
+    # la stessa app a schermo intero: senza bordi e grande quanto il monitor
+    user32.SetWindowLongW(ctypes.c_void_p(other), -16, 0x90000000 - 2 ** 32)   # WS_POPUP|VISIBLE
+    user32.SetWindowPos(ctypes.c_void_p(other), None, 0, 0, user32.GetSystemMetrics(0),
+                        user32.GetSystemMetrics(1), 0x0020 | 0x0040)
+    time.sleep(2.5)
+    hidden = not user32.IsWindowVisible(ctypes.c_void_p(panel))
+    user32.PostMessageW(ctypes.c_void_p(other), 0x0010, 0, 0)   # WM_CLOSE
+    time.sleep(2.5)
+    back = bool(user32.IsWindowVisible(ctypes.c_void_p(panel)))
+    return (f"pannello in primo piano: sopra l'app {'sì' if above else 'NO'}, "
+            f"nascosto a schermo intero {'sì' if hidden else 'NO'}, "
+            f"di nuovo visibile {'sì' if back else 'NO'}"), above and hidden and back
+
+
 def menu_checks(app, rect):
     """Clic destro sulle parti trasparenti del valore: deve aprirsi il menu di GlucoBar,
     non quello della barra. Poi "Update every → 10 s" scelto una volta sola deve bastare."""
@@ -310,7 +357,8 @@ def main(exe, strict):
     os.makedirs(CONFIG_DIR, exist_ok=True)
     with open(os.path.join(CONFIG_DIR, "config.json"), "w", encoding="utf-8") as f:
         json.dump({"source": "nightscout", "email": f"http://127.0.0.1:{server.server_port}",
-                   "elements": ["taskbar"], "language": "en"}, f)
+                   "elements": ["taskbar", "desktop"], "desktop_on_top": True,
+                   "language": "en"}, f)
     if os.path.exists(LOG):
         os.remove(LOG)
 
@@ -380,6 +428,9 @@ def main(exe, strict):
         hover_result, hover_ok = hover_check(app, rect)
         results.append(hover_result)
         problems += not hover_ok
+        panel_result, panel_ok = panel_on_top_check(app)
+        results.append(panel_result)
+        problems += not panel_ok
     notice("Valore sulla barra", " | ".join(results))
     with open(LOG, encoding="utf-8") as f:
         tail = [line.strip() for line in f.readlines()[-12:]]

@@ -11,7 +11,6 @@ Si nasconde quando un programma è a schermo intero sullo stesso monitor.
 """
 
 import sys
-import threading
 import tkinter as tk
 import traceback
 
@@ -225,8 +224,6 @@ class TaskbarView:
             hwnd = self.own_hwnd()
             user32.SetWindowLongW(hwnd, GWL_EXSTYLE,
                                   user32.GetWindowLongW(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW)
-        self._hwnd = self.own_hwnd() if IS_WIN else None
-        self._foreground_events = 0
         self.reposition()
         self._keep_on_taskbar()
         self._hook = None
@@ -246,27 +243,20 @@ class TaskbarView:
         self.root.destroy()
 
     def raise_now(self):
-        """Di nuovo sopra la barra, subito (senza attivare la finestra). Solo Win32:
-        si può chiamare da qualsiasi thread."""
+        """Di nuovo sopra la barra, subito (senza attivare la finestra)."""
         if self.alive and not self.hidden:
-            user32.SetWindowPos(self._hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+            user32.SetWindowPos(self.own_hwnd(), HWND_TOPMOST, 0, 0, 0, 0,
                                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
 
     def _on_foreground(self, _hook, _event, _hwnd, _obj, _child, _thread, _time):
-        # Windows la chiama mentre Tkinter sta gestendo i suoi eventi: qui niente
-        # Tkinter (resterebbe bloccato), solo Win32. La barra può ridisegnarsi un attimo
-        # dopo l'avviso: si torna sopra subito e di nuovo poco dopo, da un timer
+        # Chiamata da Windows nel thread di Tk. La barra può ridisegnarsi un attimo dopo
+        # l'avviso: si torna sopra subito e di nuovo poco dopo
         try:
-            self._foreground_events += 1
-            if self._foreground_events == 1:
-                log("avviso di Windows sul primo piano ricevuto")
             self.raise_now()
-            for delay in (0.04, 0.15, 0.35):
-                timer = threading.Timer(delay, self.raise_now)
-                timer.daemon = True
-                timer.start()
+            for delay in (40, 150, 350):
+                self.root.after(delay, self.raise_now)
         except Exception:
-            pass
+            log("ritorno sopra la barra:\n" + traceback.format_exc())
 
     # ---- posizione sopra la barra ----
     def own_hwnd(self):

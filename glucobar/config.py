@@ -28,6 +28,12 @@ LOG_PATH = os.path.join(CONFIG_DIR, "glucobar.log")
 # File della prima versione (script Python), importato al primo avvio
 LEGACY_CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".glicemia_widget.json")
 
+# Ogni quanto leggere il dato (secondi): le scelte del menu e il minimo. Sotto i 10 s non
+# arriverebbe niente di nuovo (Libre ogni minuto, Dexcom ogni 5) e i servizi rischiano di
+# bloccare l'account per troppe richieste.
+REFRESH_CHOICES = (10, 30, 60, 120, 300)
+MIN_REFRESH = 10
+
 DEFAULT_CONFIG = {
     "source": "libre",          # "libre" (LibreLinkUp) oppure "dexcom" (Dexcom Share)
     # account del sensore: email (Dexcom anche telefono o nome utente);

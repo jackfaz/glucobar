@@ -13,7 +13,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from . import i18n
 from .config import ELEMENTS, log, save_config
-from .i18n import LANGUAGES, t
+from .i18n import LANGUAGES, refresh_label, t
 from .sources import TREND_ARROWS
 from .ui_common import GREY, age_minutes, asset_path, color_for, fmt_value, is_stale
 
@@ -84,6 +84,11 @@ class TrayIcon:
                                     do(ctl.toggle_element, element),
                                     checked=lambda item: ctl.shown(element))
 
+        def every_item(seconds):
+            return pystray.MenuItem(refresh_label(seconds), do(ctl.set_refresh, seconds),
+                                    radio=True,
+                                    checked=lambda item: ctl.refresh_seconds() == seconds)
+
         def lang_item(code, name):
             return pystray.MenuItem(name, do(ctl.set_language, code), radio=True,
                                     checked=lambda item: i18n.current_language() == code)
@@ -93,6 +98,8 @@ class TrayIcon:
             pystray.MenuItem(lambda item: t("menu_show"),
                              pystray.Menu(*[show_item(e) for e in ELEMENTS])),
             pystray.MenuItem(lambda item: t("menu_unit"), do(ctl.toggle_unit)),
+            pystray.MenuItem(lambda item: t("menu_refresh_every"),
+                             pystray.Menu(lambda: [every_item(s) for s in ctl.refresh_choices()])),
             pystray.MenuItem(lambda item: t("menu_language"),
                              pystray.Menu(*[lang_item(c, n) for c, n in LANGUAGES.items()])),
             pystray.MenuItem(lambda item: t("menu_account"), do(ctl.change_account)),

@@ -14,7 +14,7 @@ from Foundation import NSObject
 
 from . import autostart, i18n
 from .config import ELEMENTS
-from .i18n import LANGUAGES, element_name, t
+from .i18n import LANGUAGES, element_name, refresh_label, t
 from .sources import TREND_ARROWS
 from .ui_common import GREY, age_minutes, color_for, fmt_value, is_stale
 
@@ -140,6 +140,10 @@ class MacMenuBar:
             self._add(show, element_name(element), ctl.toggle_element, element,
                       checked=ctl.shown(element))
         self._add(menu, t("menu_unit"), ctl.toggle_unit)
+        every = self._submenu(menu, t("menu_refresh_every"))
+        for seconds in ctl.refresh_choices():
+            self._add(every, refresh_label(seconds), ctl.set_refresh, seconds,
+                      checked=ctl.refresh_seconds() == seconds)
         langs = self._submenu(menu, t("menu_language"))
         for code, name in LANGUAGES.items():
             self._add(langs, name, ctl.set_language, code,

@@ -107,6 +107,7 @@ STRINGS = {
         "cli_no_account": 'Nessun account configurato: usa «glucobar setup» o «glucobar login».',
         "cli_report_copied": 'Copiato negli appunti: incollalo nella segnalazione su GitHub (Ctrl+V). Email, nome utente e valori di glicemia sono già nascosti.',
         "menu_size": "Dimensione",
+        "menu_refresh_every": "Aggiorna ogni",
         "size_small": "Piccola",
         "size_normal": "Normale",
         "size_large": "Grande",
@@ -233,6 +234,7 @@ STRINGS = {
         "cli_no_account": 'No account set up: use “glucobar setup” or “glucobar login”.',
         "cli_report_copied": 'Copied to the clipboard: paste it into the GitHub issue (Ctrl+V). Email, user name and glucose values are already hidden.',
         "menu_size": "Size",
+        "menu_refresh_every": "Update every",
         "size_small": "Small",
         "size_normal": "Normal",
         "size_large": "Large",
@@ -359,6 +361,7 @@ STRINGS = {
         "cli_no_account": 'Ninguna cuenta configurada: usa «glucobar setup» o «glucobar login».',
         "cli_report_copied": 'Copiado al portapapeles: pégalo en el informe de GitHub (Ctrl+V). Email, nombre de usuario y valores de glucosa ya están ocultos.',
         "menu_size": "Tamaño",
+        "menu_refresh_every": "Actualizar cada",
         "size_small": "Pequeño",
         "size_normal": "Normal",
         "size_large": "Grande",
@@ -485,6 +488,7 @@ STRINGS = {
         "cli_no_account": 'Aucun compte configuré : utilisez « glucobar setup » ou « glucobar login ».',
         "cli_report_copied": "Copié dans le presse-papiers : collez-le dans le ticket GitHub (Ctrl+V). E-mail, nom d'utilisateur et valeurs de glycémie sont déjà masqués.",
         "menu_size": "Taille",
+        "menu_refresh_every": "Actualiser toutes les",
         "size_small": "Petite",
         "size_normal": "Normale",
         "size_large": "Grande",
@@ -611,6 +615,7 @@ STRINGS = {
         "cli_no_account": 'Kein Konto eingerichtet: „glucobar setup“ oder „glucobar login“ verwenden.',
         "cli_report_copied": 'In die Zwischenablage kopiert: im GitHub-Ticket einfügen (Strg+V). E-Mail, Benutzername und Glukosewerte sind bereits ausgeblendet.',
         "menu_size": "Größe",
+        "menu_refresh_every": "Aktualisieren alle",
         "size_small": "Klein",
         "size_normal": "Normal",
         "size_large": "Groß",
@@ -737,6 +742,7 @@ STRINGS = {
         "cli_no_account": 'Nenhuma conta configurada: use «glucobar setup» ou «glucobar login».',
         "cli_report_copied": 'Copiado para a área de transferência: cole-o no relatório do GitHub (Ctrl+V). Email, nome de utilizador e valores de glicose já estão ocultos.',
         "menu_size": "Tamanho",
+        "menu_refresh_every": "Atualizar a cada",
         "size_small": "Pequeno",
         "size_normal": "Normal",
         "size_large": "Grande",
@@ -819,6 +825,12 @@ def element_name(element):
     if element == "tray" and sys.platform == "darwin":
         return t("mode_tray_mac")
     return t(f"mode_{element}")
+
+
+def refresh_label(seconds):
+    """60 -> "1 min", 30 -> "30 s", 90 -> "90 s": uguale in tutte le lingue."""
+    seconds = int(seconds)
+    return f"{seconds // 60} min" if seconds >= 60 and seconds % 60 == 0 else f"{seconds} s"
 
 
 def t(key, **kwargs):

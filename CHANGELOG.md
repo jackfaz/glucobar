@@ -4,6 +4,16 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.8.4] - 2026-10-28
+
+### Added
+- **Update every**: a new entry in the right-click menu of every element, the icon next to
+  the clock and the Mac menu bar, to choose how often GlucoBar fetches the value: 10 s,
+  30 s, 1 min (default), 2 min or 5 min (thanks for the suggestion on Reddit). Any value
+  from 10 to 3600 seconds works with `glucobar set refresh_seconds=...`. After an error
+  (wrong password, no connection) GlucoBar still waits at least a minute before trying
+  again, so the sensor service does not lock the account.
+
 ## [0.8.3] - 2026-10-28
 
 ### Fixed
@@ -222,6 +232,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.8.4]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.4
 [0.8.3]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.3
 [0.8.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.2
 [0.8.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.1

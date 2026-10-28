@@ -15,8 +15,9 @@ import tkinter as tk
 import traceback
 
 from . import i18n, instance
-from .config import ELEMENTS, log, normalize_elements, peek_config, save_config
-from .i18n import LANGUAGES, element_name, t
+from .config import (ELEMENTS, MIN_REFRESH, REFRESH_CHOICES, log, normalize_elements,
+                     peek_config, save_config)
+from .i18n import LANGUAGES, element_name, refresh_label, t
 from .sources import fetch_safely, make_client
 from .ui_common import apply_icon, ask_credentials
 
@@ -52,6 +53,7 @@ class Controller:
         self.updated_at = None
         self.busy = False
         self._last_fetch = 0
+        self._last_render = 0
         self.views = {}      # elemento -> vista aperta (taskbar, window, desktop)
         self.tray = None
         self._promoting = False   # tentativi in corso di mettere l'icona accanto all'orologio
@@ -199,6 +201,23 @@ class Controller:
         save_config(self.cfg)
         self.render()
 
+    def refresh_seconds(self):
+        try:
+            return max(MIN_REFRESH, int(self.cfg["refresh_seconds"]))
+        except (TypeError, ValueError):
+            return 60
+
+    def refresh_choices(self):
+        """Le scelte del menu, più il valore attuale se scelto da terminale (es. 45 s)."""
+        return sorted(set(REFRESH_CHOICES) | {self.refresh_seconds()})
+
+    def set_refresh(self, seconds):
+        self.cfg["refresh_seconds"] = int(seconds)
+        save_config(self.cfg)
+        log(f"aggiornamento ogni {refresh_label(seconds)}")
+        if self.tray:
+            self.tray.update_menu()
+
     def change_account(self):
         if ask_credentials(self.cfg, self.root):
             self.client = make_client(self.cfg)
@@ -225,12 +244,23 @@ class Controller:
             show_vars.append(var)
             show.add_checkbutton(label=element_name(element), variable=var,
                                  command=lambda e=element: self.post(self.toggle_element, e))
+        every = tk.Menu(menu, tearoff=0)
+        every_var = tk.IntVar(master=menu, value=self.refresh_seconds())
+
+        def fill_every():
+            every.delete(0, "end")
+            for seconds in self.refresh_choices():
+                every.add_radiobutton(label=refresh_label(seconds), value=seconds,
+                                      variable=every_var,
+                                      command=lambda s=seconds: self.post(self.set_refresh, s))
+        fill_every()
         langs = tk.Menu(menu, tearoff=0)
         lang_var = tk.StringVar(master=menu, value=i18n.current_language())
         for code, name in LANGUAGES.items():
             langs.add_radiobutton(label=name, value=code, variable=lang_var,
                                   command=lambda c=code: self.post(self.set_language, c))
         menu.add_cascade(label=t("menu_show"), menu=show)
+        menu.add_cascade(label=t("menu_refresh_every"), menu=every)
         menu.add_cascade(label=t("menu_language"), menu=langs)
         menu.add_command(label=t("menu_account"),
                          command=lambda: self.post(self.change_account))
@@ -243,8 +273,10 @@ class Controller:
             for var, element in zip(show_vars, visible):
                 var.set(self.shown(element))
             lang_var.set(i18n.current_language())
+            fill_every()   # il valore può essere cambiato da terminale
+            every_var.set(self.refresh_seconds())
         menu.configure(postcommand=sync)
-        menu._vars = (show_vars, lang_var)   # tenute vive insieme al menu
+        menu._vars = (show_vars, lang_var, every_var)   # tenute vive insieme al menu
 
     def _watch_quit(self):
         if not self.root:
@@ -314,11 +346,16 @@ class Controller:
     def _tick(self):
         if not self.root:
             return
-        if time.time() - self._last_fetch >= self.cfg["refresh_seconds"]:
+        now = time.time()
+        wait = self.refresh_seconds()
+        if self.error:
+            wait = max(wait, 60)   # dopo un errore (password, rete) non insistere troppo
+        if now - self._last_fetch >= wait:
             self.refresh()
-        else:
+        elif now - self._last_render >= 15:
+            self._last_render = now
             self.render()   # aggiorna i "minuti fa"
-        self.root.after(15000, self._tick)
+        self.root.after(1000, self._tick)
 
     def render(self):
         for view in self.views.values():

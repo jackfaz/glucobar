@@ -19,7 +19,7 @@ import subprocess
 import sys
 
 from . import __version__, autostart, credentials, i18n, instance, tui
-from .config import CONFIG_PATH, ELEMENTS, forget_everything, load_config, \
+from .config import CONFIG_PATH, ELEMENTS, MIN_REFRESH, forget_everything, load_config, \
     normalize_elements, save_config
 from .i18n import LANGUAGES, element_name, t
 from .nightscout import normalize_url
@@ -91,7 +91,7 @@ SETTINGS = {
     "high": _int(100, 400),
     "very_high": _int(150, 500),
     "stale_minutes": _int(5, 120),
-    "refresh_seconds": _int(30, 3600),
+    "refresh_seconds": _int(MIN_REFRESH, 3600),
     "taskbar_monitor": _int(1, 9),
     "taskbar_side": _choice("right", "left"),
     "taskbar_offset": _int(-3000, 3000),

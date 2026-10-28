@@ -189,7 +189,7 @@ If GlucoBar is running, it applies the new settings within two seconds.
 Silent install with your choices (handy for scripts and winget):
 
 ```text
-GlucoBar-Setup-0.8.3.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
+GlucoBar-Setup-0.8.4.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
 ```
 
 ## Settings
@@ -204,7 +204,7 @@ GlucoBar-Setup-0.8.3.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `low` / `high` / `very_high` | 70 / 180 / 250 | Thresholds in mg/dL |
 | `unit` | `mg/dL` | or `mmol/L` |
 | `stale_minutes` | 15 | After this, the value turns grey |
-| `refresh_seconds` | 60 | How often to fetch |
+| `refresh_seconds` | 60 | How often to fetch, from 10 to 3600 seconds (also in the right-click menu: *Update every*) |
 | `language` | `auto` | `en`, `it`, `es`, `fr`, `de`, `pt` |
 | `taskbar_monitor` | 1 | 1 = main monitor, 2 = second, … |
 | `taskbar_offset` | 0 | Extra pixels (negative = left) |
@@ -258,12 +258,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.8.3 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.8.4 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow*, tick *release* to publish the version written in `glucobar/__init__.py`
-(pushing a tag like `v0.8.3` works too). The mode previews are made with
+(pushing a tag like `v0.8.4` works too). The mode previews are made with
 `tools/compose_previews.py`.
 
 ## Credits and trademarks

@@ -30,9 +30,14 @@ from tests.test_nightscout import FakeNightscout, entry  # noqa: E402
 ctypes.windll.shcore.SetProcessDpiAwareness(1)   # pixel reali, come GlucoBar
 from PIL import ImageGrab  # noqa: E402  (dopo la DPI awareness)
 
+from glucobar.config import DEFAULT_CONFIG  # noqa: E402
+from glucobar.theme import palette, taskbar_light  # noqa: E402
+
 CONFIG_DIR = os.path.join(os.environ["APPDATA"], "GlucoBar")
 LOG = os.path.join(CONFIG_DIR, "glucobar.log")
-GREEN = (62, 207, 110)
+# il verde "nel range" che GlucoBar usa sopra questa barra (più scuro se la barra è chiara)
+_green = palette(DEFAULT_CONFIG, light=taskbar_light()).in_range
+GREEN = tuple(int(_green[i:i + 2], 16) for i in (1, 3, 5))
 user32 = ctypes.windll.user32
 
 
@@ -130,9 +135,12 @@ def main(exe, strict):
     rect = value_rect()
     baseline = green_pixels(ImageGrab.grab(bbox=rect, include_layered_windows=True,
                                            all_screens=True))
-    results = [f"valore in {rect}, pixel verdi all'inizio: {baseline}"]
+    results = [f"valore in {rect}, barra {'chiara' if taskbar_light() else 'scura'}, "
+               f"pixel verdi all'inizio: {baseline}"]
     if baseline < 20:
-        notice("Barra", "valore non visibile già all'inizio: prova non significativa")
+        notice("Barra", f"valore non visibile già all'inizio ({baseline} pixel {_green})")
+        with open(LOG, encoding="utf-8") as f:
+            notice("Log di GlucoBar", " | ".join(line.strip() for line in f.readlines()[-12:]))
         app.kill()
         return 1 if strict else 0
 

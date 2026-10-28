@@ -14,7 +14,7 @@ from . import __version__, autostart, updates
 from .config import ELEMENTS, save_config
 from .i18n import LANGUAGES, element_name, refresh_label, t
 from .theme import COLOR_KEYS, PALETTES, THEMES, UI_KEYS, is_light, palette
-from .ui_common import FONT, ask_range, fmt_value
+from .ui_common import FONT, TREND_STYLES, ask_range, fmt_value
 
 # colore del valore -> esempio in mg/dL (dalle soglie dell'utente)
 SAMPLES = {
@@ -178,6 +178,10 @@ class SettingsWindow:
             self.alert_boxes[kind] = box_
         tk.Label(box, text=t("alert_menu_note"), font=(FONT, 9), fg="#6b6f76",
                  anchor="w").pack(fill="x", pady=(4, 0))
+
+        box = self.section(frame, t("settings_beside"))
+        self.radios(box, [(n, t(f"beside_{n}")) for n in TREND_STYLES],
+                    cfg.get("trend_style", "arrow"), lambda n: ctl.set_options(trend_style=n))
 
         box = self.section(frame, t("settings_show_values"))
         self.check(box, t("menu_delta"), cfg.get("show_delta"),

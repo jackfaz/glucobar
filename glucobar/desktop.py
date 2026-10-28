@@ -15,9 +15,8 @@ from . import stats
 from .config import save_config
 from .i18n import t
 from .menus import Item, menu_open, popup, radio_items
-from .sources import TREND_ARROWS
 from .theme import palette
-from .ui_common import FONT, age_minutes, bind_right_click, fmt_value, is_stale
+from .ui_common import FONT, age_minutes, beside_value, bind_right_click, fmt_value, is_stale
 from .taskbar import IS_WIN
 
 if IS_WIN:
@@ -237,7 +236,7 @@ class DesktopView:
             stale = is_stale(cfg, c)
             color = pal.stale if stale else pal.value(cfg, c["mgdl"])
             value = fmt_value(cfg, c["mgdl"])
-            arrow = "" if stale else TREND_ARROWS.get(c["trend"], "")
+            arrow = beside_value(cfg, self.ctl.history, c)
             age = age_minutes(c)
             parts = [cfg["unit"], t("now") if age == 0 else t("min_ago", n=age)]
             delta = stats.change(points, c)

@@ -6,11 +6,11 @@ import time
 import tkinter as tk
 from tkinter import simpledialog
 
-from . import credentials
+from . import credentials, stats
 from .config import save_config
 from .i18n import t
 from .nightscout import normalize_url
-from .sources import region_options, source_options
+from .sources import TREND_ARROWS, region_options, source_options
 
 # Carattere dell'interfaccia: Segoe UI su Windows (e per le anteprime generate su
 # Linux), quello di sistema sul Mac
@@ -30,6 +30,29 @@ def fmt_delta(cfg, delta):
     if cfg["unit"] == "mmol/L":
         return f"{delta / 18.016:+.1f}"
     return f"{delta:+.0f}"
+
+
+TREND_STYLES = ("arrow", "delta", "both")
+
+
+def beside_value(cfg, history, c):
+    """Cosa scrivere accanto al valore (trend_style): la freccia, la variazione (delta) al
+    suo posto, o tutte e due. Senza una lettura precedente da cui calcolare il delta resta
+    la freccia; con il valore vecchio niente."""
+    if is_stale(cfg, c):
+        return ""
+    arrow = TREND_ARROWS.get(c["trend"], "")
+    style = cfg.get("trend_style", "arrow")
+    delta = stats.delta(history, c) if style in ("delta", "both") else None
+    if delta is None:
+        return arrow
+    delta = fmt_delta(cfg, delta)
+    return delta if style == "delta" else f"{arrow} {delta}".strip()
+
+
+def delta_beside(cfg):
+    """Il delta è già accanto al valore: sotto non va ripetuto."""
+    return cfg.get("trend_style", "arrow") in ("delta", "both")
 
 
 def age_minutes(measurement):

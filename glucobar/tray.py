@@ -14,9 +14,8 @@ from PIL import Image, ImageDraw, ImageFont
 from .config import log, save_config
 from .i18n import t
 from .menus import to_pystray
-from .sources import TREND_ARROWS
 from .theme import palette, taskbar_light
-from .ui_common import GREY, age_minutes, asset_path, fmt_value, is_stale
+from .ui_common import GREY, age_minutes, asset_path, beside_value, fmt_value, is_stale
 
 ICON_SIZE = 64  # Windows la rimpicciolisce da solo
 
@@ -131,7 +130,7 @@ class TrayIcon:
         age = age_minutes(c)
         stale = is_stale(cfg, c)
         value = fmt_value(cfg, c["mgdl"])
-        arrow = "" if stale else TREND_ARROWS.get(c["trend"], "")
+        arrow = beside_value(cfg, ctl.history, c)
         pal = palette(cfg, light=taskbar_light())
         color = pal.stale if stale else pal.value(cfg, c["mgdl"])
         self.icon.icon = make_icon(value, color)

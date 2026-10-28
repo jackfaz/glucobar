@@ -13,15 +13,16 @@ Si nasconde quando un programma è a schermo intero sullo stesso monitor.
 import sys
 import threading
 import tkinter as tk
+import tkinter.font as tkfont
 import traceback
 
 from .config import log, save_config
 from .i18n import t
 from .menus import Item, menu_open, popup, radio_items
-from .sources import TREND_ARROWS
 from .theme import palette, taskbar_light
 from . import stats
-from .ui_common import FONT, age_minutes, bind_right_click, fmt_delta, fmt_value, is_stale
+from .ui_common import (FONT, age_minutes, beside_value, bind_right_click, delta_beside,
+                        fmt_delta, fmt_value, is_stale)
 
 IS_WIN = sys.platform == "win32"
 
@@ -371,7 +372,17 @@ class TaskbarView:
         self.value_lbl.configure(font=(FONT, -int(height * 0.42 * k), "bold"))
         self.arrow_lbl.configure(font=(FONT, -int(height * 0.36 * k), "bold"))
         self.info_lbl.configure(font=(FONT, -int(height * 0.21 * min(k, 1.0))))
-        return int(height * 1.75 * k), height
+        width = int(height * 1.75 * k)
+        if delta_beside(self.cfg):
+            # più largo per il delta accanto al valore, pensando al caso più lungo, così
+            # la finestra non cambia misura a ogni lettura
+            mmol = self.cfg["unit"] == "mmol/L"
+            sample = {"delta": " +8.8" if mmol else " +88",
+                      "both": " ↗ +8.8" if mmol else " ↗ +88"}[self.cfg["trend_style"]]
+            need = (tkfont.Font(font=self.value_lbl.cget("font")).measure("88.8" if mmol else "388")
+                    + tkfont.Font(font=self.arrow_lbl.cget("font")).measure(sample))
+            width = max(width, need + int(height * 0.3))
+        return width, height
 
     def value_rect(self):
         """Dov'è il valore sullo schermo (sinistra, alto, destra, basso)."""
@@ -572,10 +583,11 @@ class TaskbarView:
         stale = is_stale(self.cfg, c)
         color = self.c.stale if stale else self.c.value(self.cfg, c["mgdl"])
         self.value_lbl.config(text=fmt_value(self.cfg, c["mgdl"]), fg=color)
-        self.arrow_lbl.config(text="" if stale else " " + TREND_ARROWS.get(c["trend"], ""),
-                              fg=color)
+        beside = beside_value(self.cfg, self.ctl.history, c)
+        self.arrow_lbl.config(text=" " + beside if beside else "", fg=color)
         info = t("now") if age == 0 else t("min_short", n=age)
-        delta = stats.delta(self.ctl.history, c) if self.cfg.get("show_delta") else None
+        delta = stats.delta(self.ctl.history, c) \
+            if self.cfg.get("show_delta") and not delta_beside(self.cfg) else None
         if delta is not None and not stale:
             info += " " + fmt_delta(self.cfg, delta)
         if error:

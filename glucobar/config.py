@@ -47,6 +47,7 @@ DEFAULT_CONFIG = {
     "very_high": 250,
     "refresh_seconds": 60,
     "stale_minutes": 15,        # oltre questo il valore è mostrato in grigio
+    "trend_style": "arrow",     # accanto al valore: arrow, delta (al posto della freccia), both
     "show_delta": False,        # variazione dalla lettura prima (es. "3 min +5")
     "app_version": "4.16.0",    # LibreLinkUp: si aggiorna se il server ne chiede una più recente
     "language": "auto",         # "auto" oppure it, en, es, fr, de, pt

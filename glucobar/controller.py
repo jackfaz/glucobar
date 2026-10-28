@@ -34,9 +34,10 @@ LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_
              "taskbar_scale", "window_scale", "desktop_hours", "desktop_alpha", "desktop_locked",
              "theme", "palette", "alert_low", "alert_high", "alert_stale", "update_check",
              "auto_update", "sensor_life_days", "ui_colors", "taskbar_text", "show_delta",
+             "trend_style",
              "hover_chart", "desktop_on_top", "desktop_over_fullscreen",
              *COLOR_KEYS.values())
-REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "taskbar_text", "desktop_alpha",
+REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "taskbar_text", "desktop_alpha", "trend_style",
                 "desktop_locked", "desktop_on_top", "window_scale", "theme", "palette", "ui_colors",
                 *COLOR_KEYS.values()}
 ACCOUNT_KEYS = {"source", "dexcom_region", "email"}

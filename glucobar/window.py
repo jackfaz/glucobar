@@ -8,10 +8,10 @@ import tkinter as tk
 from .config import save_config
 from .i18n import t
 from .menus import popup
-from .sources import TREND_ARROWS
 from .theme import palette
 from . import stats
-from .ui_common import FONT, age_minutes, bind_right_click, fmt_delta, fmt_value, is_stale
+from .ui_common import (FONT, age_minutes, beside_value, bind_right_click, delta_beside,
+                        fmt_delta, fmt_value, is_stale)
 
 
 class WindowView:
@@ -81,8 +81,12 @@ class WindowView:
         w, h = self.size()
         self.value_lbl.configure(font=(FONT, round(30 * k), "bold"))
         self.value_lbl.place(x=12 * f, y=4 * f)
-        self.arrow_lbl.configure(font=(FONT, round(26 * k), "bold"))
-        self.arrow_lbl.place(x=w - 46 * f, y=6 * f)
+        if delta_beside(self.cfg):   # più lungo della sola freccia: allineato a destra
+            self.arrow_lbl.configure(font=(FONT, round(19 * k), "bold"))
+            self.arrow_lbl.place(x=w - 10 * f, y=11 * f, anchor="ne")
+        else:
+            self.arrow_lbl.configure(font=(FONT, round(26 * k), "bold"))
+            self.arrow_lbl.place(x=w - 46 * f, y=6 * f)
         self.info_lbl.configure(font=(FONT, max(7, round(9 * k))))
         self.info_lbl.place(x=14 * f, y=52 * f, width=w - 20 * f)
         self.spark.configure(width=w - 24 * f, height=34 * f)
@@ -146,13 +150,12 @@ class WindowView:
         stale = is_stale(self.cfg, c)
         color = pal.stale if stale else pal.value(self.cfg, c["mgdl"])
         value = fmt_value(self.cfg, c["mgdl"])
-        arrow = TREND_ARROWS.get(c["trend"], "")
-
         self.value_lbl.config(text=value, fg=color)
-        self.arrow_lbl.config(text="" if stale else arrow, fg=color)
+        self.arrow_lbl.config(text=beside_value(self.cfg, self.ctl.history, c), fg=color)
         when = t("now") if age == 0 else t("min_ago", n=age)
         info = f"{self.cfg['unit']} · {when}"
-        delta = stats.delta(self.ctl.history, c) if self.cfg.get("show_delta") else None
+        delta = stats.delta(self.ctl.history, c) \
+            if self.cfg.get("show_delta") and not delta_beside(self.cfg) else None
         if delta is not None and not stale:
             info += " · " + fmt_delta(self.cfg, delta)
         if error:

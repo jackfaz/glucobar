@@ -118,6 +118,7 @@ SETTINGS = {
     "alert_stale": _bool,
     "update_check": _bool,
     "show_delta": _bool,
+    "trend_style": _choice("arrow", "delta", "both"),
     "hover_chart": _bool,
     "auto_update": _bool,
     "sensor_life_days": _int(10, 15),

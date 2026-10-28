@@ -14,9 +14,8 @@ from Foundation import NSObject
 
 from .i18n import t
 from .menus import SEPARATOR
-from .sources import TREND_ARROWS
 from .theme import palette, taskbar_light
-from .ui_common import GREY, age_minutes, fmt_value, is_stale
+from .ui_common import GREY, age_minutes, beside_value, fmt_value, is_stale
 
 NS_ON, NS_OFF = 1, 0          # NSControlStateValueOn / Off
 SEMIBOLD = 0.3                # NSFontWeightSemibold
@@ -89,8 +88,8 @@ class MacMenuBar:
             tooltip = "GlucoBar: " + (ctl.error or t("connecting"))
         else:
             stale = is_stale(cfg, c)
-            arrow = "" if stale else " " + TREND_ARROWS.get(c["trend"], "")
-            text = fmt_value(cfg, c["mgdl"]) + arrow
+            beside = beside_value(cfg, ctl.history, c)
+            text = fmt_value(cfg, c["mgdl"]) + (" " + beside if beside else "")
             pal = palette(cfg, light=taskbar_light())
             color = pal.stale if stale else pal.value(cfg, c["mgdl"])
             age = age_minutes(c)

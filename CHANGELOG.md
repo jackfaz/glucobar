@@ -4,6 +4,23 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.9.5] - 2026-10-28
+
+### Added
+- **Desktop panel over full-screen apps**: with *Always on top* on, *Also over full-screen
+  apps* keeps the panel visible over a video or a full-screen app, like picture-in-picture
+  (thanks for the suggestion on Reddit). Off by default (`desktop_over_fullscreen`).
+- **Panel opacity** slider in *Settings → Elements*, applied while you drag it.
+
+### Fixed
+- With the desktop panel always on top, its right-click menu ended up behind the panel
+  after a second. Elements that stay on top now wait while a menu is open.
+- The first choice in a right-click submenu could be lost, for example *Show → Small window*
+  in the small window's own menu needed two clicks. A right-click opened two menus in a row
+  (one for the text, one for the window around it), and the second closed the first before
+  Windows ran the choice. Now a right-click opens one menu.
+- The build checks all three on Windows with the mouse, and the same tests fail on 0.9.4.
+
 ## [0.9.4] - 2026-10-28
 
 ### Fixed
@@ -351,6 +368,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.9.5]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.5
 [0.9.4]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.4
 [0.9.3]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.3
 [0.9.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.2

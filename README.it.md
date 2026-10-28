@@ -95,7 +95,8 @@ portoghese.
 
 - **Delta**: la variazione dalla lettura precedente sotto il valore, es. "3 min +5".
 - **Aggiorna ogni** da 10 secondi a 5 minuti.
-- **Pannello sempre in primo piano**, nascosto quando un video o un gioco è a schermo intero.
+- **Pannello sempre in primo piano**, nascosto quando un video o un gioco è a schermo intero,
+  oppure tenuto sopra come immagine nell'immagine, con l'opacità regolabile.
 - **Qualsiasi barra**: a sinistra, a destra o in alto (Windows 10), nascosta automaticamente,
   sul secondo monitor.
 - **Più persone** seguite con lo stesso account LibreLinkUp.
@@ -272,7 +273,7 @@ Se GlucoBar è aperto, applica le nuove impostazioni entro due secondi.
 Installazione silenziosa con le tue scelte (comoda per script e winget):
 
 ```text
-GlucoBar-Setup-0.9.4.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
+GlucoBar-Setup-0.9.5.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
 ```
 
 ## Impostazioni
@@ -300,6 +301,7 @@ GlucoBar-Setup-0.9.4.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `desktop_hours` | 12 | Periodo del grafico del pannello: 3, 6 o 12 |
 | `desktop_alpha` | 0.92 | Opacità del pannello (1 = pieno) |
 | `desktop_on_top` | false | Tiene il pannello sopra le altre finestre (nascosto con le app a schermo intero) |
+| `desktop_over_fullscreen` | false | Con `desktop_on_top`: visibile anche sopra le app a schermo intero |
 | `theme` | `auto` | `auto` (segue Windows o macOS), `dark` o `light` |
 | `palette` | `standard` | `standard` oppure `colorblind` (adatta al daltonismo) |
 | `color_in_range` / `color_high` / `color_very_high` / `color_low` / `color_stale` | auto | Un colore tuo per il valore, es. `#00c060`; `auto` = quello della tavolozza |
@@ -362,12 +364,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: avvio senza compilare
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.9.4 installer\glucobar.iss    :: serve Inno Setup 6
+iscc /DAppVersion=0.9.5 installer\glucobar.iss    :: serve Inno Setup 6
 ```
 
 Le release le crea GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow* spunta *release* per pubblicare la versione scritta in `glucobar/__init__.py`
-(funziona anche pubblicando un tag tipo `v0.9.4`). Le anteprime delle modalità si creano con
+(funziona anche pubblicando un tag tipo `v0.9.5`). Le anteprime delle modalità si creano con
 `tools/compose_previews.py`.
 
 Ogni build installa anche l'ultima release pubblicata, la apre e ci installa sopra la nuova in

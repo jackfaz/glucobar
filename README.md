@@ -91,7 +91,8 @@ high, very high, low and old, backgrounds, text, chart and grid.
 
 - **Delta**: the change since the previous reading under the value, e.g. "3 min +5".
 - **Update every** 10 seconds to 5 minutes.
-- **Desktop panel always on top**, hidden while a video or a game is full screen.
+- **Desktop panel always on top**, hidden while a video or a game is full screen, or kept
+  over it like picture-in-picture, with adjustable opacity.
 - **Any taskbar**: on the left, right or top (Windows 10), auto-hidden, on a second monitor.
 - **More than one person** followed with the same LibreLinkUp account.
 
@@ -262,7 +263,7 @@ If GlucoBar is running, it applies the new settings within two seconds.
 Silent install with your choices (handy for scripts and winget):
 
 ```text
-GlucoBar-Setup-0.9.4.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
+GlucoBar-Setup-0.9.5.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
 ```
 
 ## Settings
@@ -290,6 +291,7 @@ GlucoBar-Setup-0.9.4.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `desktop_hours` | 12 | Desktop panel chart period: 3, 6 or 12 |
 | `desktop_alpha` | 0.92 | Desktop panel opacity (1 = solid) |
 | `desktop_on_top` | false | Keep the desktop panel above other windows (hidden while an app is full screen) |
+| `desktop_over_fullscreen` | false | With `desktop_on_top`: stay visible over full-screen apps too |
 | `theme` | `auto` | `auto` (follows Windows or macOS), `dark` or `light` |
 | `palette` | `standard` | `standard` or `colorblind` |
 | `color_in_range` / `color_high` / `color_very_high` / `color_low` / `color_stale` | auto | Your own colour for the value, e.g. `#00c060`; `auto` = the palette's |
@@ -348,12 +350,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.9.4 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.9.5 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow*, tick *release* to publish the version written in `glucobar/__init__.py`
-(pushing a tag like `v0.9.4` works too). The mode previews are made with
+(pushing a tag like `v0.9.5` works too). The mode previews are made with
 `tools/compose_previews.py`.
 
 Each build also installs the previous release, opens it and installs the new version over it

@@ -30,6 +30,8 @@ class LibreLinkUp:
         self.token = None
         self.account_id = None
         self.patient_id = None
+        self.patients = []       # [(id, nome)] delle persone seguite con questo account
+        self._patients_at = 0
         self.connection = None   # ultima risposta completa (contiene i dati del sensore)
 
     @property
@@ -131,18 +133,31 @@ class LibreLinkUp:
 
     def fetch(self):
         """Ritorna (misura_corrente, storico): ogni misura è {mgdl, trend, time}."""
-        if not self.patient_id:
-            conns = self._get("/llu/connections")
-            if not conns:
-                raise LibreError(t("err_no_patient"))
-            self.patient_id = conns[0]["patientId"]
-
+        if not self.patient_id or time.time() - self._patients_at > 3600:
+            self.load_patients()   # anche più tardi: si può iniziare a seguire qualcun altro
         data = self._get(f"/llu/connections/{self.patient_id}/graph")
         self.connection = data["connection"]
         current = parse_measurement(data["connection"]["glucoseMeasurement"])
         history = [parse_measurement(m) for m in data.get("graphData", [])]
         history.append(current)
         return current, history
+
+    def load_patients(self):
+        """Persone seguite; mostra quella scelta nel menu (cfg patient_id) o la prima."""
+        conns = self._get("/llu/connections")
+        if not conns:
+            raise LibreError(t("err_no_patient"))
+        self.patients = [(conn["patientId"], patient_name(conn)) for conn in conns]
+        self._patients_at = time.time()
+        ids = [pid for pid, _name in self.patients]
+        if self.patient_id not in ids:
+            wanted = self.cfg.get("patient_id")
+            self.patient_id = wanted if wanted in ids else ids[0]
+
+
+def patient_name(conn):
+    name = f"{conn.get('firstName') or ''} {conn.get('lastName') or ''}".strip()
+    return name or str(conn["patientId"])[:8]
 
 
 def parse_timestamp(m):

@@ -71,6 +71,26 @@ DEFAULT_CONFIG = {
     "desktop_hours": 12,        # 3, 6 o 12
     "desktop_alpha": 0.92,      # trasparenza del pannello (1 = opaco)
     "desktop_locked": False,    # True = non si sposta né si ridimensiona
+    # aspetto: tema "auto" (come Windows o macOS), "dark" o "light"; colori del valore
+    # "standard" o "colorblind" (adatti al daltonismo)
+    "theme": "auto",
+    "palette": "standard",
+    # avvisi facoltativi (spenti di default): glicemia bassa, molto alta, nessun dato
+    "alert_low": False,
+    "alert_high": False,
+    "alert_stale": False,
+    "alerts_note_shown": False,
+    # avviso di nuova versione: una richiesta al giorno a GitHub
+    "update_check": True,
+    "update_checked_at": 0,
+    "update_notified": None,
+    # LibreLinkUp: persona seguita (se più d'una) e sensore in uso, per i promemoria di
+    # fine sensore e la richiesta di sostituzione
+    "patient_id": None,
+    "sensor_life_days": 14,     # 15 per i sensori Plus
+    "sensor_sn": None,
+    "sensor_activated": None,
+    "sensor_notified": [],
     "tray_hint_shown": False,   # notifica "dov'è l'icona" già mostrata
     "tray_promoted": False,     # icona già resa visibile accanto all'orologio (una volta sola)
 }

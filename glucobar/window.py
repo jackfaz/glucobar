@@ -7,11 +7,10 @@ import tkinter as tk
 
 from .config import save_config
 from .i18n import t
+from .menus import fill_tk
 from .sources import TREND_ARROWS
-from .ui_common import BG, DIM, FG, FONT, RED, age_minutes, bind_right_click, color_for, \
-    fmt_value, is_stale
-
-GRIP = "#4a4d55"
+from .theme import palette
+from .ui_common import FONT, age_minutes, bind_right_click, fmt_value, is_stale
 
 
 class WindowView:
@@ -22,6 +21,7 @@ class WindowView:
     def __init__(self, ctl):
         self.ctl = ctl
         self.cfg = ctl.cfg
+        self.c = c = palette(self.cfg)
 
         self.root = tk.Toplevel(ctl.root)
         self.root.title("GlucoBar")
@@ -31,18 +31,19 @@ class WindowView:
             self.root.attributes("-alpha", 0.93)
         except tk.TclError:
             pass
-        self.root.configure(bg=BG)
+        self.root.configure(bg=c.bg)
 
         # Il programma lavora in pixel reali: sugli schermi al 125-150% ingrandisce
         self.s = max(1.0, self.root.winfo_fpixels("1i") / 96)
         self.k = self._clamp(self.cfg.get("window_scale") or 1.0)
 
-        self.value_lbl = tk.Label(self.root, text="…", bg=BG, fg=FG)
-        self.arrow_lbl = tk.Label(self.root, text="", bg=BG, fg=FG)
-        self.info_lbl = tk.Label(self.root, text=t("connecting"), bg=BG, fg=DIM, anchor="w")
-        self.spark = tk.Canvas(self.root, bg=BG, highlightthickness=0)
+        self.value_lbl = tk.Label(self.root, text="…", bg=c.bg, fg=c.fg)
+        self.arrow_lbl = tk.Label(self.root, text="", bg=c.bg, fg=c.fg)
+        self.info_lbl = tk.Label(self.root, text=t("connecting"), bg=c.bg, fg=c.dim, anchor="w")
+        self.spark = tk.Canvas(self.root, bg=c.bg, highlightthickness=0)
         # angolo per ridimensionare
-        self.grip = tk.Canvas(self.root, bg=BG, highlightthickness=0, cursor="bottom_right_corner")
+        self.grip = tk.Canvas(self.root, bg=c.bg, highlightthickness=0,
+                              cursor="bottom_right_corner")
 
         w, h = self.size()
         x, y = self.cfg["window_x"], self.cfg["window_y"]
@@ -51,11 +52,8 @@ class WindowView:
         self.root.geometry(f"{w}x{h}+{x}+{y}")
         self.layout()
 
-        self.menu = tk.Menu(self.root, tearoff=0)
-        self.menu.add_command(label=t("menu_refresh"), command=ctl.refresh)
-        self.menu.add_command(label=t("menu_unit"), command=ctl.toggle_unit)
-        self.menu.add_separator()
-        ctl.add_common_menu(self.menu)
+        self.menu = tk.Menu(self.root, tearoff=0,
+                            postcommand=lambda: fill_tk(self.menu, ctl.menu_items(), ctl.post))
 
         for wdg in (self.root, self.value_lbl, self.arrow_lbl, self.info_lbl, self.spark):
             wdg.bind("<ButtonPress-1>", self._drag_start)
@@ -96,7 +94,7 @@ class WindowView:
         self.grip.delete("all")
         for i in (3, 6, 9):   # tre trattini diagonali, come il pannello
             d = i * self.s
-            self.grip.create_line(g - d, g - 1, g - 1, g - d, fill=GRIP)
+            self.grip.create_line(g - d, g - 1, g - 1, g - d, fill=self.c.grip)
         self.render()
 
     # ---- trascinamento / ridimensionamento / menu ----
@@ -134,16 +132,17 @@ class WindowView:
 
     # ---- disegno ----
     def render(self):
-        c, error = self.ctl.current, self.ctl.error
+        c, error, pal = self.ctl.current, self.ctl.error, self.c
         if not c:
-            self.value_lbl.config(text="--", fg=DIM)
+            self.value_lbl.config(text="--", fg=pal.dim)
             self.arrow_lbl.config(text="")
-            self.info_lbl.config(text=error or t("connecting"), fg=RED if error else DIM)
+            self.info_lbl.config(text=error or t("connecting"),
+                                 fg=pal.error if error else pal.dim)
             return
 
         age = age_minutes(c)
         stale = is_stale(self.cfg, c)
-        color = DIM if stale else color_for(self.cfg, c["mgdl"])
+        color = pal.dim if stale else pal.value(self.cfg, c["mgdl"])
         value = fmt_value(self.cfg, c["mgdl"])
         arrow = TREND_ARROWS.get(c["trend"], "")
 
@@ -153,7 +152,7 @@ class WindowView:
         info = f"{self.cfg['unit']} · {when}"
         if error:
             info += " · ⚠ " + error
-        self.info_lbl.config(text=info, fg=RED if (stale or error) else DIM)
+        self.info_lbl.config(text=info, fg=pal.error if (stale or error) else pal.dim)
         self.draw_sparkline()
 
     def draw_sparkline(self):
@@ -176,13 +175,13 @@ class WindowView:
 
         # fascia del range obiettivo
         cv.create_rectangle(0, y(self.cfg["high"]), w, y(self.cfg["low"]),
-                            fill="#24352b", outline="")
+                            fill=self.c.band, outline="")
         if len(pts) < 2:
             return
         coords = []
         for m in pts:
             coords += [x(m["time"]), y(m["mgdl"])]
-        cv.create_line(*coords, fill="#c9ccd1", width=1.5 * f, smooth=True)
+        cv.create_line(*coords, fill=self.c.line, width=1.5 * f, smooth=True)
         lx, ly, r = coords[-2], coords[-1], 3 * f
-        col = color_for(self.cfg, pts[-1]["mgdl"])
+        col = self.c.value(self.cfg, pts[-1]["mgdl"])
         cv.create_oval(lx - r, ly - r, lx + r, ly + r, fill=col, outline=col)

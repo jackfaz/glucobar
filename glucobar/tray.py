@@ -1,7 +1,7 @@
 """L'icona di GlucoBar nell'area di notifica, vicino all'orologio.
 
 Mostra il valore colorato (passandoci sopra: freccia e minuti) e, col clic destro,
-il menu: cosa mostrare, unità, lingua, account, esci. Si può nascondere: il menu
+il menu di GlucoBar (lo stesso degli altri elementi, vedi menus.py). Si può nascondere: il menu
 resta disponibile col clic destro sugli altri elementi.
 """
 
@@ -11,11 +11,12 @@ import traceback
 import pystray
 from PIL import Image, ImageDraw, ImageFont
 
-from . import i18n
-from .config import ELEMENTS, log, save_config
-from .i18n import LANGUAGES, refresh_label, t
+from .config import log, save_config
+from .i18n import t
+from .menus import to_pystray
 from .sources import TREND_ARROWS
-from .ui_common import GREY, age_minutes, asset_path, color_for, fmt_value, is_stale
+from .theme import palette, taskbar_light
+from .ui_common import GREY, age_minutes, asset_path, fmt_value, is_stale
 
 ICON_SIZE = 64  # Windows la rimpicciolisce da solo
 
@@ -73,39 +74,8 @@ class TrayIcon:
         self.icon = pystray.Icon("glucobar", self.logo, "GlucoBar", menu=self.build_menu())
 
     def build_menu(self):
-        ctl = self.ctl
-
-        def do(fn, *args):
-            # i clic arrivano dal thread dell'icona: li esegue il thread di Tk
-            return lambda: ctl.post(fn, *args)
-
-        def show_item(element):
-            return pystray.MenuItem(lambda item: t(f"mode_{element}"),
-                                    do(ctl.toggle_element, element),
-                                    checked=lambda item: ctl.shown(element))
-
-        def every_item(seconds):
-            return pystray.MenuItem(refresh_label(seconds), do(ctl.set_refresh, seconds),
-                                    radio=True,
-                                    checked=lambda item: ctl.refresh_seconds() == seconds)
-
-        def lang_item(code, name):
-            return pystray.MenuItem(name, do(ctl.set_language, code), radio=True,
-                                    checked=lambda item: i18n.current_language() == code)
-
-        return pystray.Menu(
-            pystray.MenuItem(lambda item: t("menu_refresh"), do(ctl.refresh), default=True),
-            pystray.MenuItem(lambda item: t("menu_show"),
-                             pystray.Menu(*[show_item(e) for e in ELEMENTS])),
-            pystray.MenuItem(lambda item: t("menu_unit"), do(ctl.toggle_unit)),
-            pystray.MenuItem(lambda item: t("menu_refresh_every"),
-                             pystray.Menu(lambda: [every_item(s) for s in ctl.refresh_choices()])),
-            pystray.MenuItem(lambda item: t("menu_language"),
-                             pystray.Menu(*[lang_item(c, n) for c, n in LANGUAGES.items()])),
-            pystray.MenuItem(lambda item: t("menu_account"), do(ctl.change_account)),
-            pystray.Menu.SEPARATOR,
-            pystray.MenuItem(lambda item: t("menu_quit"), do(ctl.quit)),
-        )
+        # ricostruito da update_menu() (lo chiama il controller dopo ogni cambiamento)
+        return pystray.Menu(lambda: to_pystray(self.ctl.menu_items(), self.ctl.post))
 
     def start(self):
         # Su Windows l'icona gira in un suo thread, accanto al ciclo di Tkinter
@@ -162,7 +132,8 @@ class TrayIcon:
         stale = is_stale(cfg, c)
         value = fmt_value(cfg, c["mgdl"])
         arrow = "" if stale else TREND_ARROWS.get(c["trend"], "")
-        self.icon.icon = make_icon(value, GREY if stale else color_for(cfg, c["mgdl"]))
+        color = GREY if stale else palette(cfg, light=taskbar_light()).value(cfg, c["mgdl"])
+        self.icon.icon = make_icon(value, color)
         when = t("now") if age == 0 else t("min_ago", n=age)
         title = f"{value} {arrow} {cfg['unit']} · {when}"
         if stale:

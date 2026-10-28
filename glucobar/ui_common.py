@@ -1,4 +1,4 @@
-"""Parti comuni alle tre interfacce: colori, formati, finestra delle credenziali."""
+"""Parti comuni alle interfacce: formati, finestre di dialogo, credenziali."""
 
 import os
 import sys
@@ -16,27 +16,13 @@ from .sources import region_options, source_options
 # Linux), quello di sistema sul Mac
 FONT = "Helvetica Neue" if sys.platform == "darwin" else "Segoe UI"
 
-BG = "#1e1f22"
-FG = "#f2f2f2"
-DIM = "#8a8d93"
-GREY = "#9a9da3"
-GREEN = "#3ecf6e"
-ORANGE = "#f5a524"
-RED = "#ff4d4f"
+GREY = "#9a9da3"   # valore vecchio, su qualsiasi sfondo
 
 
 def fmt_value(cfg, mgdl):
     if cfg["unit"] == "mmol/L":
         return f"{mgdl / 18.016:.1f}"
     return f"{mgdl:.0f}"
-
-
-def color_for(cfg, mgdl):
-    if mgdl < cfg["low"] or mgdl > cfg["very_high"]:
-        return RED
-    if mgdl > cfg["high"]:
-        return ORANGE
-    return GREEN
 
 
 def age_minutes(measurement):
@@ -91,6 +77,69 @@ def choose(parent, title, prompt, options, default):
                  f"+{(dlg.winfo_screenheight() - dlg.winfo_reqheight()) // 3}")
     dlg.attributes("-topmost", True)
     dlg.focus_force()
+    dlg.grab_set()
+    parent.wait_window(dlg)
+    return result[0] if result else None
+
+
+RANGE_LIMITS = {"low": (40, 200), "high": (100, 400), "very_high": (150, 500)}   # mg/dL
+
+
+def parse_range(cfg, texts):
+    """{"low": "3.9", ...} nell'unità scelta -> soglie in mg/dL; ValueError se non vanno."""
+    values = {}
+    for key, (lo, hi) in RANGE_LIMITS.items():
+        number = float(texts[key].replace(",", ".").strip())
+        mgdl = round(number * 18.016) if cfg["unit"] == "mmol/L" else round(number)
+        if not lo <= mgdl <= hi:
+            raise ValueError(key)
+        values[key] = mgdl
+    if not values["low"] < values["high"] < values["very_high"]:
+        raise ValueError("order")
+    return values
+
+
+def ask_range(cfg, parent):
+    """Finestrella per le soglie (basso, alto, molto alto); None se annullata."""
+    dlg = tk.Toplevel(parent)
+    dlg.title(t("range_title"))
+    dlg.resizable(False, False)
+    tk.Label(dlg, text=t("range_prompt", unit=cfg["unit"]), justify="left",
+             font=(FONT, 10)).grid(row=0, column=0, columnspan=2, sticky="w",
+                                   padx=16, pady=(14, 8))
+    entries = {}
+    for row, key in enumerate(RANGE_LIMITS, 1):
+        tk.Label(dlg, text=t(f"range_{key}"), font=(FONT, 10)).grid(
+            row=row, column=0, sticky="w", padx=(16, 8), pady=3)
+        entry = tk.Entry(dlg, width=8, font=(FONT, 10), justify="right")
+        entry.insert(0, fmt_value(cfg, cfg[key]))
+        entry.grid(row=row, column=1, sticky="w", padx=(0, 16), pady=3)
+        entries[key] = entry
+    error = tk.Label(dlg, text="", fg="#c62828", font=(FONT, 9), justify="left")
+    error.grid(row=4, column=0, columnspan=2, sticky="w", padx=16)
+    result = []
+
+    def ok(_event=None):
+        try:
+            result.append(parse_range(cfg, {k: e.get() for k, e in entries.items()}))
+        except ValueError:
+            error.config(text=t("range_invalid"))
+            return
+        dlg.destroy()
+
+    buttons = tk.Frame(dlg)
+    buttons.grid(row=5, column=0, columnspan=2, sticky="e", padx=16, pady=(8, 14))
+    tk.Button(buttons, text=t("button_cancel"), width=10, command=dlg.destroy).pack(side="right")
+    tk.Button(buttons, text=t("button_ok"), width=10, command=ok, default="active").pack(
+        side="right", padx=(0, 6))
+    dlg.bind("<Return>", ok)
+    dlg.bind("<Escape>", lambda _event: dlg.destroy())
+    dlg.update_idletasks()
+    dlg.geometry(f"+{(dlg.winfo_screenwidth() - dlg.winfo_reqwidth()) // 2}"
+                 f"+{(dlg.winfo_screenheight() - dlg.winfo_reqheight()) // 3}")
+    dlg.attributes("-topmost", True)
+    dlg.focus_force()
+    entries["low"].focus_set()
     dlg.grab_set()
     parent.wait_window(dlg)
     return result[0] if result else None

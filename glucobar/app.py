@@ -70,8 +70,9 @@ def save_choices(elements, language, source=None):
 def self_test():
     """Per la build: carica tutte le parti nell'exe (moduli mancanti = errore)."""
     try:
-        from . import (controller, desktop, dexcom, instance, librelinkup,  # noqa: F401
-                       nightscout, window)
+        from . import (alerts, controller, desktop, dexcom, instance,  # noqa: F401
+                       librelinkup, menus, nightscout, notify, sensor, support, theme,
+                       updates, window)
         if sys.platform == "darwin":
             from . import macbar  # noqa: F401
             log("self-test ok (barra dei menu del Mac)")

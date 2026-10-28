@@ -2,7 +2,8 @@ import time
 import unittest
 
 from glucobar.config import DEFAULT_CONFIG
-from glucobar.ui_common import GREEN, ORANGE, RED, color_for, fmt_value, is_stale
+from glucobar.theme import palette
+from glucobar.ui_common import fmt_value, is_stale
 
 
 class FormatTest(unittest.TestCase):
@@ -15,11 +16,12 @@ class FormatTest(unittest.TestCase):
         self.assertEqual(fmt_value(self.cfg, 180), "10.0")
 
     def test_colors(self):
-        self.assertEqual(color_for(self.cfg, 69), RED)
-        self.assertEqual(color_for(self.cfg, 70), GREEN)
-        self.assertEqual(color_for(self.cfg, 180), GREEN)
-        self.assertEqual(color_for(self.cfg, 181), ORANGE)
-        self.assertEqual(color_for(self.cfg, 251), RED)
+        pal = palette(self.cfg, light=False)
+        self.assertEqual(pal.value(self.cfg, 69), pal.danger)
+        self.assertEqual(pal.value(self.cfg, 70), pal.in_range)
+        self.assertEqual(pal.value(self.cfg, 180), pal.in_range)
+        self.assertEqual(pal.value(self.cfg, 181), pal.high)
+        self.assertEqual(pal.value(self.cfg, 251), pal.danger)
 
     def test_stale(self):
         self.assertFalse(is_stale(self.cfg, {"time": time.time() - 60}))

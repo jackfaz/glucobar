@@ -17,14 +17,15 @@ import traceback
 
 from .config import log, save_config
 from .i18n import t
+from .menus import Item, fill_tk, radio_items
 from .sources import TREND_ARROWS
-from .ui_common import FONT, RED, age_minutes, bind_right_click, color_for, fmt_value, is_stale
+from .theme import palette, taskbar_light
+from .ui_common import FONT, age_minutes, bind_right_click, fmt_value, is_stale
 
 IS_WIN = sys.platform == "win32"
 
 if IS_WIN:
     import ctypes
-    import winreg
     from ctypes import wintypes
 
     user32 = ctypes.windll.user32
@@ -143,16 +144,7 @@ def class_name(hwnd):
 
 def taskbar_colors():
     """Colori di sfondo/testo simili a quelli della barra (tema chiaro o scuro)."""
-    light = False
-    if IS_WIN:
-        try:
-            key = winreg.OpenKey(
-                winreg.HKEY_CURRENT_USER,
-                r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
-            light = winreg.QueryValueEx(key, "SystemUsesLightTheme")[0] == 1
-        except OSError:
-            pass
-    return ("#eeeeee", "#5f6368") if light else ("#1f1f1f", "#a0a0a0")
+    return ("#eeeeee", "#5f6368") if taskbar_light() else ("#1f1f1f", "#a0a0a0")
 
 
 def windows_above(hwnd, limit=400):
@@ -185,6 +177,7 @@ class TaskbarView:
         bg, dim = taskbar_colors()
         self.bg = self.cfg["taskbar_bg"] or bg
         self.dim = dim
+        self.c = palette(self.cfg, light=taskbar_light())   # colori leggibili sulla barra
 
         self.root = tk.Toplevel(ctl.root)
         self.root.title("GlucoBar")
@@ -208,19 +201,8 @@ class TaskbarView:
         for lbl in (self.value_lbl, self.arrow_lbl, self.info_lbl):
             lbl.configure(padx=0, pady=0, bd=0)
 
-        self.menu = tk.Menu(self.root, tearoff=0)
-        self.menu.add_command(label=t("menu_refresh"), command=ctl.refresh)
-        self.menu.add_command(label=t("menu_unit"), command=ctl.toggle_unit)
-        self.menu.add_command(label=t("menu_side"), command=self.toggle_side)
-        self.menu.add_command(label=t("menu_monitor"), command=self.next_monitor)
-        sizes = tk.Menu(self.menu, tearoff=0)
-        self.scale_var = tk.DoubleVar(master=self.menu, value=float(self.cfg["taskbar_scale"]))
-        for scale, key in SIZES:
-            sizes.add_radiobutton(label=t(key), value=scale, variable=self.scale_var,
-                                  command=lambda v=scale: self.set_scale(v))
-        self.menu.add_cascade(label=t("menu_size"), menu=sizes)
-        self.menu.add_separator()
-        ctl.add_common_menu(self.menu)
+        self.menu = tk.Menu(self.root, tearoff=0, postcommand=lambda: fill_tk(
+            self.menu, ctl.menu_items(self.menu_items()), ctl.post))
 
         for w in (self.root, self.box, self.value_lbl, self.arrow_lbl, self.info_lbl):
             bind_right_click(w, lambda e: self.menu.tk_popup(e.x_root, e.y_root))
@@ -318,6 +300,15 @@ class TaskbarView:
         self.arrow_lbl.configure(font=(FONT, -int(height * 0.36 * k), "bold"))
         self.info_lbl.configure(font=(FONT, -int(height * 0.21 * min(k, 1.0))))
         return int(height * 1.75 * k), height
+
+    def menu_items(self):
+        return [
+            Item(t("menu_side"), self.toggle_side),
+            Item(t("menu_monitor"), self.next_monitor),
+            Item(t("menu_size"), children=radio_items(
+                [(scale, t(key)) for scale, key in SIZES], float(self.cfg["taskbar_scale"]),
+                self.set_scale)),
+        ]
 
     def set_scale(self, scale):
         self.cfg["taskbar_scale"] = scale
@@ -455,15 +446,15 @@ class TaskbarView:
             self.value_lbl.config(text="--", fg=self.dim)
             self.arrow_lbl.config(text="")
             self.info_lbl.config(text=t("error_short") if error else "…",
-                                 fg=RED if error else self.dim)
+                                 fg=self.c.error if error else self.dim)
             return
         age = age_minutes(c)
         stale = is_stale(self.cfg, c)
-        color = self.dim if stale else color_for(self.cfg, c["mgdl"])
+        color = self.dim if stale else self.c.value(self.cfg, c["mgdl"])
         self.value_lbl.config(text=fmt_value(self.cfg, c["mgdl"]), fg=color)
         self.arrow_lbl.config(text="" if stale else " " + TREND_ARROWS.get(c["trend"], ""),
                               fg=color)
         info = t("now") if age == 0 else t("min_short", n=age)
         if error:
             info = "⚠ " + info
-        self.info_lbl.config(text=info, fg=RED if (stale or error) else self.dim)
+        self.info_lbl.config(text=info, fg=self.c.error if (stale or error) else self.dim)

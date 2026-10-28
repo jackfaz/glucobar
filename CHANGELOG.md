@@ -4,6 +4,41 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] - 2026-10-28
+
+### Added
+- **Sensor replacement** (*Sensor* in the menu). With LibreLinkUp GlucoBar shows the day of
+  use and the serial number (click to copy it), reminds you 24 hours and 2 hours before the
+  sensor ends, and shows a message when the sensor seems to have stopped early (no data for an
+  hour while the connection works) or was replaced more than a day early. *Request a sensor
+  replacement…* opens the manufacturer's page for your country (Abbott or Dexcom) and copies
+  the serial number, ready to paste into the form. Dexcom Share and Nightscout do not report
+  the sensor, so for them there is only the menu item.
+- **Themes** (*Appearance* in the menu): light, dark or automatic (follows Windows or macOS,
+  also when it changes), and colour-blind friendly colours for the value and the charts.
+  *Thresholds…* changes low, high and very high from the menu, in your unit.
+- **Alerts**, off by default: low glucose, very high glucose, no new data. One message per
+  episode. They do not replace your sensor's alarms, and GlucoBar says so the first time.
+- **Person**: if your LibreLinkUp account follows more than one person, choose who to show.
+- **New version notice**: once a day GlucoBar asks GitHub for the latest version and, if
+  there is a newer one, offers to download it. Can be turned off from the menu
+  (`update_check`).
+- *Start with Windows* in the menu.
+- The build installs the previous release, opens it and installs the new version over it in
+  silence, checking that settings, password and choices stay. New workflows: a daily check of
+  the real LibreLinkUp, Dexcom Share and Nightscout services, and a weekly soak test that
+  keeps GlucoBar open with a reading every 10 seconds and checks that memory and graphics
+  objects do not grow.
+
+### Fixed
+- A silent update (for example with winget) reset what to show to "taskbar and icon" and the
+  language to the installer's one. Now it keeps your choices, unless you pass `/ELEMENTS`,
+  `/LANG` or `/SENSOR`.
+
+### Changed
+- The right-click menu is now the same everywhere (value on the taskbar, icon, small window,
+  desktop panel and Mac menu bar), plus the few items that belong to each element.
+
 ## [0.8.4] - 2026-10-28
 
 ### Added
@@ -232,6 +267,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.9.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.0
 [0.8.4]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.4
 [0.8.3]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.3
 [0.8.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.2

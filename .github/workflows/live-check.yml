@@ -1,0 +1,33 @@
+name: Live check
+
+# Ogni giorno: LibreLinkUp, Dexcom Share e Nightscout rispondono ancora come si aspetta
+# GlucoBar? Usa gli account nei secret (vedi tools/live_check.py); se manca un secret,
+# quel servizio si salta. Se qualcosa non va il job fallisce e GitHub manda un'email.
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Check the real services
+        env:
+          LIBRE_EMAIL: ${{ secrets.LIBRE_EMAIL }}
+          LIBRE_PASSWORD: ${{ secrets.LIBRE_PASSWORD }}
+          DEXCOM_USER: ${{ secrets.DEXCOM_USER }}
+          DEXCOM_PASSWORD: ${{ secrets.DEXCOM_PASSWORD }}
+          DEXCOM_REGION: ${{ secrets.DEXCOM_REGION }}
+          NIGHTSCOUT_URL: ${{ secrets.NIGHTSCOUT_URL }}
+          NIGHTSCOUT_TOKEN: ${{ secrets.NIGHTSCOUT_TOKEN }}
+        run: python tools/live_check.py

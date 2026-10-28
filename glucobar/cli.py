@@ -22,6 +22,7 @@ from . import __version__, autostart, credentials, i18n, instance, tui
 from .config import CONFIG_PATH, ELEMENTS, MIN_REFRESH, forget_everything, load_config, \
     normalize_elements, save_config
 from .i18n import LANGUAGES, element_name, t
+from .theme import PALETTES, THEMES
 from .nightscout import normalize_url
 from .sources import DEXCOM_REGIONS, SOURCES, TREND_ARROWS, account_ready, fetch_safely, \
     make_client, region_options, source_options
@@ -102,6 +103,13 @@ SETTINGS = {
     "desktop_hours": lambda raw: _choice(3, 6, 12)(raw),
     "desktop_alpha": _float(0.3, 1.0),
     "desktop_locked": _bool,
+    "theme": _choice(*THEMES),
+    "palette": _choice(*PALETTES),
+    "alert_low": _bool,
+    "alert_high": _bool,
+    "alert_stale": _bool,
+    "update_check": _bool,
+    "sensor_life_days": _int(10, 15),
     "autostart": _bool,   # nel registro di Windows, non in config.json
 }
 

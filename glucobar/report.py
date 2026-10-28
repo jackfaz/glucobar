@@ -113,6 +113,10 @@ def build_report(cfg, running, log_lines=40):
         ("Taskbar settings", f"monitor {cfg['taskbar_monitor']}, side {cfg['taskbar_side']}, "
                              f"offset {cfg['taskbar_offset']}, transparent "
                              f"{yes(cfg['taskbar_transparent'])}, bg {cfg['taskbar_bg'] or 'auto'}"),
+        ("Look", f"theme {cfg.get('theme', 'auto')}, colours {cfg.get('palette', 'standard')}"),
+        ("Alerts", ", ".join(k for k in ("low", "high", "stale") if cfg.get(f"alert_{k}"))
+                   or "off"),
+        ("Update check", yes(cfg.get("update_check", True))),
         ("Desktop panel", f"{cfg['desktop_w']}x{cfg['desktop_h']}, {cfg['desktop_hours']} h, "
                           f"opacity {cfg['desktop_alpha']}, locked {yes(cfg['desktop_locked'])}"),
         ("Account", ("site set, " + ("token saved" if password else "no token"))
@@ -121,7 +125,8 @@ def build_report(cfg, running, log_lines=40):
                     "email saved, password missing" if cfg.get("email") else "not set up"),
         ("Sensor", f"Dexcom Share, region {cfg['dexcom_region']}" if cfg["source"] == "dexcom"
                    else "Nightscout" if nightscout
-                   else f"LibreLinkUp, region {cfg['region']}, app version {cfg['app_version']}"),
+                   else f"LibreLinkUp, region {cfg['region']}, app version {cfg['app_version']}, "
+                        f"sensor life {cfg.get('sensor_life_days', 14)} days"),
         ("Running", yes(running)),
         ("Start with Windows", yes(autostart.is_enabled())),
         ("glucobar in PATH", yes(in_path())),

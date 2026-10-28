@@ -12,11 +12,11 @@ from AppKit import (NSAttributedString, NSColor, NSFont, NSFontAttributeName,
                     NSVariableStatusItemLength)
 from Foundation import NSObject
 
-from . import autostart, i18n
-from .config import ELEMENTS
-from .i18n import LANGUAGES, element_name, refresh_label, t
+from .i18n import t
+from .menus import SEPARATOR
 from .sources import TREND_ARROWS
-from .ui_common import GREY, age_minutes, color_for, fmt_value, is_stale
+from .theme import palette, taskbar_light
+from .ui_common import GREY, age_minutes, fmt_value, is_stale
 
 NS_ON, NS_OFF = 1, 0          # NSControlStateValueOn / Off
 SEMIBOLD = 0.3                # NSFontWeightSemibold
@@ -91,7 +91,7 @@ class MacMenuBar:
             stale = is_stale(cfg, c)
             arrow = "" if stale else " " + TREND_ARROWS.get(c["trend"], "")
             text = fmt_value(cfg, c["mgdl"]) + arrow
-            color = GREY if stale else color_for(cfg, c["mgdl"])
+            color = GREY if stale else palette(cfg, light=taskbar_light()).value(cfg, c["mgdl"])
             age = age_minutes(c)
             tooltip = f"{text} {cfg['unit']} · " + (t("now") if age == 0 else t("min_ago", n=age))
             if stale:
@@ -131,27 +131,17 @@ class MacMenuBar:
         return sub
 
     def fill_menu(self, menu):
-        ctl = self.ctl
         menu.removeAllItems()
         self.actions = []
-        self._add(menu, t("menu_refresh"), ctl.refresh)
-        show = self._submenu(menu, t("menu_show"))
-        for element in ELEMENTS:
-            self._add(show, element_name(element), ctl.toggle_element, element,
-                      checked=ctl.shown(element))
-        self._add(menu, t("menu_unit"), ctl.toggle_unit)
-        every = self._submenu(menu, t("menu_refresh_every"))
-        for seconds in ctl.refresh_choices():
-            self._add(every, refresh_label(seconds), ctl.set_refresh, seconds,
-                      checked=ctl.refresh_seconds() == seconds)
-        langs = self._submenu(menu, t("menu_language"))
-        for code, name in LANGUAGES.items():
-            self._add(langs, name, ctl.set_language, code,
-                      checked=i18n.current_language() == code)
-        self._add(menu, t("menu_account"), ctl.change_account)
-        if autostart.gui_exe():   # solo nell'app vera, non da sorgente
-            enabled = autostart.is_enabled()
-            self._add(menu, t("menu_autostart"), autostart.set_enabled, not enabled,
-                      checked=enabled)
-        menu.addItem_(NSMenuItem.separatorItem())
-        self._add(menu, t("menu_quit"), ctl.quit)
+        self._fill(menu, self.ctl.menu_items())
+
+    def _fill(self, menu, items):
+        for item in items:
+            if item is SEPARATOR:
+                menu.addItem_(NSMenuItem.separatorItem())
+            elif item.children is not None:
+                self._fill(self._submenu(menu, item.label), item.children)
+            else:
+                ns_item = self._add(menu, item.label, item.action, *item.args,
+                                    checked=item.checked)
+                ns_item.setEnabled_(item.enabled)

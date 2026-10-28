@@ -6,6 +6,7 @@ import unittest
 from unittest import mock
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools"))
+import live_check  # noqa: E402
 import release_notes  # noqa: E402
 import virustotal  # noqa: E402
 
@@ -66,6 +67,38 @@ class ToolsTest(unittest.TestCase):
         self.assertNotIn("[VirusTotal]", release_notes.notes(version, self.path))
         self.assertNotIn("Pre-release", full)
         self.assertIn("**Pre-release:**", release_notes.notes(version, self.path, "u", True))
+
+
+
+class LiveCheckTest(unittest.TestCase):
+    """Il controllo quotidiano, contro il LibreLinkUp finto dei test."""
+
+    def test_accounts_from_secrets(self):
+        self.assertEqual(live_check.accounts({}), [])
+        found = live_check.accounts({"LIBRE_EMAIL": "a@b.c", "LIBRE_PASSWORD": "x",
+                                     "DEXCOM_USER": "u", "NIGHTSCOUT_URL": "https://ns.example"})
+        self.assertEqual([name for name, _cfg, _pw in found], ["LibreLinkUp", "Nightscout"])
+
+    def test_check_never_prints_values_or_email(self):
+        from http.server import HTTPServer
+        import threading
+        from test_librelinkup import FakeLibreView
+        FakeLibreView.state = {"logins": 0, "redirect": False, "redirected": False,
+                               "terms": False}
+        server = HTTPServer(("127.0.0.1", 0), FakeLibreView)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.shutdown)
+        with mock.patch.dict(os.environ, {"LLU_BASE_URL": f"http://127.0.0.1:{server.server_port}"}):
+            ok, text = live_check.check("LibreLinkUp", {"source": "libre", "email": "a@b.c"},
+                                        "segreta")
+            self.assertTrue(ok, text)
+            self.assertIn("ok, ultima lettura 2 min fa", text)
+            self.assertIn("chiede la versione 4.20.0", text)
+            self.assertNotIn("142", text)
+            ok, text = live_check.check("LibreLinkUp", {"source": "libre", "email": "a@b.c"},
+                                        "sbagliata")
+            self.assertFalse(ok)
+            self.assertNotIn("a@b.c", text)
 
 
 if __name__ == "__main__":

@@ -13,22 +13,27 @@ import threading
 import time
 import tkinter as tk
 import traceback
+import webbrowser
 
-from . import i18n, instance
+from . import autostart, i18n, instance, sensor, support, theme, updates
+from .alerts import AlertWatch
 from .config import (ELEMENTS, MIN_REFRESH, REFRESH_CHOICES, log, normalize_elements,
                      peek_config, save_config)
 from .i18n import LANGUAGES, element_name, refresh_label, t
+from .menus import SEPARATOR, Item, radio_items
 from .sources import fetch_safely, make_client
-from .ui_common import apply_icon, ask_credentials
+from .ui_common import apply_icon, ask_credentials, ask_range, fmt_value
 
 
 # Impostazioni che si possono cambiare da terminale mentre GlucoBar è aperto
 LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_minutes",
              "refresh_seconds", "source", "dexcom_region", "email", "taskbar_monitor",
              "taskbar_side", "taskbar_offset", "taskbar_bg", "taskbar_transparent",
-             "taskbar_scale", "window_scale", "desktop_hours", "desktop_alpha", "desktop_locked")
+             "taskbar_scale", "window_scale", "desktop_hours", "desktop_alpha", "desktop_locked",
+             "theme", "palette", "alert_low", "alert_high", "alert_stale", "update_check",
+             "sensor_life_days")
 REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "desktop_alpha", "desktop_locked",
-                "window_scale"}
+                "window_scale", "theme", "palette"}
 ACCOUNT_KEYS = {"source", "dexcom_region", "email"}
 
 
@@ -54,6 +59,13 @@ class Controller:
         self.busy = False
         self._last_fetch = 0
         self._last_render = 0
+        self._started = time.time()
+        self.alerts = AlertWatch()
+        self.sensors = sensor.SensorWatch()
+        self.update = None          # (versione, pagina) se ce n'è una più nuova
+        self._checking_update = False
+        self._logged_sensor = None
+        self._theme_key = self.theme_key()
         self.views = {}      # elemento -> vista aperta (taskbar, window, desktop)
         self.tray = None
         self._promoting = False   # tentativi in corso di mettere l'icona accanto all'orologio
@@ -201,23 +213,6 @@ class Controller:
         save_config(self.cfg)
         self.render()
 
-    def refresh_seconds(self):
-        try:
-            return max(MIN_REFRESH, int(self.cfg["refresh_seconds"]))
-        except (TypeError, ValueError):
-            return 60
-
-    def refresh_choices(self):
-        """Le scelte del menu, più il valore attuale se scelto da terminale (es. 45 s)."""
-        return sorted(set(REFRESH_CHOICES) | {self.refresh_seconds()})
-
-    def set_refresh(self, seconds):
-        self.cfg["refresh_seconds"] = int(seconds)
-        save_config(self.cfg)
-        log(f"aggiornamento ogni {refresh_label(seconds)}")
-        if self.tray:
-            self.tray.update_menu()
-
     def change_account(self):
         if ask_credentials(self.cfg, self.root):
             self.client = make_client(self.cfg)
@@ -233,50 +228,171 @@ class Controller:
         root, self.root = self.root, None
         root.destroy()
 
-    def add_common_menu(self, menu):
-        """Voci comuni ai menu col clic destro delle viste."""
-        show = tk.Menu(menu, tearoff=0)
-        show_vars = []
-        for element in ELEMENTS:
-            if not self.available(element):
-                continue
-            var = tk.BooleanVar(master=menu, value=self.shown(element))
-            show_vars.append(var)
-            show.add_checkbutton(label=element_name(element), variable=var,
-                                 command=lambda e=element: self.post(self.toggle_element, e))
-        every = tk.Menu(menu, tearoff=0)
-        every_var = tk.IntVar(master=menu, value=self.refresh_seconds())
+    # ---- menu (uguale per clic destro, icona e barra dei menu del Mac) ----
+    def menu_items(self, view_items=()):
+        cfg = self.cfg
+        items = []
+        if self.update:
+            items += [Item(t("menu_update", v=self.update[0]), self.open_update), SEPARATOR]
+        items.append(Item(t("menu_refresh"), self.refresh, default=True))
+        items += list(view_items)
+        items += [
+            Item(t("menu_show"), children=[
+                Item(element_name(e), self.toggle_element, e, checked=self.shown(e))
+                for e in ELEMENTS if self.available(e)]),
+            Item(t("menu_unit"), self.toggle_unit),
+            Item(t("menu_refresh_every"), children=radio_items(
+                [(s, refresh_label(s)) for s in self.refresh_choices()],
+                self.refresh_seconds(), self.set_refresh)),
+            Item(t("menu_appearance"), children=self.appearance_items()),
+            Item(t("menu_alerts"), children=self.alert_items()),
+        ]
+        patients = getattr(self.client, "patients", None) or []
+        if len(patients) > 1:
+            items.append(Item(t("menu_person"), children=radio_items(
+                patients, self.client.patient_id, self.set_patient)))
+        items.append(Item(t("menu_sensor"), children=self.sensor_items()))
+        items += [
+            Item(t("menu_language"), children=radio_items(
+                list(LANGUAGES.items()), i18n.current_language(), self.set_language)),
+            Item(t("menu_account"), self.change_account),
+        ]
+        if autostart.gui_exe():   # solo nell'app installata, non da sorgente
+            enabled = autostart.is_enabled()
+            label = t("menu_autostart" if sys.platform == "darwin" else "menu_autostart_win")
+            items.append(Item(label, autostart.set_enabled, not enabled, checked=enabled))
+        items += [
+            Item(t("menu_update_check"), self.toggle_update_check,
+                 checked=bool(cfg.get("update_check", True))),
+            SEPARATOR,
+            Item(t("menu_quit"), self.quit),
+        ]
+        return items
 
-        def fill_every():
-            every.delete(0, "end")
-            for seconds in self.refresh_choices():
-                every.add_radiobutton(label=refresh_label(seconds), value=seconds,
-                                      variable=every_var,
-                                      command=lambda s=seconds: self.post(self.set_refresh, s))
-        fill_every()
-        langs = tk.Menu(menu, tearoff=0)
-        lang_var = tk.StringVar(master=menu, value=i18n.current_language())
-        for code, name in LANGUAGES.items():
-            langs.add_radiobutton(label=name, value=code, variable=lang_var,
-                                  command=lambda c=code: self.post(self.set_language, c))
-        menu.add_cascade(label=t("menu_show"), menu=show)
-        menu.add_cascade(label=t("menu_refresh_every"), menu=every)
-        menu.add_cascade(label=t("menu_language"), menu=langs)
-        menu.add_command(label=t("menu_account"),
-                         command=lambda: self.post(self.change_account))
-        menu.add_separator()
-        menu.add_command(label=t("menu_quit"), command=lambda: self.post(self.quit))
+    def appearance_items(self):
+        cfg = self.cfg
+        return (radio_items([(name, t(f"theme_{name}")) for name in theme.THEMES],
+                            cfg.get("theme", "auto"), self.set_theme)
+                + [SEPARATOR]
+                + radio_items([(name, t(f"palette_{name}")) for name in theme.PALETTES],
+                              cfg.get("palette", "standard"), self.set_palette)
+                + [SEPARATOR, Item(t("menu_range"), self.ask_range)])
 
-        def sync():
-            # le spunte seguono i cambi fatti da altri menu (per esempio dall'icona)
-            visible = [e for e in ELEMENTS if self.available(e)]
-            for var, element in zip(show_vars, visible):
-                var.set(self.shown(element))
-            lang_var.set(i18n.current_language())
-            fill_every()   # il valore può essere cambiato da terminale
-            every_var.set(self.refresh_seconds())
-        menu.configure(postcommand=sync)
-        menu._vars = (show_vars, lang_var, every_var)   # tenute vive insieme al menu
+    def alert_items(self):
+        cfg = self.cfg
+        unit = cfg["unit"]
+        labels = {
+            "low": t("alert_menu_low", v=f"{fmt_value(cfg, cfg['low'])} {unit}"),
+            "high": t("alert_menu_high", v=f"{fmt_value(cfg, cfg['very_high'])} {unit}"),
+            "stale": t("alert_menu_stale", n=cfg["stale_minutes"]),
+        }
+        return ([Item(labels[kind], self.toggle_alert, kind,
+                      checked=bool(cfg.get(f"alert_{kind}"))) for kind in labels]
+                + [SEPARATOR, Item(t("alert_menu_note"), enabled=False)])
+
+    def sensor_items(self):
+        items = []
+        info = self.sensor_info()
+        if info:
+            items += [Item(t("sensor_day", d=sensor.day_of(info), n=sensor.life_days(self.cfg)),
+                           enabled=False),
+                      Item(t("sensor_serial", sn=info["sn"]), self.copy_serial, info["sn"]),
+                      SEPARATOR]
+        source = self.cfg.get("source", "libre")
+        if source == "nightscout":   # il sensore può essere di chiunque
+            items += [Item(t("replace_libre"), self.request_replacement, "libre"),
+                      Item(t("replace_dexcom"), self.request_replacement, "dexcom")]
+        else:
+            items.append(Item(t("replace"), self.request_replacement, source))
+        return items
+
+    def sensor_info(self):
+        if self.cfg.get("source", "libre") != "libre":
+            return None
+        return sensor.info(getattr(self.client, "connection", None))
+
+    # ---- comandi del menu ----
+    def set_theme(self, name):
+        self.cfg["theme"] = name
+        save_config(self.cfg)
+        self.restyle()
+
+    def set_palette(self, name):
+        self.cfg["palette"] = name
+        save_config(self.cfg)
+        self.restyle()
+
+    def restyle(self):
+        self._theme_key = self.theme_key()
+        self.rebuild_views()
+        if self.tray:
+            self.tray.render()
+
+    def theme_key(self):
+        return (theme.is_light(self.cfg), theme.taskbar_light(), self.cfg.get("palette"))
+
+    def ask_range(self):
+        values = ask_range(self.cfg, self.root)
+        if values:
+            self.cfg.update(values)
+            save_config(self.cfg)
+            log("soglie cambiate dal menu")
+            self.render()
+
+    def toggle_alert(self, kind):
+        key = f"alert_{kind}"
+        self.cfg[key] = not self.cfg.get(key)
+        if self.cfg[key] and not self.cfg.get("alerts_note_shown"):
+            # una volta sola: cosa sono (e non sono) questi avvisi
+            self.cfg["alerts_note_shown"] = True
+            self.notify(t("alert_title"), t("alerts_note"), timeout=30)
+        save_config(self.cfg)
+        self.check_alerts()
+
+    def set_patient(self, patient_id):
+        self.cfg["patient_id"] = patient_id
+        # il sensore è di un'altra persona: niente avvisi di "sensore cambiato"
+        self.cfg.update(sensor_sn=None, sensor_activated=None, sensor_notified=[])
+        save_config(self.cfg)
+        self.client.patient_id = patient_id
+        self.current, self.history, self.error = None, [], None
+        self.render()
+        self.refresh()
+
+    def copy_serial(self, sn):
+        self.root.clipboard_clear()
+        self.root.clipboard_append(sn)
+        self.notify(t("menu_sensor"), t("sensor_copied", sn=sn), timeout=8)
+
+    def request_replacement(self, maker, sn=None):
+        """Apre la pagina del produttore e copia il numero di serie (se si conosce)."""
+        url = support.replacement_url(maker)
+        log(f"pagina di sostituzione aperta: {url}")
+        webbrowser.open(url)
+        info = self.sensor_info()
+        sn = sn or (info["sn"] if info and maker == "libre" else None)
+        if sn:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(sn)
+            self.notify(t("menu_sensor"), t("replace_copied", sn=sn), timeout=20)
+
+    def toggle_update_check(self):
+        self.cfg["update_check"] = not self.cfg.get("update_check", True)
+        if not self.cfg["update_check"]:
+            self.update = None
+        save_config(self.cfg)
+        self.render()
+
+    def open_update(self):
+        webbrowser.open(self.update[1] if self.update else updates.RELEASES)
+
+    def notify(self, title, text, actions=(), timeout=15):
+        from .notify import Toast
+        log(f"messaggio: {title}")
+        try:
+            Toast(self, title, text, actions, timeout)
+        except tk.TclError:
+            log("messaggio non mostrato:\n" + traceback.format_exc())
 
     def _watch_quit(self):
         if not self.root:
@@ -311,6 +427,7 @@ class Controller:
             self.current, self.history, self.error = None, [], None
             self.refresh()
         if "language" in changed or REBUILD_KEYS & set(changed):
+            self._theme_key = self.theme_key()
             self.rebuild_views()
         elif "elements" in changed:
             self.set_elements(self.cfg["elements"])
@@ -321,6 +438,22 @@ class Controller:
             self.render()
 
     # ---- dati ----
+    def refresh_seconds(self):
+        try:
+            return max(MIN_REFRESH, int(self.cfg["refresh_seconds"]))
+        except (TypeError, ValueError):
+            return 60
+
+    def refresh_choices(self):
+        """Le scelte del menu, più il valore attuale se scelto da terminale (es. 45 s)."""
+        return sorted(set(REFRESH_CHOICES) | {self.refresh_seconds()})
+
+    def set_refresh(self, seconds):
+        self.cfg["refresh_seconds"] = int(seconds)
+        save_config(self.cfg)
+        log(f"aggiornamento ogni {refresh_label(seconds)}")
+        self.render()
+
     def refresh(self):
         if self.busy:
             return
@@ -342,6 +475,73 @@ class Controller:
             self.current, self.history = current, history
             self.updated_at = time.time()
         self.render()
+        self.check_alerts()
+        self.check_sensor()
+
+    def check_alerts(self):
+        cfg = self.cfg
+        for kind in self.alerts.check(cfg, self.current):
+            c = self.current
+            value = f"{fmt_value(cfg, c['mgdl'])} {cfg['unit']}" if c else ""
+            minutes = int((time.time() - c["time"]) // 60) if c else 0
+            log(f"avviso: {kind}")
+            self.notify(t("alert_title"), t(f"alert_{kind}", v=value, n=minutes), timeout=60)
+
+    def check_sensor(self):
+        if self.cfg.get("source", "libre") != "libre":
+            return
+        events, dirty = self.sensors.check(self.cfg, getattr(self.client, "connection", None),
+                                           self.current, self.error)
+        if dirty:
+            save_config(self.cfg)
+        info = self.sensor_info()
+        if info and info["sn"] != self._logged_sensor:
+            # il tipo serve a capire quanto dura ogni modello (14 o 15 giorni)
+            self._logged_sensor = info["sn"]
+            log(f"sensore LibreLinkUp: tipo {info['type']}, giorno {sensor.day_of(info)}")
+        for name, data in events:
+            log(f"sensore: {name}")
+            if name == "ending":
+                hours = data["hours"]
+                text = (t("sensor_ending_h", h=round(hours)) if hours >= 1.5
+                        else t("sensor_ending_soon"))
+                self.notify(t("sensor_msg_title"), text, timeout=60)
+            else:   # stopped / replaced_early: si può chiedere la sostituzione
+                text = t(f"sensor_{name}", sn=data["sn"], d=data.get("days", 0))
+                self.notify(t("sensor_msg_title"), text, actions=[
+                    (t("replace_open"), lambda sn=data["sn"]: self.request_replacement("libre", sn))])
+
+    def check_updates(self):
+        now = time.time()
+        if (not self.cfg.get("update_check", True) or self._checking_update
+                or now - self._started < 60
+                or now - float(self.cfg.get("update_checked_at") or 0) < updates.INTERVAL):
+            return
+        self._checking_update = True
+        threading.Thread(target=self._update_worker, daemon=True).start()
+
+    def _update_worker(self):
+        try:
+            result = updates.latest_release()
+        except Exception as e:
+            log(f"controllo nuova versione non riuscito: {e}")
+            result = None
+        self.post(self._on_update, result)
+
+    def _on_update(self, result):
+        self._checking_update = False
+        now = time.time()
+        # se GitHub non risponde riprova tra un'ora, non tra un minuto
+        self.cfg["update_checked_at"] = now if result else now - updates.INTERVAL + 3600
+        if result and updates.is_newer(result[0]):
+            self.update = result
+            if self.cfg.get("update_notified") != result[0]:
+                self.cfg["update_notified"] = result[0]
+                log(f"nuova versione disponibile: {result[0]}")
+                self.notify(t("update_title"), t("update_text", v=result[0]),
+                            actions=[(t("update_open"), self.open_update)])
+        save_config(self.cfg)
+        self.render()
 
     def _tick(self):
         if not self.root:
@@ -354,7 +554,13 @@ class Controller:
             self.refresh()
         elif now - self._last_render >= 15:
             self._last_render = now
+            if self.theme_key() != self._theme_key:   # tema di Windows o macOS cambiato
+                log("tema cambiato")
+                self.restyle()
             self.render()   # aggiorna i "minuti fa"
+            self.check_alerts()   # "nessun dato" scatta anche senza letture nuove
+            self.check_sensor()
+            self.check_updates()
         self.root.after(1000, self._tick)
 
     def render(self):
@@ -362,6 +568,7 @@ class Controller:
             view.render()
         if self.tray:
             self.tray.render()
+            self.tray.update_menu()
 
     def run(self):
         self.root.mainloop()

@@ -2,11 +2,11 @@
 ; Prima servono l'exe e le anteprime:
 ;   pyinstaller --noconfirm --clean glucobar.spec
 ;   python tools\previews_to_bmp.py
-; Poi: iscc /DAppVersion=0.8.4 installer\glucobar.iss
+; Poi: iscc /DAppVersion=0.9.0 installer\glucobar.iss
 ; Installazione silenziosa con scelte: /VERYSILENT /ELEMENTS=desktop,tray /SENSOR=dexcom /LANG=it
 
 #ifndef AppVersion
-  #define AppVersion "0.8.4"
+  #define AppVersion "0.9.0"
 #endif
 #ifndef RepoUrl
   #define RepoUrl "https://github.com/"
@@ -258,8 +258,10 @@ Name: "{group}\{cm:UninstallProgram,GlucoBar}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\GlucoBar"; Filename: "{app}\GlucoBar.exe"; Tasks: desktopicon
 
 [Run]
-; salva elementi, lingua e sensore scelti (anche se GlucoBar non viene avviato subito)
-Filename: "{app}\GlucoBar.exe"; Parameters: "--set-elements {code:SelectedElements} --set-language {language} --set-source {code:SelectedSource}"; Flags: runhidden waituntilterminated
+; salva elementi, lingua e sensore scelti (anche se GlucoBar non viene avviato subito).
+; In un aggiornamento silenzioso (winget) solo quelli passati da riga di comando:
+; le scelte fatte nell'app restano
+Filename: "{app}\GlucoBar.exe"; Parameters: "{code:ChoiceArgs}"; Flags: runhidden waituntilterminated; Check: HasChoices
 Filename: "{app}\GlucoBar.exe"; Description: "{cm:LaunchNow}"; Flags: nowait postinstall skipifsilent
 ; aggiornamento silenzioso (es. winget): riapre GlucoBar se era aperto
 Filename: "{app}\GlucoBar.exe"; Flags: nowait; Check: ReopenAfterSilentUpdate
@@ -575,6 +577,26 @@ begin
     end;
   if Result = '' then
     Result := 'taskbar,tray';   { /ELEMENTS sbagliato: i predefiniti }
+end;
+
+{ Usata da [Run]: le scelte da salvare. Con l'installazione guidata tutte; in quella
+  silenziosa solo /ELEMENTS, /LANG e /SENSOR se ci sono (0.8.x: un aggiornamento con
+  winget rimetteva barra e icona e la lingua dell'installer) }
+function ChoiceArgs(Param: String): String;
+begin
+  Result := '';
+  if (not WizardSilent) or (ExpandConstant('{param:ELEMENTS|}') <> '') then
+    Result := Result + ' --set-elements ' + SelectedElements('');
+  if (not WizardSilent) or (ExpandConstant('{param:LANG|}') <> '') then
+    Result := Result + ' --set-language ' + ExpandConstant('{language}');
+  if (not WizardSilent) or (ExpandConstant('{param:SENSOR|}') <> '') then
+    Result := Result + ' --set-source ' + SelectedSource('');
+  Result := Trim(Result);
+end;
+
+function HasChoices: Boolean;
+begin
+  Result := ChoiceArgs('') <> '';
 end;
 
 // [Registry]: aggiunge {app}\bin al PATH solo se non c'è già

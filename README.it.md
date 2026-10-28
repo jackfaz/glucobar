@@ -169,6 +169,22 @@ in GlucoBar: funziona allo stesso modo.
   destra per ridimensionarli. Sul pannello, clic destro per il periodo del grafico e per
   bloccarlo.
 - Valore sulla barra: clic destro → *Dimensione* per rimpicciolirlo o ingrandirlo.
+- *Aggiorna ogni*: ogni quanto GlucoBar legge il dato, da 10 secondi a 5 minuti.
+- *Aspetto*: tema chiaro, scuro o automatico (segue Windows o macOS), colori adatti al
+  daltonismo (blu, giallo, arancione al posto di verde, arancione, rosso) e *Soglie…* per
+  cambiare il range nella tua unità.
+- *Avvisi* (spenti di default): un messaggio quando la glicemia è bassa, molto alta, o quando
+  da un po' non arrivano dati nuovi. Arrivano dal servizio online del sensore, con qualche
+  minuto di ritardo, e solo col computer acceso: **non sostituiscono gli allarmi del
+  sensore**.
+- *Sensore*: con LibreLinkUp, il giorno di utilizzo e il numero di serie (cliccalo per
+  copiarlo), un promemoria 24 ore e 2 ore prima della fine, e un messaggio se il sensore
+  sembra essersi fermato o è stato sostituito prima del tempo. *Chiedi la sostituzione del
+  sensore…* apre la pagina del produttore per il tuo paese e copia il numero di serie, pronto
+  da incollare nel modulo.
+- *Persona*: se il tuo account LibreLinkUp segue più persone, scegli chi mostrare.
+- Quando esce una nuova versione, la prima voce del menu propone di scaricarla (si può
+  spegnere dal menu).
 
 ## Terminale
 
@@ -191,7 +207,7 @@ Se GlucoBar è aperto, applica le nuove impostazioni entro due secondi.
 Installazione silenziosa con le tue scelte (comoda per script e winget):
 
 ```text
-GlucoBar-Setup-0.8.4.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
+GlucoBar-Setup-0.9.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
 ```
 
 ## Impostazioni
@@ -216,6 +232,11 @@ GlucoBar-Setup-0.8.4.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `window_scale` | 1.0 | Dimensione della finestrella, 0,8–2,5 (anche trascinando l'angolo in basso a destra) |
 | `desktop_hours` | 12 | Periodo del grafico del pannello: 3, 6 o 12 |
 | `desktop_alpha` | 0.92 | Opacità del pannello (1 = pieno) |
+| `theme` | `auto` | `auto` (segue Windows o macOS), `dark` o `light` |
+| `palette` | `standard` | `standard` oppure `colorblind` (adatta al daltonismo) |
+| `alert_low` / `alert_high` / `alert_stale` | false | Avvisi per valore basso (sotto `low`), molto alto (sopra `very_high`) e nessun dato (`stale_minutes`) |
+| `update_check` | true | Controlla una volta al giorno se c'è una nuova versione |
+| `sensor_life_days` | 14 | LibreLinkUp: quanto dura il sensore, per i promemoria di fine (15 per i sensori Plus) |
 
 Log: `%APPDATA%\GlucoBar\glucobar.log`.
 
@@ -228,7 +249,12 @@ GlucoBar importa da solo impostazioni e password. Poi puoi cancellare quel file.
   `GlucoBar:LibreLinkUp`, `GlucoBar:Dexcom` e `GlucoBar:Nightscout` per il token), mai nel
   file delle impostazioni.
 - GlucoBar comunica **solo con i server del produttore del sensore** (LibreView di Abbott o
-  Dexcom Share) **o con il tuo sito Nightscout**. Nessuna statistica, nessun altro server.
+  Dexcom Share) **o con il tuo sito Nightscout**. Nessuna statistica.
+- Una volta al giorno chiede a GitHub qual è l'ultima versione di GlucoBar (una richiesta
+  pubblica che non manda dati su di te o sulle tue letture). Si spegne dal menu o con
+  `glucobar set update_check=false`.
+- *Chiedi la sostituzione del sensore…* apre solo la pagina del produttore nel browser e copia
+  il numero di serie negli appunti: GlucoBar non invia niente.
 - La disinstallazione chiede se eliminare anche impostazioni e password (anche il vecchio
   `.glicemia_widget.json`). Puoi farlo anche in qualsiasi momento con `GlucoBar.exe --forget`.
 
@@ -246,7 +272,8 @@ Vengono firmati solo gli installer compilati da GitHub Actions a partire da ques
 GlucoBar non trasmette nessuna informazione ad altri sistemi in rete, se non su richiesta
 esplicita di chi lo installa o lo usa. Le uniche connessioni sono verso i server del
 produttore del sensore (Abbott LibreView o Dexcom Share) o verso il sito Nightscout
-dell'utente, con l'account inserito dall'utente.
+dell'utente, con l'account inserito dall'utente, più un controllo giornaliero dell'ultima
+versione su GitHub, che l'utente può spegnere.
 
 ## Perché "sulla" barra e non "dentro"?
 
@@ -263,13 +290,25 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: avvio senza compilare
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.8.4 installer\glucobar.iss    :: serve Inno Setup 6
+iscc /DAppVersion=0.9.0 installer\glucobar.iss    :: serve Inno Setup 6
 ```
 
 Le release le crea GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow* spunta *release* per pubblicare la versione scritta in `glucobar/__init__.py`
-(funziona anche pubblicando un tag tipo `v0.8.4`). Le anteprime delle modalità si creano con
+(funziona anche pubblicando un tag tipo `v0.9.0`). Le anteprime delle modalità si creano con
 `tools/compose_previews.py`.
+
+Ogni build installa anche l'ultima release pubblicata, la apre e ci installa sopra la nuova in
+silenzio (come winget), controllando che impostazioni, password e scelte restino. Altri due
+workflow partono da soli:
+
+- *Live check* (ogni giorno): legge un dato dai veri LibreLinkUp, Dexcom Share e Nightscout
+  con gli account salvati nei secret del repository (`LIBRE_EMAIL`, `LIBRE_PASSWORD`,
+  `DEXCOM_USER`, `DEXCOM_PASSWORD`, `DEXCOM_REGION`, `NIGHTSCOUT_URL`, `NIGHTSCOUT_TOKEN`; un
+  servizio senza secret si salta). Il log dice solo "ok" o l'errore.
+- *Soak test* (ogni settimana, o a mano scegliendo la durata): tiene GlucoBar aperto con una
+  lettura ogni 10 secondi e cambi di tema, e fallisce se memoria, handle o oggetti grafici
+  continuano a crescere.
 
 ## Riconoscimenti e marchi
 

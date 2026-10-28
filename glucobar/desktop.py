@@ -13,9 +13,10 @@ from datetime import datetime
 from . import stats
 from .config import save_config
 from .i18n import t
+from .menus import Item, fill_tk, radio_items
 from .sources import TREND_ARROWS
-from .ui_common import DIM, FG, FONT, ORANGE, RED, age_minutes, bind_right_click, color_for, \
-    fmt_value, is_stale
+from .theme import palette
+from .ui_common import FONT, age_minutes, bind_right_click, fmt_value, is_stale
 from .taskbar import IS_WIN
 
 if IS_WIN:
@@ -25,10 +26,6 @@ if IS_WIN:
         WS_EX_TOOLWINDOW, user32
     HWND_BOTTOM = wintypes.HWND(1)
 
-PANEL = "#15171c"
-GRID = "#2a2d35"
-BAND = "#1b3325"
-LINE = "#c9ccd1"
 HOURS_CHOICES = (3, 6, 12)  # LibreLinkUp fornisce circa 12 ore di storico, Dexcom 24
 
 
@@ -39,13 +36,14 @@ class DesktopView:
     def __init__(self, ctl):
         self.ctl = ctl
         self.cfg = cfg = ctl.cfg
+        self.c = palette(cfg)
         self.alive = True
         self.drag = None
 
         self.root = tk.Toplevel(ctl.root)
         self.root.title("GlucoBar")
         self.root.overrideredirect(True)
-        self.root.configure(bg=PANEL)
+        self.root.configure(bg=self.c.panel)
         try:
             self.root.attributes("-alpha", float(cfg["desktop_alpha"]))
         except tk.TclError:
@@ -58,7 +56,7 @@ class DesktopView:
             x, y = self.root.winfo_screenwidth() - w - 40, 60
         self.root.geometry(f"{w}x{h}+{x}+{y}")
 
-        self.canvas = tk.Canvas(self.root, bg=PANEL, highlightthickness=0)
+        self.canvas = tk.Canvas(self.root, bg=self.c.panel, highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
         self.canvas.bind("<Configure>", lambda e: self.draw())
         self.canvas.bind("<ButtonPress-1>", self._press)
@@ -68,20 +66,8 @@ class DesktopView:
         self.canvas.bind("<Double-Button-1>", lambda e: ctl.refresh())
         bind_right_click(self.canvas, lambda e: self.menu.tk_popup(e.x_root, e.y_root))
 
-        self.hours_var = tk.IntVar(value=int(cfg["desktop_hours"]))
-        self.locked_var = tk.BooleanVar(value=bool(cfg["desktop_locked"]))
-        hours_menu = tk.Menu(self.root, tearoff=0)
-        for hours in HOURS_CHOICES:
-            hours_menu.add_radiobutton(label=t("desk_hours", h=hours), value=hours,
-                                       variable=self.hours_var, command=self.set_hours)
-        self.menu = tk.Menu(self.root, tearoff=0)
-        self.menu.add_command(label=t("menu_refresh"), command=ctl.refresh)
-        self.menu.add_command(label=t("menu_unit"), command=ctl.toggle_unit)
-        self.menu.add_cascade(label=t("menu_hours"), menu=hours_menu)
-        self.menu.add_checkbutton(label=t("menu_lock"), variable=self.locked_var,
-                                  command=self.set_locked)
-        self.menu.add_separator()
-        ctl.add_common_menu(self.menu)
+        self.menu = tk.Menu(self.root, tearoff=0, postcommand=lambda: fill_tk(
+            self.menu, ctl.menu_items(self.menu_items()), ctl.post))
 
         self.root.update_idletasks()
         if IS_WIN:
@@ -112,11 +98,11 @@ class DesktopView:
                 e.y >= self.canvas.winfo_height() - self.GRIP)
 
     def _hover(self, e):
-        resizable = self._in_grip(e) and not self.locked_var.get()
+        resizable = self._in_grip(e) and not self.locked()
         self.canvas.configure(cursor="bottom_right_corner" if resizable else "")
 
     def _press(self, e):
-        if self.locked_var.get():
+        if self.locked():
             return
         self.drag = {
             "mode": "resize" if self._in_grip(e) else "move",
@@ -146,14 +132,27 @@ class DesktopView:
         save_config(self.cfg)
 
     # ---- menu ----
-    def set_hours(self):
-        self.cfg["desktop_hours"] = self.hours_var.get()
+    def menu_items(self):
+        cfg = self.cfg
+        return [
+            Item(t("menu_hours"), children=radio_items(
+                [(h, t("desk_hours", h=h)) for h in HOURS_CHOICES], int(cfg["desktop_hours"]),
+                self.set_hours)),
+            Item(t("menu_lock"), self.toggle_locked, checked=bool(cfg["desktop_locked"])),
+        ]
+
+    def locked(self):
+        return bool(self.cfg["desktop_locked"])
+
+    def set_hours(self, hours):
+        self.cfg["desktop_hours"] = hours
         save_config(self.cfg)
         self.draw()
 
-    def set_locked(self):
-        self.cfg["desktop_locked"] = self.locked_var.get()
+    def toggle_locked(self):
+        self.cfg["desktop_locked"] = not self.cfg["desktop_locked"]
         save_config(self.cfg)
+        self.draw()
 
     # ---- disegno ----
     def fmt_delta(self, delta):
@@ -172,7 +171,7 @@ class DesktopView:
         W, H = cv.winfo_width(), cv.winfo_height()
         if W < 50 or H < 50:
             return
-        cfg = self.cfg
+        cfg, pal = self.cfg, self.c
         hours = int(cfg["desktop_hours"])
         pad = max(10, int(min(W, H) * 0.04))
         head_h = max(56, int(H * 0.24))
@@ -187,7 +186,7 @@ class DesktopView:
         # --- valore grande, freccia, sottotitolo ---
         if c:
             stale = is_stale(cfg, c)
-            color = DIM if stale else color_for(cfg, c["mgdl"])
+            color = pal.dim if stale else pal.value(cfg, c["mgdl"])
             value = fmt_value(cfg, c["mgdl"])
             arrow = "" if stale else TREND_ARROWS.get(c["trend"], "")
             age = age_minutes(c)
@@ -195,12 +194,12 @@ class DesktopView:
             delta = stats.change(points, c)
             if delta is not None:
                 parts.append(t("desk_change", delta=self.fmt_delta(delta)))
-            sub, sub_color = " · ".join(parts), RED if stale else DIM
+            sub, sub_color = " · ".join(parts), pal.error if stale else pal.dim
         else:
-            color, value, arrow = DIM, "--", ""
-            sub, sub_color = t("connecting"), DIM
+            color, value, arrow = pal.dim, "--", ""
+            sub, sub_color = t("connecting"), pal.dim
         if error:
-            sub, sub_color = "⚠ " + error, RED
+            sub, sub_color = "⚠ " + error, pal.error
 
         vid = cv.create_text(pad, pad - head_h * 0.08, text=value, anchor="nw", fill=color,
                              font=(FONT, f_big, "bold"))
@@ -216,12 +215,12 @@ class DesktopView:
         if summary:
             f = lambda v: fmt_value(cfg, v)  # noqa: E731
             rows = [
-                (t("desk_mean"), f(summary["mean"]), FG),
-                (t("desk_in_range"), f"{summary['in_range']:.0f}%", color_for(cfg, cfg["low"])),
-                (t("desk_min"), f(summary["min"]), color_for(cfg, summary["min"])),
-                (t("desk_below"), f"{summary['below']:.0f}%", RED),
-                (t("desk_max"), f(summary["max"]), color_for(cfg, summary["max"])),
-                (t("desk_above"), f"{summary['above']:.0f}%", ORANGE),
+                (t("desk_mean"), f(summary["mean"]), pal.fg),
+                (t("desk_in_range"), f"{summary['in_range']:.0f}%", pal.in_range),
+                (t("desk_min"), f(summary["min"]), pal.value(cfg, summary["min"])),
+                (t("desk_below"), f"{summary['below']:.0f}%", pal.danger),
+                (t("desk_max"), f(summary["max"]), pal.value(cfg, summary["max"])),
+                (t("desk_above"), f"{summary['above']:.0f}%", pal.high),
             ]
         # colonne larghe quanto i testi veri (in tedesco sono più lunghi)
         normal = tkfont.Font(root=self.root, family=FONT, size=f_tiny)
@@ -235,14 +234,14 @@ class DesktopView:
             for i, (label, val, col) in enumerate(rows):
                 x = x0 + (i % 2) * (col_w + pad)
                 y = y0 + (i // 2) * line_h
-                cv.create_text(x, y, text=label, anchor="nw", fill=DIM,
+                cv.create_text(x, y, text=label, anchor="nw", fill=pal.dim,
                                font=(FONT, f_tiny))
                 cv.create_text(x + col_w, y, text=val, anchor="ne", fill=col,
                                font=(FONT, f_tiny, "bold"))
         elif rows:
             # spazio indivisibile: si va a capo tra una voce e l'altra, non dentro
             text = "   ".join(f"{label} {val}" for label, val, _ in rows)
-            tid = cv.create_text(pad, top, text=text, anchor="nw", fill=DIM,
+            tid = cv.create_text(pad, top, text=text, anchor="nw", fill=pal.dim,
                                  font=(FONT, f_tiny), width=W - 2 * pad)
             top = cv.bbox(tid)[3] + 2
 
@@ -255,7 +254,7 @@ class DesktopView:
             footer.append(t("desk_updated", time=datetime.fromtimestamp(self.ctl.updated_at)
                                                   .strftime("%H:%M")))
         foot_h = -f_tiny * 1.6
-        cv.create_text(pad, H - pad, text=" · ".join(footer), anchor="sw", fill=DIM,
+        cv.create_text(pad, H - pad, text=" · ".join(footer), anchor="sw", fill=pal.dim,
                        font=(FONT, f_tiny))
         self.draw_grip(W, H)
 
@@ -265,7 +264,7 @@ class DesktopView:
                         H - pad - foot_h - (-f_tiny * 1.5), hours, f_tiny)
 
     def draw_chart(self, points, left, top, right, bottom, hours, f_tiny):
-        cv, cfg = self.canvas, self.cfg
+        cv, cfg, pal = self.canvas, self.cfg, self.c
         if right - left < 40 or bottom - top < 30:
             return
         now = time.time()
@@ -281,12 +280,12 @@ class DesktopView:
             return left + (ts - t0) / (now - t0) * (right - left)
 
         # fascia del range e soglie
-        cv.create_rectangle(left, y(cfg["high"]), right, y(cfg["low"]), fill=BAND, outline="")
-        for v, col in ((cfg["low"], RED), (cfg["high"], ORANGE)):
+        cv.create_rectangle(left, y(cfg["high"]), right, y(cfg["low"]), fill=pal.band, outline="")
+        for v, col in ((cfg["low"], pal.danger), (cfg["high"], pal.high)):
             cv.create_line(left, y(v), right, y(v), fill=col, dash=(3, 3))
             cv.create_text(left - 4, y(v), text=fmt_value(cfg, v), anchor="e", fill=col,
                            font=(FONT, f_tiny))
-        cv.create_text(left - 4, y(hi_v), text=fmt_value(cfg, hi_v), anchor="ne", fill=DIM,
+        cv.create_text(left - 4, y(hi_v), text=fmt_value(cfg, hi_v), anchor="ne", fill=pal.dim,
                        font=(FONT, f_tiny))
 
         # griglia oraria
@@ -296,30 +295,30 @@ class DesktopView:
         while ts < now:
             hour = datetime.fromtimestamp(ts)
             if hour.hour % step == 0:
-                cv.create_line(x(ts), top, x(ts), bottom, fill=GRID)
+                cv.create_line(x(ts), top, x(ts), bottom, fill=pal.grid)
                 cv.create_text(x(ts), bottom + 3, text=hour.strftime("%H:%M"), anchor="n",
-                               fill=DIM, font=(FONT, f_tiny))
+                               fill=pal.dim, font=(FONT, f_tiny))
             ts += 3600
 
         if len(points) >= 2:
             coords = []
             for p in points:
                 coords += [x(p["time"]), y(p["mgdl"])]
-            cv.create_line(*coords, fill=LINE, width=1.5, smooth=True)
+            cv.create_line(*coords, fill=pal.line, width=1.5, smooth=True)
         r = max(2, (bottom - top) / 70)
         for p in points:
             px, py = x(p["time"]), y(p["mgdl"])
-            col = color_for(cfg, p["mgdl"])
+            col = pal.value(cfg, p["mgdl"])
             cv.create_oval(px - r, py - r, px + r, py + r, fill=col, outline="")
         current = self.ctl.current
         if current and points:
             px, py = x(current["time"]), y(current["mgdl"])
-            col = color_for(cfg, current["mgdl"])
+            col = pal.value(cfg, current["mgdl"])
             cv.create_oval(px - 2.2 * r, py - 2.2 * r, px + 2.2 * r, py + 2.2 * r,
                            outline=col, width=2)
 
     def draw_grip(self, W, H):
-        if self.locked_var.get():
+        if self.locked():
             return
         for i in (4, 9, 14):
-            self.canvas.create_line(W - i, H - 2, W - 2, H - i, fill=GRID, width=2)
+            self.canvas.create_line(W - i, H - 2, W - 2, H - i, fill=self.c.grid, width=2)

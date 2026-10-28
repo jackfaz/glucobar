@@ -4,6 +4,8 @@
 Uso: python tools/win_taskbar_edges_test.py run_glucobar.py|GlucoBar.exe [--strict]
 - "Nascondi automaticamente la barra": con il mouse lontano il valore deve sparire, con
   il mouse sul bordo (barra di nuovo visibile) deve ricomparire sopra la barra.
+- Con la barra nascosta automaticamente e mostrata, menu del valore: si va su "Size" con
+  calma (la barra intanto può scendere) e si sceglie "Small": deve essere salvato.
 - Barra in alto, a sinistra, a destra, in basso (StuckRects3 + riavvio di Esplora risorse;
   Windows 11 accetta solo il basso): il valore deve stare dentro la barra.
 Per ogni caso scrive negli avvisi del job dove sono la barra e il valore.
@@ -27,6 +29,8 @@ if hasattr(sys.stdout, "reconfigure"):
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from tests.test_nightscout import FakeNightscout, entry  # noqa: E402
+from tools.win_taskbar_test import (click, key, menu_item_center, menus_of,  # noqa: E402
+                                    read_config, right_click)
 
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
 user32 = ctypes.windll.user32
@@ -116,6 +120,35 @@ def set_edge(edge):
     time.sleep(10)
 
 
+def slow_menu_choice(app, value):
+    """Clic destro sul valore, due secondi e mezzo su "Size" (il tempo di una persona, e
+    quello in cui la barra nascosta torna giù), poi "Small". Ritorna (ok, testo)."""
+    right_click((value[0] + value[2]) // 2, (value[1] + value[3]) // 2)
+    time.sleep(1.0)
+    menus = menus_of(app.pid)
+    if not menus:
+        return False, "menu non aperto"
+    where, texts = menu_item_center(menus[0], 0, cascade=True)
+    if not where:
+        key(0x1B, 2)
+        return False, f"Size non trovato ({texts})"
+    user32.SetCursorPos(*where)
+    time.sleep(2.5)
+    bar_after = taskbar()
+    click(*where)
+    time.sleep(1.0)
+    sub = [m for m in menus_of(app.pid) if m not in menus]
+    if not sub:
+        key(0x1B, 2)
+        return False, f"sottomenu non aperto (menu ancora aperti: {len(menus_of(app.pid))}, " \
+                      f"barra {bar_after['bar']})"
+    small, _ = menu_item_center(sub[0], 0)
+    click(*small)
+    time.sleep(1.5)
+    scale = read_config().get("taskbar_scale")
+    return scale == 0.85, f"taskbar_scale={scale}, barra dopo 2,5 s {bar_after['bar']}"
+
+
 def main(app_path, strict):
     FakeNightscout.state = {"auth": "public", "queries": [], "entries": [entry(1, 142, "Flat")]}
     server = HTTPServer(("127.0.0.1", 0), FakeNightscout)
@@ -161,6 +194,9 @@ def main(app_path, strict):
                f"saltato: la barra non è ricomparsa su questa macchina ({shown_bar['bar']})")
     else:
         case("auto-hide (barra mostrata)", visible and inside(value, bar))
+        if visible:
+            ok, text = slow_menu_choice(app, value)
+            case("auto-hide menu del valore", ok, text)
     user32.keybd_event(0x1B, 0, 0, 0)
     user32.keybd_event(0x1B, 0, 2, 0)
     user32.SetCursorPos(sw // 2, sh // 2)

@@ -153,6 +153,46 @@ def read_config():
         return json.load(f)
 
 
+def menu_item_center(menu_hwnd, label):
+    """Centro della voce `label` (o None) nel menu a comparsa aperto `menu_hwnd`."""
+    user32.SendMessageW.restype = ctypes.c_void_p
+    hmenu = user32.SendMessageW(wintypes.HWND(menu_hwnd), 0x01E1, 0, 0)   # MN_GETHMENU
+    texts = []
+    for i in range(user32.GetMenuItemCount(ctypes.c_void_p(hmenu))):
+        buf = ctypes.create_unicode_buffer(256)
+        user32.GetMenuStringW(ctypes.c_void_p(hmenu), i, buf, 256, 0x400)   # MF_BYPOSITION
+        texts.append(buf.value)
+        if buf.value.replace("&", "") == label:
+            rect = wintypes.RECT()
+            user32.GetMenuItemRect(None, ctypes.c_void_p(hmenu), i, ctypes.byref(rect))
+            return ((rect.left + rect.right) // 2, (rect.top + rect.bottom) // 2), texts
+    return None, texts
+
+
+def choose_from_menu(app, rect):
+    """Clic destro sul valore, clic su "Update every", clic su "10 s": come una persona."""
+    x0, y0, x1, y1 = rect
+    right_click((x0 + x1) // 2, (y0 + y1) // 2)
+    time.sleep(1.0)
+    menus = menus_of(app.pid)
+    if not menus:
+        return "menu non aperto"
+    where, texts = menu_item_center(menus[0], "Update every")
+    if not where:
+        key(0x1B, 2)
+        return f"voce non trovata tra {texts}"
+    click(*where)
+    time.sleep(1.0)
+    sub = [m for m in menus_of(app.pid) if m not in menus]
+    where, texts = menu_item_center(sub[0], "10 s") if sub else (None, [])
+    if not where:
+        key(0x1B, 3)
+        return f"sottomenu senza 10 s ({texts})"
+    click(*where)
+    time.sleep(1.5)
+    return read_config().get("refresh_seconds")
+
+
 def menu_checks(app, rect):
     """Clic destro sulle parti trasparenti del valore: deve aprirsi il menu di GlucoBar,
     non quello della barra. Poi "Update every → 10 s" scelto una volta sola deve bastare."""
@@ -161,8 +201,8 @@ def menu_checks(app, rect):
               ((x0 + x1) // 2, y0 + 2)]
     ours = 0
     under = []
+    user32.WindowFromPoint.restype = wintypes.HWND
     for x, y in points:
-        user32.WindowFromPoint.restype = wintypes.HWND
         hwnd = user32.WindowFromPoint(wintypes.POINT(x, y))
         name = ctypes.create_unicode_buffer(64)
         user32.GetClassNameW(hwnd, name, 64)
@@ -176,33 +216,13 @@ def menu_checks(app, rect):
         time.sleep(0.5)
     results = [f"clic destro sul fondo trasparente: menu di GlucoBar {ours}/{len(points)} "
                f"(sotto il mouse: {', '.join(under)}; * = GlucoBar)"]
-    # Refresh now, Move left/right, Move to the other monitor, Size, Show, Switch unit,
-    # Update every: la settima voce, poi il sottomenu e la prima scelta (10 s)
-    right_click((x0 + x1) // 2, (y0 + y1) // 2)
-    time.sleep(1.0)
-    opened = bool(menus_of(app.pid))
-    key(0x28, 7)
-    key(0x27)
-    time.sleep(0.5)
-    photo_notice("Menu prima di Invio", ImageGrab.grab(
-        bbox=(max(0, x0 - 500), max(0, y0 - 420), x1 + 60, y1), all_screens=True), (420, 330))
-    key(0x0D)
-    time.sleep(1.5)
-    first = read_config().get("refresh_seconds")
-    results.append(f"menu aperto: {'sì' if opened else 'NO'}, "
-                   f"Update every 10 s al primo colpo: {'sì' if first == 10 else f'NO ({first})'}")
-    key(0x1B, 2)
-    if first != 10:   # la seconda volta? (il problema segnalato con la 0.8.4)
-        right_click((x0 + x1) // 2, (y0 + y1) // 2)
-        time.sleep(1.0)
-        key(0x28, 7)
-        key(0x27)
-        time.sleep(0.5)
-        key(0x0D)
-        time.sleep(1.5)
-        results.append(f"al secondo colpo: {read_config().get('refresh_seconds')}")
-        key(0x1B, 2)
-    return results, ours == len(points) and opened and first == 10
+    first = choose_from_menu(app, rect)
+    results.append(f"Update every 10 s al primo colpo: {first}")
+    second = None
+    if first != 10:   # e la seconda volta? (il problema segnalato con la 0.8.4)
+        second = choose_from_menu(app, rect)
+        results.append(f"al secondo colpo: {second}")
+    return results, ours == len(points) and first == 10
 
 
 def main(exe, strict):

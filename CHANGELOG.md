@@ -4,6 +4,15 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.9.6] - 2026-10-28
+
+### Fixed
+- With the taskbar set to hide automatically, the right-click menu of the value on the
+  taskbar only ran *Quit*. While you moved to the other entries the taskbar slid down,
+  GlucoBar hid the value and the menu closed with it. The value now waits until the menu is
+  closed (thanks for the report on Reddit). The edges test chooses from that menu slowly, with
+  the taskbar hidden, on Windows 10 and 11.
+
 ## [0.9.5] - 2026-10-28
 
 ### Added
@@ -368,6 +377,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.9.6]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.6
 [0.9.5]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.5
 [0.9.4]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.4
 [0.9.3]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.3

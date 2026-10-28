@@ -12,6 +12,7 @@ più del 10% delle foto (qualche fotogramma perso può dipendere dalla macchina 
 
 import base64
 import ctypes
+from ctypes import wintypes
 import io
 import json
 import os
@@ -45,9 +46,9 @@ def notice(title, text):
     print(f"::notice title={title}::{text}", flush=True)
 
 
-def photo_notice(title, img):
+def photo_notice(title, img, size=(480, 120)):
     img = img.convert("RGB")
-    img.thumbnail((480, 120))
+    img.thumbnail(size)
     buf = io.BytesIO()
     img.save(buf, "JPEG", quality=70)
     data = base64.b64encode(buf.getvalue()).decode()
@@ -159,13 +160,22 @@ def menu_checks(app, rect):
     points = [(x0 + 3, y0 + 3), (x1 - 3, y0 + 3), (x0 + 3, y1 - 3), (x1 - 3, y1 - 3),
               ((x0 + x1) // 2, y0 + 2)]
     ours = 0
+    under = []
     for x, y in points:
+        user32.WindowFromPoint.restype = wintypes.HWND
+        hwnd = user32.WindowFromPoint(wintypes.POINT(x, y))
+        name = ctypes.create_unicode_buffer(64)
+        user32.GetClassNameW(hwnd, name, 64)
+        owner = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(owner))
+        under.append(f"{name.value}{'*' if owner.value == app.pid else ''}")
         right_click(x, y)
         time.sleep(1.0)
         ours += bool(menus_of(app.pid))
         key(0x1B, 2)   # chiude il menu, qualunque sia
         time.sleep(0.5)
-    results = [f"clic destro sul fondo trasparente: menu di GlucoBar {ours}/{len(points)}"]
+    results = [f"clic destro sul fondo trasparente: menu di GlucoBar {ours}/{len(points)} "
+               f"(sotto il mouse: {', '.join(under)}; * = GlucoBar)"]
     # Refresh now, Move left/right, Move to the other monitor, Size, Show, Switch unit,
     # Update every: la settima voce, poi il sottomenu e la prima scelta (10 s)
     right_click((x0 + x1) // 2, (y0 + y1) // 2)
@@ -174,6 +184,8 @@ def menu_checks(app, rect):
     key(0x28, 7)
     key(0x27)
     time.sleep(0.5)
+    photo_notice("Menu prima di Invio", ImageGrab.grab(
+        bbox=(max(0, x0 - 500), max(0, y0 - 420), x1 + 60, y1), all_screens=True), (420, 330))
     key(0x0D)
     time.sleep(1.5)
     first = read_config().get("refresh_seconds")

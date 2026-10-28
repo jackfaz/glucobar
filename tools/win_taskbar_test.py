@@ -4,7 +4,7 @@ Uso: python tools/win_taskbar_test.py dist\\GlucoBar\\GlucoBar.exe [--strict]
 Avvia GlucoBar con il solo valore sulla barra, collegato a un sito Nightscout finto
 (valore 142, verde), poi ripete le azioni che lo facevano lampeggiare o sparire: aprire e
 chiudere un'app, aprire una cartella, cliccare su uno spazio vuoto della barra. Intanto
-fotografa il punto del valore ogni ~50 ms e conta in quante foto le cifre verdi ci sono.
+fotografa il punto del valore ogni ~10-20 ms e conta in quante foto le cifre verdi ci sono.
 Risultati e una foto del primo momento in cui manca finiscono negli avvisi del job.
 Con --strict esce con 1 se in qualche foto il valore non c'è.
 """
@@ -87,7 +87,7 @@ class Watcher:
                 self.first_missing = ImageGrab.grab(
                     bbox=(x0 - 200, y0 - 40, x1 + 200, y1), include_layered_windows=True,
                     all_screens=True)
-            time.sleep(0.03)
+            time.sleep(0.01)
 
     def during(self, action, seconds):
         self.samples, self.first_missing = [], None
@@ -163,9 +163,8 @@ def main(exe, strict):
 
     for name, action in (("apri app", open_notepad), ("chiudi app", close_notepad),
                          ("apri cartella", open_folder), ("chiudi cartella", close_folder),
-                         ("clic sulla barra", click_taskbar),
-                         ("clic sulla barra 2", click_taskbar)):
-        seen, total, missing = watcher.during(action, 2.0)
+                         *[(f"clic sulla barra {n}", click_taskbar) for n in range(1, 6)]):
+        seen, total, missing = watcher.during(action, 1.5)
         ok = seen == total
         problems += not ok
         alive = app.poll() is None

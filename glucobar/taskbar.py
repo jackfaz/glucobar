@@ -72,8 +72,15 @@ if IS_WIN:
                                        WINEVENTPROC, wintypes.DWORD, wintypes.DWORD,
                                        wintypes.UINT]
     user32.UnhookWinEvent.argtypes = [wintypes.HANDLE]
+    user32.GetMessageW.argtypes = [ctypes.POINTER(wintypes.MSG), wintypes.HWND,
+                                   wintypes.UINT, wintypes.UINT]
+    user32.PostThreadMessageW.argtypes = [wintypes.DWORD, wintypes.UINT, wintypes.WPARAM,
+                                          wintypes.LPARAM]
+    kernel32 = ctypes.windll.kernel32
     EVENT_SYSTEM_FOREGROUND = 0x0003
-    WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS = 0x0000, 0x0002
+    EVENT_OBJECT_REORDER = 0x8004   # cambia l'ordine delle finestre (la barra passa sopra)
+    WINEVENT_OUTOFCONTEXT = 0x0000
+    WM_QUIT = 0x0012
     SWP_NOSIZE, SWP_NOMOVE, SWP_NOACTIVATE = 0x1, 0x2, 0x10
 
 # Finestre del desktop: se sono in primo piano non è "schermo intero"
@@ -226,23 +233,18 @@ class TaskbarView:
             user32.SetWindowLongW(hwnd, GWL_EXSTYLE,
                                   user32.GetWindowLongW(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW)
         self._hwnd = self.own_hwnd() if IS_WIN else None
-        self._foreground_events = 0
+        self._bars = set()           # finestre della barra (le aggiorna taskbar_geometry)
+        self._events = 0
+        self._watch_thread_id = None
         self.reposition()
         self._keep_on_taskbar()
-        self._hook = None
         if IS_WIN:
-            # tenuta in self: se Python la liberasse, Windows chiamerebbe il vuoto
-            self._on_foreground_proc = WINEVENTPROC(self._on_foreground)
-            self._hook = user32.SetWinEventHook(
-                EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, None,
-                self._on_foreground_proc, 0, 0,
-                WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS)
+            threading.Thread(target=self._watch_zorder, daemon=True).start()
 
     def destroy(self):
         self.alive = False
-        if self._hook:
-            user32.UnhookWinEvent(self._hook)
-            self._hook = None
+        if self._watch_thread_id:
+            user32.PostThreadMessageW(self._watch_thread_id, WM_QUIT, 0, 0)
         self.root.destroy()
 
     def raise_now(self):
@@ -252,21 +254,56 @@ class TaskbarView:
             user32.SetWindowPos(self._hwnd, HWND_TOPMOST, 0, 0, 0, 0,
                                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
 
-    def _on_foreground(self, _hook, _event, _hwnd, _obj, _child, _thread, _time):
-        # Windows la chiama mentre Tkinter sta gestendo i suoi eventi: qui niente
-        # Tkinter (resterebbe bloccato), solo Win32. La barra può ridisegnarsi un attimo
-        # dopo l'avviso: si torna sopra subito e di nuovo poco dopo, da un timer
+    def bar_above(self):
+        """La barra delle applicazioni è sopra il valore? Solo Win32."""
+        h = self._hwnd
+        for _ in range(64):   # le finestre "sempre in primo piano" sopra di noi sono poche
+            h = user32.GetWindow(h, GW_HWNDPREV)
+            if not h:
+                return False
+            if h in self._bars:
+                return True
+        return False
+
+    def _watch_zorder(self):
+        """Thread tutto suo: Windows avvisa quando cambia la finestra in primo piano o
+        l'ordine delle finestre (clic sulla barra, app aperta o chiusa) e il valore torna
+        sopra subito, senza aspettare il ciclo di Tkinter (0.8.2 lo faceva lì dentro e
+        GlucoBar si chiudeva). Qui niente Tkinter: solo Win32."""
         try:
-            self._foreground_events += 1
-            if self._foreground_events == 1:
-                log("avviso di Windows sul primo piano ricevuto")
-            self.raise_now()
-            for delay in (0.04, 0.15, 0.35):
-                timer = threading.Timer(delay, self.raise_now)
-                timer.daemon = True
-                timer.start()
+            self._watch_thread_id = kernel32.GetCurrentThreadId()
+            proc = WINEVENTPROC(self._on_event)   # tenuta viva finché il thread gira
+            hooks = [user32.SetWinEventHook(event, event, None, proc, 0, 0,
+                                            WINEVENT_OUTOFCONTEXT)
+                     for event in (EVENT_SYSTEM_FOREGROUND, EVENT_OBJECT_REORDER)]
+            msg = wintypes.MSG()
+            while self.alive and user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
+                pass   # gli avvisi arrivano dentro GetMessage
+            for hook in hooks:
+                if hook:
+                    user32.UnhookWinEvent(hook)
+        except Exception:
+            log("avvisi di Windows non disponibili:\n" + traceback.format_exc())
+
+    def _on_event(self, _hook, event, _hwnd, _obj, _child, _thread, _time):
+        try:
+            self._events += 1
+            if self._events == 1:
+                log("avvisi di Windows sull'ordine delle finestre attivi")
+            if self.alive and not self.hidden and self.bar_above():
+                self.raise_now()
+            if event == EVENT_SYSTEM_FOREGROUND:
+                # a volte la barra si ridisegna un attimo dopo l'avviso
+                for delay in (0.03, 0.1, 0.3):
+                    timer = threading.Timer(delay, self._raise_if_needed)
+                    timer.daemon = True
+                    timer.start()
         except Exception:
             pass
+
+    def _raise_if_needed(self):
+        if self.alive and not self.hidden and self.bar_above():
+            self.raise_now()
 
     # ---- posizione sopra la barra ----
     def own_hwnd(self):
@@ -295,6 +332,7 @@ class TaskbarView:
             self.screen = (0, 0, sw, sh)
             return (0, sh - 48, sw, sh), sw - 200, True
         bars = all_taskbars()
+        self._bars = set(bars)
         if not bars:
             return None, 0, False
         wanted = int(self.cfg["taskbar_monitor"])
@@ -384,7 +422,7 @@ class TaskbarView:
                 log("valore di nuovo visibile")
             if IS_WIN and not self.hidden:
                 # Se clicchi sulla barra, Windows la porta davanti: torna sopra (di solito
-                # ci ha già pensato _on_foreground; questo è il controllo di riserva)
+                # ci ha già pensato _on_event; questo è il controllo di riserva)
                 self.raise_now()
                 # ogni 30 s (e dopo ogni spostamento) annota se qualcosa è cambiato
                 if self._checks % 60 == 1:

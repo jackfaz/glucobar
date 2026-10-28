@@ -11,6 +11,7 @@ import ctypes
 import math
 import os
 import shutil
+import subprocess
 import sys
 import threading
 import time
@@ -47,18 +48,26 @@ def main():
     server = HTTPServer(("127.0.0.1", 0), FakeNightscout)
     threading.Thread(target=server.serve_forever, daemon=True).start()
 
+    # niente finestre della build in vista (la console del runner)
+    subprocess.run(["powershell", "-NoProfile", "-Command",
+                    "(New-Object -ComObject Shell.Application).MinimizeAll()"], timeout=60)
+    time.sleep(2)
     from glucobar.taskbar import all_taskbars, enable_dpi_awareness, window_rect
     enable_dpi_awareness()
     from glucobar import config
     shutil.rmtree(config.CONFIG_DIR, ignore_errors=True)
     sw, sh = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+    bar = window_rect(all_taskbars()[0])
+    # pannello in basso a destra, sopra la scritta "Test Mode" di Windows Server
     panel_w, panel_h = 540, 330
+    panel_x, panel_y = sw - panel_w - 4, bar[1] - panel_h - 4
+    window_x, window_y = sw - 234, panel_y - 150
     cfg = config.load_config()
     cfg.update(source="nightscout", email=f"http://127.0.0.1:{server.server_port}",
                elements=["taskbar", "tray", "window", "desktop"], language="en",
                update_check=False, theme="dark", tray_promoted=True, tray_hint_shown=True,
-               desktop_x=sw - panel_w - 280, desktop_y=60, desktop_w=panel_w, desktop_h=panel_h,
-               window_x=sw - 240, window_y=60)
+               desktop_x=panel_x, desktop_y=panel_y, desktop_w=panel_w, desktop_h=panel_h,
+               window_x=window_x, window_y=window_y)
     config.save_config(cfg)
     from glucobar.i18n import set_language
     set_language("en")
@@ -66,7 +75,15 @@ def main():
     from PIL import ImageGrab
 
     ctl = Controller(config.load_config())
-    bar = window_rect(all_taskbars()[0])
+
+    def promote():
+        # l'icona di python.exe accanto all'orologio, come fa GlucoBar.exe per sé
+        from glucobar import notifyicon
+        for _ in range(10):   # la voce di Windows compare qualche secondo dopo l'icona
+            if notifyicon.promote(os.path.basename(sys.executable)):
+                print("::notice title=Screenshot::icon next to the clock", flush=True)
+                return
+            time.sleep(1)
 
     def grab(name, box=None):
         img = ImageGrab.grab(bbox=box, all_screens=True, include_layered_windows=True)
@@ -77,19 +94,27 @@ def main():
         """Rettangolo della finestra con la cornice di Windows."""
         return window_rect(user32.GetParent(win.winfo_id()))
 
-    elements_box = (sw - panel_w - 300, 40, sw - 20, 60 + panel_h + 20)
+    elements_box = (panel_x - 40, window_y - 30, sw, sh)
     taskbar_box = (max(0, bar[2] - 620), bar[1], bar[2], bar[3])
 
     def popup_menu(view, name, after):
         """tk_popup blocca il ciclo di Tk finché il menu è aperto: la foto la scatta un
         thread, che poi chiude il menu con Esc."""
-        x, y = view.root.winfo_rootx() + 30, view.root.winfo_rooty() + 30
+        x, y = view.root.winfo_rootx() - 300, view.root.winfo_rooty() - 120
+
+        def key(code, times=1):
+            for _ in range(times):
+                user32.keybd_event(code, 0, 0, 0)
+                user32.keybd_event(code, 0, 2, 0)
+                time.sleep(0.25)
 
         def shoot():
-            time.sleep(1.5)
-            grab(name, (x - 20, y - 20, min(sw, x + 460), min(sh, y + 520)))
-            user32.keybd_event(0x1B, 0, 0, 0)
-            user32.keybd_event(0x1B, 0, 2, 0)
+            time.sleep(1.2)
+            key(0x28, 4)   # giù fino a "Update every"...
+            key(0x27)      # ...e si apre il sottomenu
+            time.sleep(1.0)
+            grab(name, (x - 20, y - 20, min(sw, x + 520), min(sh, y + 330)))
+            key(0x1B, 2)
         threading.Thread(target=shoot, daemon=True).start()
         view.menu.tk_popup(x, y)
         ctl.root.after(800, after)
@@ -107,10 +132,21 @@ def main():
                    actions=[(ctl_t("update_install"), lambda: None),
                             (ctl_t("update_notes"), lambda: None)])
 
+    def toast_box():
+        from glucobar.notify import Toast
+        boxes = [frame_of(toast.win) for toast in Toast.open]
+        return (min(b[0] for b in boxes) - 16, min(b[1] for b in boxes) - 16, sw,
+                max(b[3] for b in boxes) + 8)
+
+    def frame_of(win):
+        x, y = win.winfo_rootx(), win.winfo_rooty()
+        return x, y, x + win.winfo_width(), y + win.winfo_height()
+
     from glucobar.i18n import t as ctl_t
     from glucobar.settings import SettingsWindow
     steps = [
-        (8000, lambda: (grab("desktop-dark"), grab("elements-dark", elements_box),
+        (4000, promote),
+        (6000, lambda: (grab("desktop-dark"), grab("elements-dark", elements_box),
                         grab("taskbar", taskbar_box))),
         (500, lambda: popup_menu(ctl.views["window"], "menu", next_step)),
         (None, lambda: ctl.open_settings()),
@@ -131,7 +167,7 @@ def main():
         (500, lambda: SettingsWindow.current.close()),
         (500, lambda: restyle(color_in_range=None, color_high=None, ui_colors={})),
         (1500, toasts),
-        (2500, lambda: grab("messages", (sw - 400, max(0, bar[1] - 420), sw, bar[3]))),
+        (2500, lambda: grab("messages", toast_box())),
         (500, lambda: ctl.quit()),
     ]
     position = [0]
@@ -153,7 +189,7 @@ def main():
             print(f"::warning title=Screenshot::step failed: {e!r}", flush=True)
             result = None
         # il menu richiama next_step da solo, quando si chiude
-        if action is not steps[1][1]:
+        if action is not steps[2][1]:
             next_step()
         return result
 

@@ -178,21 +178,23 @@ def read_config():
         return json.load(f)
 
 
-def menu_item_center(menu_hwnd, label, index):
-    """Centro della voce `label` nel menu a comparsa aperto `menu_hwnd`. Tk disegna da
-    sé le voci (Windows non ne conosce il testo): se il testo non c'è, vale `index`."""
+def menu_item_center(menu_hwnd, index, cascade=False):
+    """Centro di una voce del menu a comparsa aperto `menu_hwnd`: la voce `index`, o con
+    cascade=True il sottomenu numero `index`. Tk disegna da sé le voci e Windows non ne
+    conosce il testo: si contano le posizioni."""
     user32.SendMessageW.restype = ctypes.c_void_p
+    user32.GetSubMenu.restype = ctypes.c_void_p
     hmenu = user32.SendMessageW(wintypes.HWND(menu_hwnd), 0x01E1, 0, 0)   # MN_GETHMENU
-    texts = []
-    for i in range(user32.GetMenuItemCount(ctypes.c_void_p(hmenu))):
-        buf = ctypes.create_unicode_buffer(256)
-        user32.GetMenuStringW(ctypes.c_void_p(hmenu), i, buf, 256, 0x400)   # MF_BYPOSITION
-        texts.append(buf.value)
-        if buf.value.replace("&", "") == label or (not buf.value and i == index):
-            rect = wintypes.RECT()
-            user32.GetMenuItemRect(None, ctypes.c_void_p(hmenu), i, ctypes.byref(rect))
-            return ((rect.left + rect.right) // 2, (rect.top + rect.bottom) // 2), texts
-    return None, texts
+    count = user32.GetMenuItemCount(ctypes.c_void_p(hmenu))
+    if cascade:
+        items = [i for i in range(count) if user32.GetSubMenu(ctypes.c_void_p(hmenu), i)]
+    else:
+        items = list(range(count))
+    if index >= len(items):
+        return None, f"{count} voci, {len(items)} adatte"
+    rect = wintypes.RECT()
+    user32.GetMenuItemRect(None, ctypes.c_void_p(hmenu), items[index], ctypes.byref(rect))
+    return ((rect.left + rect.right) // 2, (rect.top + rect.bottom) // 2), ""
 
 
 def choose_from_menu(app, rect):
@@ -208,9 +210,8 @@ def choose_from_menu(app, rect):
     menus = menus_of(app.pid)
     if not menus:
         return "menu non aperto"
-    # Refresh now, Move left / right, Move to the other monitor, Size, Show the change,
-    # Show, Switch unit, Update every: l'ottava voce
-    where, texts = menu_item_center(menus[0], "Update every", 7)
+    # sottomenu, in ordine: Size, Show, Update every
+    where, texts = menu_item_center(menus[0], 2, cascade=True)
     if not where:
         key(0x1B, 2)
         return f"voce non trovata tra {texts}"
@@ -218,7 +219,7 @@ def choose_from_menu(app, rect):
     time.sleep(1.0)
     first_click = where
     sub = [m for m in menus_of(app.pid) if m not in menus]
-    where, texts = menu_item_center(sub[0], "10 s", 0) if sub else (None, [])
+    where, texts = menu_item_center(sub[0], 0) if sub else (None, "nessun sottomenu")
     if not where:
         key(0x1B, 3)
         return f"sottomenu senza 10 s ({texts})"

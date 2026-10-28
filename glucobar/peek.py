@@ -40,7 +40,7 @@ class PeekView(DesktopView):
         self.progress = 0.0   # 0 = nascosta, 1 = del tutto visibile
         self._anim = None
         self._target = (0, 0)
-        self._slide = SLIDE
+        self._slide = (0, SLIDE)   # da dove arriva: verso il centro dello schermo
         self.s = 1.0
 
         self.root = tk.Toplevel(ctl.root)
@@ -66,22 +66,30 @@ class PeekView(DesktopView):
             self.draw()
 
     # ---- comparsa e scomparsa ----
-    def show(self, anchor, screen):
-        """anchor: rettangolo del valore; screen: monitor (sinistra, alto, destra, basso)."""
+    def show(self, anchor, screen, edge="bottom"):
+        """anchor: rettangolo del valore; screen: monitor (sinistra, alto, destra, basso);
+        edge: bordo della barra. Si apre verso il centro dello schermo: sopra il valore con
+        la barra in basso, sotto con la barra in alto, di fianco con la barra verticale."""
         if self.shown or not self.alive:
             return
         self.shown = True
         w, h = int(WIDTH * self.s), int(HEIGHT * self.s)
         left, top, right, bottom = screen
+        gap, slide = int(10 * self.s), int(SLIDE * self.s)
         x = min(max((anchor[0] + anchor[2]) // 2 - w // 2, left + 8), right - w - 8)
-        gap = int(10 * self.s)
-        if anchor[1] - h - gap >= top:          # barra in basso: sopra il valore
-            y, self._slide = anchor[1] - h - gap, int(SLIDE * self.s)
-        else:                                   # barra in alto: sotto
-            y, self._slide = anchor[3] + gap, -int(SLIDE * self.s)
+        y = min(max((anchor[1] + anchor[3]) // 2 - h // 2, top + 8), bottom - h - 8)
+        if edge == "left":
+            x, self._slide = anchor[2] + gap, (-slide, 0)
+        elif edge == "right":
+            x, self._slide = anchor[0] - w - gap, (slide, 0)
+        elif edge == "top" or anchor[1] - h - gap < top:
+            y, self._slide = anchor[3] + gap, (0, -slide)
+        else:
+            y, self._slide = anchor[1] - h - gap, (0, slide)
         self._target = (x, y)
         if self.progress == 0:
-            self.root.geometry(f"{w}x{h}+{x}+{y + self._slide}")
+            dx, dy = self._slide
+            self.root.geometry(f"{w}x{h}+{x + dx}+{y + dy}")
             self._set_alpha(0.0)
             self.root.deiconify()
             self._no_focus()
@@ -126,8 +134,9 @@ class PeekView(DesktopView):
             self.progress = max(goal, self.progress - 1 / STEPS)
         k = ease(self.progress)
         x, y = self._target
+        dx, dy = self._slide
         self._set_alpha(ALPHA * k)
-        self.root.geometry(f"+{x}+{int(y + self._slide * (1 - k))}")
+        self.root.geometry(f"+{int(x + dx * (1 - k))}+{int(y + dy * (1 - k))}")
         if self.progress == goal:
             if goal == 0:
                 self.root.withdraw()
@@ -175,7 +184,7 @@ class HoverWatch:
             if self.peek is None:
                 self.peek = PeekView(view.ctl)
             self.peek.show(rect, view.screen or (0, 0, view.root.winfo_screenwidth(),
-                                                 view.root.winfo_screenheight()))
+                                                 view.root.winfo_screenheight()), view.edge)
         self._poll = view.root.after(POLL_MS, self.check)
 
     def stop(self):

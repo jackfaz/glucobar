@@ -237,5 +237,26 @@ class RangeTest(unittest.TestCase):
                 parse_range(cfg, wrong)
 
 
+
+class TaskbarEdgeTest(unittest.TestCase):
+    """Su quale bordo è la barra e quanta ne resta in vista (nascosta automaticamente)."""
+
+    def test_edges(self):
+        from glucobar.taskbar import on_screen, taskbar_edge
+        screen = (0, 0, 1024, 768)
+        self.assertEqual(taskbar_edge((0, 728, 1024, 768), screen), "bottom")
+        self.assertEqual(taskbar_edge((0, 0, 1024, 40), screen), "top")
+        self.assertEqual(taskbar_edge((0, 0, 62, 768), screen), "left")
+        self.assertEqual(taskbar_edge((962, 0, 1024, 768), screen), "right")
+        # nascoste: quasi tutte fuori dallo schermo, ma sempre sullo stesso bordo
+        self.assertEqual(taskbar_edge((0, 766, 1024, 806), screen), "bottom")
+        self.assertEqual(taskbar_edge((0, -38, 1024, 2), screen), "top")
+        self.assertEqual(taskbar_edge((-60, 0, 2, 768), screen), "left")
+        self.assertEqual(on_screen((0, 728, 1024, 768), screen), 40)
+        self.assertEqual(on_screen((0, 766, 1024, 806), screen), 2)
+        self.assertEqual(on_screen((-60, 0, 2, 768), screen), 2)
+        self.assertEqual(on_screen((0, 900, 1024, 940), screen), 0)
+
+
 if __name__ == "__main__":
     unittest.main()

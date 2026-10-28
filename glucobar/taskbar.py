@@ -148,6 +148,51 @@ def taskbar_colors():
     return ("#eeeeee", "#5f6368") if taskbar_light() else ("#1f1f1f", "#a0a0a0")
 
 
+def taskbar_edge(bar, screen):
+    """Su quale bordo dello schermo sta la barra: bottom, top, left o right."""
+    left, top, right, bottom = bar
+    ml, mt, mr, mb = screen
+    if right - left < bottom - top:
+        return "left" if left - ml <= mr - right else "right"
+    return "top" if top - mt < mb - bottom else "bottom"
+
+
+def on_screen(bar, screen):
+    """Spessore in pixel della parte di barra dentro lo schermo (0 se è tutta fuori)."""
+    left, top, right, bottom = bar
+    ml, mt, mr, mb = screen
+    return max(0, min(min(right, mr) - max(left, ml), min(bottom, mb) - max(top, mt)))
+
+
+if IS_WIN:
+    class APPBARDATA(ctypes.Structure):
+        _fields_ = [("cbSize", wintypes.DWORD), ("hWnd", wintypes.HWND),
+                    ("uCallbackMessage", wintypes.UINT), ("uEdge", wintypes.UINT),
+                    ("rc", wintypes.RECT), ("lParam", wintypes.LPARAM)]
+
+    class POINT(ctypes.Structure):
+        _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+
+# finestre in primo piano che vogliono dire "la barra è in uso" (lei stessa, Start, ricerca)
+TASKBAR_IN_USE = DESKTOP_CLASSES | {"Windows.UI.Core.CoreWindow", "NotifyIconOverflowWindow",
+                                    "TopLevelWindowForOverflowXamlIsland", "Xaml_WindowedPopupClass"}
+
+
+def autohide_shown(tb, bar):
+    """Con "Nascondi automaticamente la barra" attivo: la barra è davvero in vista? Sì se
+    il mouse ci è sopra o se la si sta usando (clic, Start, area di notifica)."""
+    data = APPBARDATA(cbSize=ctypes.sizeof(APPBARDATA), hWnd=tb)
+    if not ctypes.windll.shell32.SHAppBarMessage(4, ctypes.byref(data)) & 1:   # ABM_GETSTATE
+        return True
+    point = POINT()
+    user32.GetCursorPos(ctypes.byref(point))
+    left, top, right, bottom = bar
+    if left - 2 <= point.x <= right + 2 and top - 2 <= point.y <= bottom + 2:
+        return True
+    fg = user32.GetForegroundWindow()
+    return bool(fg) and class_name(fg) in TASKBAR_IN_USE
+
+
 def windows_above(hwnd, limit=400):
     """Classi delle finestre sopra `hwnd` nell'ordine di Windows (dalla più vicina)."""
     above, h = [], hwnd
@@ -171,6 +216,7 @@ class TaskbarView:
         self.hidden = False
         self.last_geometry = None
         self.screen = None   # rettangolo del monitor della barra usata
+        self.edge = "bottom"  # bordo dello schermo su cui sta la barra
         self._last_bars = None
         self._last_state = None   # per annotare nel log solo i cambiamenti
         self._checks = 0
@@ -351,63 +397,87 @@ class TaskbarView:
         self.reposition()
 
     def taskbar_geometry(self):
-        """(left, top, right, bottom) della parte visibile della barra scelta,
-        bordo sinistro dell'area delle icone/orologio e se la barra è visibile."""
+        """La barra scelta: {"bar": parte visibile (sinistra, alto, destra, basso), "edge":
+        bordo dello schermo, "tray": area di notifica e orologio, "start": pulsante Start,
+        "visible", "secondary"}; None se non c'è."""
         if not IS_WIN:
             sw, sh = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
             self.screen = (0, 0, sw, sh)
-            return (0, sh - 48, sw, sh), sw - 200, True
+            return {"bar": (0, sh - 48, sw, sh), "edge": "bottom", "start": None,
+                    "tray": (sw - 200, sh - 48, sw, sh), "visible": True, "secondary": False}
         bars = all_taskbars()
         self._bars = set(bars)
         if not bars:
-            return None, 0, False
+            return None
         wanted = int(self.cfg["taskbar_monitor"])
         index = wanted - 1 if 1 <= wanted <= len(bars) else 0  # non c'è: principale
         tb = bars[index]
-        secondary = index > 0
         left, top, right, bottom = window_rect(tb)
+        self.screen = monitor_rect(tb)
+        edge = taskbar_edge((left, top, right, bottom), self.screen)
+        start = user32.FindWindowExW(tb, None, "Start", None)
+        start = window_rect(start) if start else None
         # Sui PC touch con Windows 11 la finestra della barra è più alta di
         # quella visibile: come TrafficMonitor, si misura il pulsante Start
-        start = user32.FindWindowExW(tb, None, "Start", None)
-        if start:
-            s_top, s_bottom = window_rect(start)[1::2]
-            if 0 < s_bottom - s_top <= bottom - top:
-                top = bottom - (s_bottom - s_top)
-        h = bottom - top
+        if edge == "bottom" and start and 0 < start[3] - start[1] <= bottom - top:
+            top = bottom - (start[3] - start[1])
         tray = user32.FindWindowExW(tb, None, "TrayNotifyWnd", None)
-        tray_left = window_rect(tray)[0] if tray else 0
-        if not left < tray_left < right:
-            # Le barre secondarie hanno solo l'orologio (~88 px a 100%, come
-            # TrafficMonitor); sulla principale lascia ~280 px per icone e orologio
-            tray_left = right - int(h * (100 if secondary else 280) / 48)
-        self.screen = monitor_rect(tb)
-        # barra nascosta (nascondi automaticamente) o non visibile
-        visible = bool(user32.IsWindowVisible(tb)) and top < self.screen[3] - 4
+        tray = window_rect(tray) if tray else None
+        # barra non visibile, o nascosta (nascondi automaticamente: Windows la sposta
+        # quasi tutta fuori dallo schermo, o lascia la finestra dov'è e ne nasconde il
+        # contenuto: allora conta dove è il mouse)
+        visible = (bool(user32.IsWindowVisible(tb))
+                   and on_screen((left, top, right, bottom), self.screen) > 4
+                   and autohide_shown(tb, (left, top, right, bottom)))
         if (index, len(bars)) != self._last_bars:
             self._last_bars = (index, len(bars))
             log(f"barre trovate: {len(bars)} (monitor scelto {wanted}, uso il n. {index + 1})")
-        return (left, top, right, bottom), tray_left, visible
+        return {"bar": (left, top, right, bottom), "edge": edge, "start": start, "tray": tray,
+                "visible": visible, "secondary": index > 0}
 
     def reposition(self):
-        bar, tray_left, visible = self.taskbar_geometry()
-        if bar is None:
+        geo = self.taskbar_geometry()
+        if geo is None:
             return False
-        left, top, right, bottom = bar
-        w, h = self.layout_for(bottom - top)
-        if self.cfg["taskbar_side"] == "right":
-            x = tray_left - w - int(h * 0.1)
+        left, top, right, bottom = geo["bar"]
+        self.edge = edge = geo["edge"]
+        tray, start = geo["tray"], geo["start"]
+        offset = int(self.cfg["taskbar_offset"])
+        if edge in ("top", "bottom"):
+            w, h = self.layout_for(bottom - top)
+            if tray and left < tray[0] < right:
+                tray_left = tray[0]
+            else:
+                # Le barre secondarie hanno solo l'orologio (~88 px a 100%, come
+                # TrafficMonitor); sulla principale lascia ~280 px per icone e orologio
+                tray_left = right - int(h * (100 if geo["secondary"] else 280) / 48)
+            if self.cfg["taskbar_side"] == "right":
+                x = tray_left - w - int(h * 0.1)
+            else:
+                x = left + int(h * 0.25)
+            x, y = x + offset, top
         else:
-            x = left + int(h * 0.25)
-        x += int(self.cfg["taskbar_offset"])
-        geometry = f"{w}x{h}+{x}+{top}"
+            # barra verticale (a sinistra o a destra, Windows 10): il valore largo quanto
+            # la barra, sopra l'area di notifica ("right" = verso l'orologio) o sotto Start
+            width = right - left
+            base = start[3] - start[1] if start and 20 <= start[3] - start[1] <= 80 else 40
+            w, h = self.layout_for(min(base, int(width / 1.75)))
+            w = min(w, width)
+            if self.cfg["taskbar_side"] == "right":
+                tray_top = tray[1] if tray and top < tray[1] < bottom else bottom - width * 3
+                y = tray_top - h - int(h * 0.15)
+            else:
+                y = (start[3] if start else top) + int(h * 0.25)
+            x, y = left + (width - w) // 2, y + offset
+        geometry = f"{w}x{h}+{x}+{y}"
         if geometry != self.last_geometry:
             self.root.geometry(geometry)
             if self.hit:
                 self.hit.geometry(geometry)
             self.last_geometry = geometry
-            log(f"barra={bar} icone_da_x={tray_left} -> valore in {geometry}")
+            log(f"barra={geo['bar']} bordo={edge} -> valore in {geometry}")
             self._checks = 0   # ricontrolla subito dove è finita davvero
-        return visible
+        return geo["visible"]
 
     def state(self):
         """Dove è davvero la finestra del valore e cosa le sta sopra (per il log)."""

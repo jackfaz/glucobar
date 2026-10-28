@@ -143,12 +143,15 @@ def main(app_path, strict):
     user32.SetCursorPos(sw // 2, sh // 2)
     time.sleep(3)
     value, visible = value_window(app.pid)
-    case("auto-hide, barra nascosta", not visible)
-    user32.SetCursorPos(sw // 2, sh - 1)   # mouse sul bordo: la barra ricompare
+    case("auto-hide (barra nascosta)", not visible)
+    # mouse sul bordo, con movimenti veri: SetCursorPos da solo non fa ricomparire la barra
+    for y in range(sh - 40, sh, 4):
+        user32.mouse_event(0x8001, (sw // 2) * 65535 // sw, y * 65535 // sh, 0, 0)
+        time.sleep(0.05)
     time.sleep(2.5)
     value, visible = value_window(app.pid)
     bar = taskbar()["bar"]
-    case("auto-hide, barra mostrata", visible and inside(value, bar))
+    case("auto-hide (barra mostrata)", visible and inside(value, bar))
     user32.SetCursorPos(sw // 2, sh // 2)
     set_autohide(False)
     time.sleep(2)
@@ -163,6 +166,13 @@ def main(app_path, strict):
         time.sleep(3)
         value, visible = value_window(app.pid)
         case(EDGES[edge], visible and inside(value, info["bar"]))
+        if edge != 3:   # nascosta automaticamente anche su questo bordo
+            set_autohide(True)
+            user32.SetCursorPos(sw // 2, sh // 2)
+            time.sleep(3)
+            value, visible = value_window(app.pid)
+            case(f"{EDGES[edge]} auto-hide", not visible)
+            set_autohide(False)
 
     with open(LOG, encoding="utf-8") as f:
         notice("Log di GlucoBar", " | ".join(line.strip() for line in f.readlines()[-14:]))

@@ -65,6 +65,7 @@ DEFAULT_CONFIG = {
     "taskbar_text": None,       # colore dei minuti sotto il valore (None = come la barra)
     "taskbar_transparent": True,
     "taskbar_scale": 1.0,       # dimensione del valore sulla barra (0.85 - 1.25)
+    "hover_chart": True,        # un secondo col mouse sul valore: compare il grafico
     # pannello sullo sfondo
     "desktop_x": None,
     "desktop_y": None,

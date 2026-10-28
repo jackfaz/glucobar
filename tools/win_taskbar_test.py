@@ -229,6 +229,44 @@ def choose_from_menu(app, rect):
     return f"{read_config().get('refresh_seconds')} (clic a {first_click} e {where})"
 
 
+def big_windows(pid):
+    """Finestre visibili di `pid` alte almeno 200 pixel (l'anteprima col grafico)."""
+    found = []
+    proc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+
+    def check(hwnd, _):
+        owner = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(ctypes.c_void_p(hwnd), ctypes.byref(owner))
+        if owner.value == pid and user32.IsWindowVisible(ctypes.c_void_p(hwnd)):
+            r = wintypes.RECT()
+            user32.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(r))
+            if r.bottom - r.top >= 200:
+                found.append((r.left, r.top, r.right, r.bottom))
+        return True
+    user32.EnumWindows(proc(check), 0)
+    return found
+
+
+def hover_check(app, rect):
+    """Un secondo col mouse sul valore: compare il grafico; mouse via: sparisce."""
+    x0, y0, x1, y1 = rect
+    user32.SetCursorPos(user32.GetSystemMetrics(0) // 2, 200)
+    time.sleep(0.8)
+    user32.SetCursorPos((x0 + x1) // 2, (y0 + y1) // 2)
+    time.sleep(0.4)
+    early = big_windows(app.pid)
+    time.sleep(1.4)
+    shown = big_windows(app.pid)
+    user32.SetCursorPos(user32.GetSystemMetrics(0) // 2, 200)
+    time.sleep(0.8)
+    gone = not big_windows(app.pid)
+    above = bool(shown) and shown[0][3] <= y0
+    ok = not early and bool(shown) and above and gone
+    return (f"grafico col mouse: dopo 0,4 s {'NO' if not early else 'già visibile'}, "
+            f"dopo 1,8 s {shown[0] if shown else 'NO'}{' sopra il valore' if above else ''}, "
+            f"mouse via: {'sparito' if gone else 'ANCORA LÌ'}"), ok
+
+
 def menu_checks(app, rect):
     """Clic destro sulle parti trasparenti del valore: deve aprirsi il menu di GlucoBar,
     non quello della barra. Poi "Update every → 10 s" scelto una volta sola deve bastare."""
@@ -336,6 +374,9 @@ def main(exe, strict):
         menu_results, menus_ok = menu_checks(app, rect)
         results += menu_results
         problems += not menus_ok
+        hover_result, hover_ok = hover_check(app, rect)
+        results.append(hover_result)
+        problems += not hover_ok
     notice("Valore sulla barra", " | ".join(results))
     with open(LOG, encoding="utf-8") as f:
         tail = [line.strip() for line in f.readlines()[-12:]]

@@ -146,6 +146,26 @@ def main():
         x, y = win.winfo_rootx(), win.winfo_rooty()
         return x, y, x + win.winfo_width(), y + win.winfo_height()
 
+    def close_toasts():
+        from glucobar.notify import Toast
+        for toast in list(Toast.open):
+            toast.close()
+
+    def hover_value():
+        x0, y0, x1, y1 = ctl.views["taskbar"].value_rect()
+        user32.SetCursorPos(sw // 2, 200)
+        time.sleep(0.3)
+        user32.SetCursorPos((x0 + x1) // 2, (y0 + y1) // 2)
+
+    def hover_box():
+        x0, y0, x1, y1 = ctl.views["taskbar"].value_rect()
+        peek = ctl.views["taskbar"].hover.peek
+        if peek is None:
+            return (max(0, x0 - 400), max(0, y0 - 400), min(sw, x1 + 400), sh)
+        px, py = peek.root.winfo_rootx(), peek.root.winfo_rooty()
+        return (max(0, px - 30), max(0, py - 30),
+                min(sw, max(px + peek.root.winfo_width(), x1) + 30), sh)
+
     from glucobar.i18n import t as ctl_t
     from glucobar.settings import SettingsWindow
     steps = [
@@ -172,6 +192,11 @@ def main():
         (500, lambda: restyle(color_in_range=None, color_high=None, ui_colors={})),
         (1500, toasts),
         (2500, lambda: grab("messages", toast_box())),
+        (500, close_toasts),
+        (500, lambda: ctl.set_elements(["taskbar", "tray"])),
+        (1500, hover_value),
+        (2200, lambda: grab("hover-chart", hover_box())),
+        (300, lambda: user32.SetCursorPos(sw // 2, 200)),
         (500, lambda: ctl.quit()),
     ]
     position = [0]

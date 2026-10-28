@@ -34,6 +34,7 @@ LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_
              "taskbar_scale", "window_scale", "desktop_hours", "desktop_alpha", "desktop_locked",
              "theme", "palette", "alert_low", "alert_high", "alert_stale", "update_check",
              "auto_update", "sensor_life_days", "ui_colors", "taskbar_text", "show_delta",
+             "hover_chart",
              *COLOR_KEYS.values())
 REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "taskbar_text", "desktop_alpha",
                 "desktop_locked", "window_scale", "theme", "palette", "ui_colors",
@@ -213,6 +214,10 @@ class Controller:
         save_config(self.cfg)
         i18n.set_language(lang)
         self.rebuild_views()
+
+    def toggle_hover_chart(self):
+        self.cfg["hover_chart"] = not self.cfg.get("hover_chart", True)
+        save_config(self.cfg)
 
     def toggle_delta(self):
         self.cfg["show_delta"] = not self.cfg.get("show_delta")

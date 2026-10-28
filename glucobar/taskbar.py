@@ -212,10 +212,13 @@ class TaskbarView:
             self.hit.attributes("-topmost", True)
             self.hit.attributes("-alpha", 0.01)
             self.hit.configure(bg=self.bg)
+        from .peek import HoverWatch   # qui: peek.py usa questo modulo
+        self.hover = HoverWatch(self)  # un secondo col mouse sopra: il grafico
         for w in (self.root, self.box, self.value_lbl, self.arrow_lbl, self.info_lbl,
                   *([self.hit] if self.hit else [])):
             bind_right_click(w, lambda e: self.show_menu(e.x_root, e.y_root))
             w.bind("<Double-Button-1>", lambda e: ctl.refresh())
+            w.bind("<Enter>", self.hover.enter, add="+")
 
         self.root.update_idletasks()
         if IS_WIN:
@@ -241,6 +244,7 @@ class TaskbarView:
         self.alive = False
         if self._watch_thread_id:
             user32.PostThreadMessageW(self._watch_thread_id, WM_QUIT, 0, 0)
+        self.hover.destroy()
         if self.hit:
             self.hit.destroy()
         self.root.destroy()
@@ -323,7 +327,13 @@ class TaskbarView:
         self.info_lbl.configure(font=(FONT, -int(height * 0.21 * min(k, 1.0))))
         return int(height * 1.75 * k), height
 
+    def value_rect(self):
+        """Dov'è il valore sullo schermo (sinistra, alto, destra, basso)."""
+        x, y = self.root.winfo_rootx(), self.root.winfo_rooty()
+        return x, y, x + self.root.winfo_width(), y + self.root.winfo_height()
+
     def show_menu(self, x, y):
+        self.hover.stop()
         popup(self.root, self.ctl.menu_items(self.menu_items()), self.ctl.post, x, y)
 
     def menu_items(self):
@@ -335,6 +345,8 @@ class TaskbarView:
                 self.set_scale)),
             Item(t("menu_delta"), self.ctl.toggle_delta,
                  checked=bool(self.cfg.get("show_delta"))),
+            Item(t("menu_hover_chart"), self.ctl.toggle_hover_chart,
+                 checked=bool(self.cfg.get("hover_chart", True))),
         ]
 
     def set_scale(self, scale):
@@ -433,6 +445,7 @@ class TaskbarView:
             fullscreen = self.fullscreen_app_active()
             hide = not visible or fullscreen
             if hide and not self.hidden:
+                self.hover.stop()
                 self.root.withdraw()
                 if self.hit:
                     self.hit.withdraw()
@@ -476,6 +489,7 @@ class TaskbarView:
 
     def render(self):
         c, error = self.ctl.current, self.ctl.error
+        self.hover.render()
         if not c:
             self.value_lbl.config(text="--", fg=self.dim)
             self.arrow_lbl.config(text="")

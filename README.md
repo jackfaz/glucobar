@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/jackfaz/glucobar/releases/latest"><b>Download for Windows</b></a> ·
+  <a href="#highlights">Highlights</a> ·
   <a href="#install">Install</a> ·
   <a href="#mac-beta">Mac</a> ·
   <a href="#setting-up-librelinkup">LibreLinkUp setup</a> ·
@@ -44,7 +45,55 @@ French, German and Portuguese.
 | Behind your windows: chart of the last 3, 6 or 12 hours, average, min, max, time in range, 15-minute change and sensor day. Resizable. | The coloured number in the notification area. Hover it for the arrow and the minutes. |
 
 Colours: green in range (70–180 mg/dL), orange above 180, red below 70 or above 250, grey when
-the reading is more than 15 minutes old. Thresholds can be changed.
+the reading is more than 15 minutes old. Thresholds and colours can be changed in Settings.
+
+## Highlights
+
+### The chart, one second away
+
+<p align="center"><img src="docs/screenshots/hover-chart.png" alt="Full chart opening above the value on the taskbar" width="560"></p>
+
+Keep the mouse on the value on the taskbar for a second and the full chart opens just above
+it, with a short fade: the value, the change in the last 15 minutes, average, min, max, time
+in range and the last hours. Move the mouse away and it closes.
+
+### Your colours
+
+| Dark | Light |
+|---|---|
+| ![Dark theme](docs/screenshots/elements-dark.png) | ![Light theme](docs/screenshots/elements-light.png) |
+| **Colour-blind friendly** | **Your own colours** |
+| ![Colour-blind friendly colours](docs/screenshots/elements-colorblind.png) | ![Custom colours](docs/screenshots/elements-custom.png) |
+
+Light, dark or automatic theme (it follows Windows or macOS), a palette that works with the
+common forms of colour blindness, or your own colour for everything: the value in range,
+high, very high, low and old, backgrounds, text, chart and grid.
+
+### Quick menu, full settings
+
+| Right-click menu | Settings |
+|---|---|
+| ![Right-click menu](docs/screenshots/menu.png) | ![Settings window](docs/screenshots/settings-custom.png) |
+| Right-click any GlucoBar element for the quick actions: refresh, what to show, sensor, settings. | Everything else, in tabs: account, language and unit; thresholds, alerts and delta; theme and colours; elements; updates. Every change shows right away. |
+
+### Alerts, sensor and updates
+
+<p align="center"><img src="docs/screenshots/messages.png" alt="Messages for a new version, a sensor that stopped, and low glucose" width="368"></p>
+
+- **Optional alerts** for low, very high or no data. Off by default, and not a replacement
+  for your sensor's alarms.
+- **Sensor** (FreeStyle Libre): day of use, a reminder before it ends and, if it stops early,
+  a button that opens the manufacturer's replacement form with the serial number copied.
+- **Updates from inside the app**: one click installs the new version and keeps your
+  settings; *Settings → Updates → Check for updates now* checks right away.
+
+### And also
+
+- **Delta**: the change since the previous reading under the value, e.g. "3 min +5".
+- **Update every** 10 seconds to 5 minutes.
+- **Desktop panel always on top**, hidden while a video or a game is full screen.
+- **Any taskbar**: on the left, right or top (Windows 10), auto-hidden, on a second monitor.
+- **More than one person** followed with the same LibreLinkUp account.
 
 > **GlucoBar is not a medical device.** Do not use it to decide insulin doses or to treat a
 > hypo: always rely on your reader or the official app. It uses an unofficial API that Abbott

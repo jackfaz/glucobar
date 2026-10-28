@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/jackfaz/glucobar/releases/latest"><b>Scarica per Windows</b></a> ·
+  <a href="#in-evidenza">In evidenza</a> ·
   <a href="#installazione">Installazione</a> ·
   <a href="#mac-beta">Mac</a> ·
   <a href="#configurare-librelinkup">Configurare LibreLinkUp</a> ·
@@ -44,7 +45,60 @@ spagnolo, francese, tedesco e portoghese.
 | Dietro le finestre: grafico delle ultime 3, 6 o 12 ore, media, minimo, massimo, tempo nel range, variazione in 15 minuti e giorno del sensore. Ridimensionabile. | Il numero colorato nell'area di notifica. Passandoci sopra vedi freccia e minuti. |
 
 Colori: verde nel range (70–180 mg/dL), arancione sopra 180, rosso sotto 70 o sopra 250,
-grigio se il dato è di più di 15 minuti fa. Le soglie si possono cambiare.
+grigio se il dato è di più di 15 minuti fa. Soglie e colori si cambiano dalle Impostazioni.
+
+## In evidenza
+
+### Il grafico, a un secondo di distanza
+
+<p align="center"><img src="docs/screenshots/hover-chart.png" alt="Grafico completo che si apre sopra il valore sulla barra" width="560"></p>
+
+Tieni il mouse sul valore della barra per un secondo e, con una breve dissolvenza, si apre
+subito sopra il grafico completo: il valore, la variazione negli ultimi 15 minuti, media,
+minimo, massimo, tempo nel range e le ultime ore. Sposti il mouse e si chiude.
+
+### I tuoi colori
+
+| Scuro | Chiaro |
+|---|---|
+| ![Tema scuro](docs/screenshots/elements-dark.png) | ![Tema chiaro](docs/screenshots/elements-light.png) |
+| **Adatti al daltonismo** | **Colori scelti da te** |
+| ![Colori adatti al daltonismo](docs/screenshots/elements-colorblind.png) | ![Colori personalizzati](docs/screenshots/elements-custom.png) |
+
+Tema chiaro, scuro o automatico (segue Windows o macOS), una tavolozza leggibile con le forme
+più comuni di daltonismo, o un colore tuo per tutto: il valore nel range, alto, molto alto,
+basso e vecchio, gli sfondi, i testi, il grafico e la griglia.
+
+### Menu rapido, impostazioni complete
+
+| Menu col clic destro | Impostazioni |
+|---|---|
+| ![Menu col clic destro](docs/screenshots/menu.png) | ![Finestra Impostazioni](docs/screenshots/settings-custom.png) |
+| Clic destro su qualsiasi elemento di GlucoBar per le azioni rapide: aggiorna, cosa mostrare, sensore, impostazioni. | Tutto il resto, diviso in schede: account, lingua e unità; soglie, avvisi e delta; tema e colori; elementi; aggiornamenti. Ogni modifica si vede subito. |
+
+Gli screenshot sono in inglese; GlucoBar parla anche italiano, spagnolo, francese, tedesco e
+portoghese.
+
+### Avvisi, sensore e aggiornamenti
+
+<p align="center"><img src="docs/screenshots/messages.png" alt="Messaggi per una nuova versione, un sensore fermo e una glicemia bassa" width="368"></p>
+
+- **Avvisi facoltativi** per glicemia bassa, molto alta o nessun dato. Spenti di default, e
+  non sostituiscono gli allarmi del sensore.
+- **Sensore** (FreeStyle Libre): giorno di utilizzo, un promemoria prima della fine e, se si
+  ferma prima del tempo, un pulsante che apre il modulo di sostituzione del produttore con il
+  numero di serie già copiato.
+- **Aggiornamenti dall'app**: un clic installa la nuova versione e tiene le impostazioni;
+  *Impostazioni → Aggiornamenti → Cerca aggiornamenti adesso* controlla subito.
+
+### E inoltre
+
+- **Delta**: la variazione dalla lettura precedente sotto il valore, es. "3 min +5".
+- **Aggiorna ogni** da 10 secondi a 5 minuti.
+- **Pannello sempre in primo piano**, nascosto quando un video o un gioco è a schermo intero.
+- **Qualsiasi barra**: a sinistra, a destra o in alto (Windows 10), nascosta automaticamente,
+  sul secondo monitor.
+- **Più persone** seguite con lo stesso account LibreLinkUp.
 
 > **GlucoBar non è un dispositivo medico.** Non usarlo per decidere dosi di insulina o per
 > trattare un'ipo: fa fede il lettore o l'app ufficiale. Usa un'API non ufficiale che Abbott

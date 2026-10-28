@@ -224,8 +224,6 @@ def choose_from_menu(app, rect):
     if not where:
         key(0x1B, 3)
         return f"sottomenu senza voci ({texts})"
-    photo_notice("Sottomenu", ImageGrab.grab(bbox=(where[0] - 150, where[1] - 40, where[0] + 150,
-                                                   where[1] + 120), all_screens=True), (300, 160))
     click(*where)
     time.sleep(1.5)
     return f"{read_config().get('taskbar_scale')} (clic a {first_click} e {where})"
@@ -384,7 +382,7 @@ def main(exe, strict):
 
     watcher = Watcher(rect, max(10, baseline // 3))
     problems = 0
-    photos = 0   # al massimo due foto: gli avvisi per passo sono pochi
+    photos = []   # foto dei momenti in cui il valore manca: dopo il riepilogo, al massimo una
     apps = []
 
     def open_notepad():
@@ -416,9 +414,8 @@ def main(exe, strict):
         alive = app.poll() is None
         results.append(f"{name}: visibile in {seen}/{total} foto"
                        + ("" if alive else " · GLUCOBAR CHIUSO"))
-        if missing is not None and photos < 2:
-            photos += 1
-            photo_notice(f"Manca ({name})", missing)
+        if missing is not None and not photos:
+            photos.append((f"Manca ({name})", missing))
         if not alive:
             problems += 1
             break
@@ -434,6 +431,8 @@ def main(exe, strict):
         results.append(panel_result)
         problems += not panel_ok
     notice("Valore sulla barra", " | ".join(results))
+    for title, img in photos:
+        photo_notice(title, img)
     with open(LOG, encoding="utf-8") as f:
         tail = [line.strip() for line in f.readlines()[-12:]]
     notice("Log di GlucoBar", " | ".join(tail))

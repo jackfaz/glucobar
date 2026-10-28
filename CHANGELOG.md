@@ -4,6 +4,16 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.9.1] - 2026-10-28
+
+### Added
+- **Chart on hover**: keep the mouse on the value on the taskbar for a second and the full
+  chart opens just above it, with the same content as the desktop panel (value, average,
+  time in range, last hours). It fades and slides in, and fades out when the mouse leaves.
+  It can be turned off from the right-click menu (`hover_chart`). The build checks it on
+  Windows with the mouse: not there after 0.4 s, drawn above the value after 1.8 s, gone
+  when the mouse moves away.
+
 ## [0.9.0] - 2026-10-28
 
 ### Added
@@ -301,6 +311,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.9.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.1
 [0.9.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.0
 [0.8.4]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.4
 [0.8.3]: https://github.com/jackfaz/glucobar/releases/tag/v0.8.3

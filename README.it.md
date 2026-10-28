@@ -168,7 +168,8 @@ in GlucoBar: funziona allo stesso modo.
 - Pannello sullo sfondo e finestrella: trascinali per spostarli, trascina l'angolo in basso a
   destra per ridimensionarli. Sul pannello, clic destro per il periodo del grafico e per
   bloccarlo.
-- Valore sulla barra: clic destro → *Dimensione* per rimpicciolirlo o ingrandirlo, e
+- Valore sulla barra: tieni il mouse sopra per un secondo e compare il grafico completo
+  subito sopra. Clic destro → *Dimensione* per rimpicciolirlo o ingrandirlo, e
   *Mostra la variazione (delta)* per aggiungere la variazione dalla lettura precedente
   (es. "3 min +5").
 - *Aggiorna ogni*: ogni quanto GlucoBar legge il dato, da 10 secondi a 5 minuti.
@@ -212,7 +213,7 @@ Se GlucoBar è aperto, applica le nuove impostazioni entro due secondi.
 Installazione silenziosa con le tue scelte (comoda per script e winget):
 
 ```text
-GlucoBar-Setup-0.9.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
+GlucoBar-Setup-0.9.1.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=it
 ```
 
 ## Impostazioni
@@ -227,6 +228,7 @@ GlucoBar-Setup-0.9.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `low` / `high` / `very_high` | 70 / 180 / 250 | Soglie in mg/dL |
 | `unit` | `mg/dL` | oppure `mmol/L` |
 | `stale_minutes` | 15 | Oltre questo il valore diventa grigio |
+| `hover_chart` | true | Mostra il grafico completo tenendo il mouse sul valore della barra |
 | `show_delta` | false | Mostra la variazione dalla lettura precedente, ogni 5 minuti, sulla barra e nella finestrella |
 | `refresh_seconds` | 60 | Ogni quanto leggere il dato, da 10 a 3600 secondi (anche dal menu col clic destro: *Aggiorna ogni*) |
 | `language` | `auto` | `it`, `en`, `es`, `fr`, `de`, `pt` |
@@ -300,12 +302,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: avvio senza compilare
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.9.0 installer\glucobar.iss    :: serve Inno Setup 6
+iscc /DAppVersion=0.9.1 installer\glucobar.iss    :: serve Inno Setup 6
 ```
 
 Le release le crea GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow* spunta *release* per pubblicare la versione scritta in `glucobar/__init__.py`
-(funziona anche pubblicando un tag tipo `v0.9.0`). Le anteprime delle modalità si creano con
+(funziona anche pubblicando un tag tipo `v0.9.1`). Le anteprime delle modalità si creano con
 `tools/compose_previews.py`.
 
 Ogni build installa anche l'ultima release pubblicata, la apre e ci installa sopra la nuova in

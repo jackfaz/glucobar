@@ -4,6 +4,22 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.9.3] - 2026-10-28
+
+### Added
+- **Check for updates now**: *Settings → Updates* shows the installed version, checks GitHub
+  right away and, if there is a newer version, installs it with one click (on the Mac it
+  opens the download page). The daily check and the automatic install are there too.
+
+### Changed
+- **Settings in tabs**, by topic: *General* (account, language, unit, how often to update,
+  start with Windows), *Values and alerts* (thresholds, alerts, delta), *Appearance* (theme
+  and every colour), *Elements* (what to show, size and chart on hover for the taskbar value,
+  period, always on top and lock for the desktop panel) and *Updates*.
+- The right-click menu is shorter: refresh, *Show*, *Sensor*, *Settings…* and quit, plus the
+  few items that belong to each element (move and size for the taskbar value; chart period,
+  lock and always on top for the desktop panel).
+
 ## [0.9.2] - 2026-10-28
 
 ### Added
@@ -321,6 +337,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.9.3]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.3
 [0.9.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.2
 [0.9.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.1
 [0.9.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.0

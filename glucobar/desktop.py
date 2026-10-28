@@ -218,7 +218,7 @@ class DesktopView:
                 (t("desk_mean"), f(summary["mean"]), pal.fg),
                 (t("desk_in_range"), f"{summary['in_range']:.0f}%", pal.in_range),
                 (t("desk_min"), f(summary["min"]), pal.value(cfg, summary["min"])),
-                (t("desk_below"), f"{summary['below']:.0f}%", pal.danger),
+                (t("desk_below"), f"{summary['below']:.0f}%", pal.low),
                 (t("desk_max"), f(summary["max"]), pal.value(cfg, summary["max"])),
                 (t("desk_above"), f"{summary['above']:.0f}%", pal.high),
             ]
@@ -281,7 +281,7 @@ class DesktopView:
 
         # fascia del range e soglie
         cv.create_rectangle(left, y(cfg["high"]), right, y(cfg["low"]), fill=pal.band, outline="")
-        for v, col in ((cfg["low"], pal.danger), (cfg["high"], pal.high)):
+        for v, col in ((cfg["low"], pal.low), (cfg["high"], pal.high)):
             cv.create_line(left, y(v), right, y(v), fill=col, dash=(3, 3))
             cv.create_text(left - 4, y(v), text=fmt_value(cfg, v), anchor="e", fill=col,
                            font=(FONT, f_tiny))

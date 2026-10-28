@@ -20,7 +20,7 @@ class ThemeTest(unittest.TestCase):
         dark = theme.palette(cfg)
         self.assertFalse(dark.light)
         self.assertEqual([dark.value(cfg, v) for v in (60, 120, 200, 300)],
-                         [dark.danger, dark.in_range, dark.high, dark.danger])
+                         [dark.low, dark.in_range, dark.high, dark.very_high])
         light = theme.palette(dict(cfg, theme="light"))
         self.assertTrue(light.light)
         self.assertNotEqual(light.bg, dark.bg)
@@ -28,6 +28,20 @@ class ThemeTest(unittest.TestCase):
         self.assertNotEqual(blind.in_range, dark.in_range)
         # sopra una barra chiara contano i colori della barra, non il tema scelto
         self.assertTrue(theme.palette(cfg, light=True).light)
+
+    def test_custom_colors(self):
+        cfg = dict(DEFAULT_CONFIG, theme="dark", color_in_range="#B066FF", color_low="#0000ff",
+                   color_high="rosso")
+        pal = theme.palette(cfg)
+        self.assertEqual(pal.value(cfg, 120), "#b066ff")
+        self.assertEqual(pal.value(cfg, 60), "#0000ff")
+        standard = theme.palette(dict(DEFAULT_CONFIG, theme="dark"))
+        self.assertEqual(pal.value(cfg, 200), standard.high)        # colore non valido: ignorato
+        self.assertEqual(pal.value(cfg, 300), standard.very_high)
+        self.assertNotEqual(pal.band, standard.band)                # la fascia segue il colore
+        self.assertEqual(theme.mix("#ffffff", "#000000", 0.5), "#808080")
+        # vale anche sopra la barra chiara
+        self.assertEqual(theme.palette(cfg, light=True).value(cfg, 120), "#b066ff")
 
     def test_unknown_palette_falls_back(self):
         cfg = dict(DEFAULT_CONFIG, theme="dark", palette="rainbow")

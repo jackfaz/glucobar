@@ -75,6 +75,11 @@ DEFAULT_CONFIG = {
     # "standard" o "colorblind" (adatti al daltonismo)
     "theme": "auto",
     "palette": "standard",
+    # colori scelti a mano dalla finestra Impostazioni (None = quelli della tavolozza)
+    "color_in_range": None,
+    "color_high": None,
+    "color_very_high": None,
+    "color_low": None,
     # avvisi facoltativi (spenti di default): glicemia bassa, molto alta, nessun dato
     "alert_low": False,
     "alert_high": False,

@@ -168,9 +168,9 @@ in GlucoBar instead: it works the same way.
   the panel, right-click for the chart period and to lock it in place.
 - Value on the taskbar: right-click → *Size* to make it smaller or larger.
 - *Update every*: how often GlucoBar fetches the value, from 10 seconds to 5 minutes.
-- *Appearance*: light, dark or automatic theme (follows Windows or macOS), colour-blind
-  friendly colours (blue, yellow, orange instead of green, orange, red), and *Thresholds…*
-  to change the target range in your unit.
+- *Settings…*: theme (light, dark or automatic, following Windows or macOS), colours of the
+  value (standard, colour-blind friendly, or your own colour for in range, high, very high
+  and low) and thresholds. Changes show right away on every element.
 - *Alerts* (off by default): a message when glucose is low, very high, or when no new data
   has arrived for a while. They come from the sensor's online service, a few minutes late,
   and only while the computer is on: **they do not replace your sensor's alarms**.
@@ -233,6 +233,7 @@ GlucoBar-Setup-0.9.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `desktop_alpha` | 0.92 | Desktop panel opacity (1 = solid) |
 | `theme` | `auto` | `auto` (follows Windows or macOS), `dark` or `light` |
 | `palette` | `standard` | `standard` or `colorblind` |
+| `color_in_range` / `color_high` / `color_very_high` / `color_low` | auto | Your own colour for the value, e.g. `#00c060`; `auto` = the palette's |
 | `alert_low` / `alert_high` / `alert_stale` | false | Alerts for low (below `low`), very high (above `very_high`) and no data (`stale_minutes`) |
 | `update_check` | true | Check once a day whether a new version is out |
 | `auto_update` | false | Windows: install new versions without asking |

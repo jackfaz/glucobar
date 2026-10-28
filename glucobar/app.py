@@ -90,7 +90,7 @@ def self_test():
     """Per la build: carica tutte le parti nell'exe (moduli mancanti = errore)."""
     try:
         from . import (alerts, controller, desktop, dexcom, instance,  # noqa: F401
-                       librelinkup, menus, nightscout, notify, sensor, support, theme,
+                       librelinkup, menus, nightscout, notify, sensor, settings, support, theme,
                        updates, window)
         if sys.platform == "darwin":
             from . import macbar  # noqa: F401

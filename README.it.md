@@ -170,9 +170,9 @@ in GlucoBar: funziona allo stesso modo.
   bloccarlo.
 - Valore sulla barra: clic destro → *Dimensione* per rimpicciolirlo o ingrandirlo.
 - *Aggiorna ogni*: ogni quanto GlucoBar legge il dato, da 10 secondi a 5 minuti.
-- *Aspetto*: tema chiaro, scuro o automatico (segue Windows o macOS), colori adatti al
-  daltonismo (blu, giallo, arancione al posto di verde, arancione, rosso) e *Soglie…* per
-  cambiare il range nella tua unità.
+- *Impostazioni…*: tema (chiaro, scuro o automatico, segue Windows o macOS), colori del
+  valore (standard, adatti al daltonismo, o un colore tuo per nel range, alto, molto alto e
+  basso) e soglie. Ogni modifica si vede subito su tutti gli elementi.
 - *Avvisi* (spenti di default): un messaggio quando la glicemia è bassa, molto alta, o quando
   da un po' non arrivano dati nuovi. Arrivano dal servizio online del sensore, con qualche
   minuto di ritardo, e solo col computer acceso: **non sostituiscono gli allarmi del
@@ -236,6 +236,7 @@ GlucoBar-Setup-0.9.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `desktop_alpha` | 0.92 | Opacità del pannello (1 = pieno) |
 | `theme` | `auto` | `auto` (segue Windows o macOS), `dark` o `light` |
 | `palette` | `standard` | `standard` oppure `colorblind` (adatta al daltonismo) |
+| `color_in_range` / `color_high` / `color_very_high` / `color_low` | auto | Un colore tuo per il valore, es. `#00c060`; `auto` = quello della tavolozza |
 | `alert_low` / `alert_high` / `alert_stale` | false | Avvisi per valore basso (sotto `low`), molto alto (sopra `very_high`) e nessun dato (`stale_minutes`) |
 | `update_check` | true | Controlla una volta al giorno se c'è una nuova versione |
 | `auto_update` | false | Windows: installa le nuove versioni senza chiedere |

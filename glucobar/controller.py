@@ -22,7 +22,8 @@ from .config import (ELEMENTS, MIN_REFRESH, REFRESH_CHOICES, log, normalize_elem
 from .i18n import LANGUAGES, element_name, refresh_label, t
 from .menus import SEPARATOR, Item, radio_items
 from .sources import fetch_safely, make_client
-from .ui_common import apply_icon, ask_credentials, ask_range, fmt_value
+from .theme import COLOR_KEYS
+from .ui_common import apply_icon, ask_credentials, fmt_value
 
 
 # Impostazioni che si possono cambiare da terminale mentre GlucoBar è aperto
@@ -31,9 +32,9 @@ LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_
              "taskbar_side", "taskbar_offset", "taskbar_bg", "taskbar_transparent",
              "taskbar_scale", "window_scale", "desktop_hours", "desktop_alpha", "desktop_locked",
              "theme", "palette", "alert_low", "alert_high", "alert_stale", "update_check",
-             "auto_update", "sensor_life_days")
+             "auto_update", "sensor_life_days", *COLOR_KEYS.values())
 REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "desktop_alpha", "desktop_locked",
-                "window_scale", "theme", "palette"}
+                "window_scale", "theme", "palette", *COLOR_KEYS.values()}
 ACCOUNT_KEYS = {"source", "dexcom_region", "email"}
 
 
@@ -251,7 +252,6 @@ class Controller:
             Item(t("menu_refresh_every"), children=radio_items(
                 [(s, refresh_label(s)) for s in self.refresh_choices()],
                 self.refresh_seconds(), self.set_refresh)),
-            Item(t("menu_appearance"), children=self.appearance_items()),
             Item(t("menu_alerts"), children=self.alert_items()),
         ]
         patients = getattr(self.client, "patients", None) or []
@@ -260,6 +260,7 @@ class Controller:
                 patients, self.client.patient_id, self.set_patient)))
         items.append(Item(t("menu_sensor"), children=self.sensor_items()))
         items += [
+            Item(t("menu_settings"), self.open_settings),
             Item(t("menu_language"), children=radio_items(
                 list(LANGUAGES.items()), i18n.current_language(), self.set_language)),
             Item(t("menu_account"), self.change_account),
@@ -280,15 +281,6 @@ class Controller:
             Item(t("menu_quit"), self.quit),
         ]
         return items
-
-    def appearance_items(self):
-        cfg = self.cfg
-        return (radio_items([(name, t(f"theme_{name}")) for name in theme.THEMES],
-                            cfg.get("theme", "auto"), self.set_theme)
-                + [SEPARATOR]
-                + radio_items([(name, t(f"palette_{name}")) for name in theme.PALETTES],
-                              cfg.get("palette", "standard"), self.set_palette)
-                + [SEPARATOR, Item(t("menu_range"), self.ask_range)])
 
     def alert_items(self):
         cfg = self.cfg
@@ -324,15 +316,9 @@ class Controller:
         return sensor.info(getattr(self.client, "connection", None))
 
     # ---- comandi del menu ----
-    def set_theme(self, name):
-        self.cfg["theme"] = name
-        save_config(self.cfg)
-        self.restyle()
-
-    def set_palette(self, name):
-        self.cfg["palette"] = name
-        save_config(self.cfg)
-        self.restyle()
+    def open_settings(self):
+        from .settings import SettingsWindow
+        SettingsWindow.open(self)
 
     def restyle(self):
         self._theme_key = self.theme_key()
@@ -341,15 +327,8 @@ class Controller:
             self.tray.render()
 
     def theme_key(self):
-        return (theme.is_light(self.cfg), theme.taskbar_light(), self.cfg.get("palette"))
-
-    def ask_range(self):
-        values = ask_range(self.cfg, self.root)
-        if values:
-            self.cfg.update(values)
-            save_config(self.cfg)
-            log("soglie cambiate dal menu")
-            self.render()
+        return (theme.is_light(self.cfg), theme.taskbar_light(), self.cfg.get("palette"),
+                *(self.cfg.get(key) for key in COLOR_KEYS.values()))
 
     def toggle_alert(self, kind):
         key = f"alert_{kind}"

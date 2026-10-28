@@ -139,7 +139,10 @@ def build_report(cfg, running, log_lines=40):
         ("Taskbar settings", f"monitor {cfg['taskbar_monitor']}, side {cfg['taskbar_side']}, "
                              f"offset {cfg['taskbar_offset']}, transparent "
                              f"{yes(cfg['taskbar_transparent'])}, bg {cfg['taskbar_bg'] or 'auto'}"),
-        ("Look", f"theme {cfg.get('theme', 'auto')}, colours {cfg.get('palette', 'standard')}"),
+        ("Look", f"theme {cfg.get('theme', 'auto')}, colours {cfg.get('palette', 'standard')}"
+                 + "".join(f", {key} {cfg[key]}" for key in ("color_in_range", "color_high",
+                                                             "color_very_high", "color_low")
+                           if cfg.get(key))),
         ("Alerts", ", ".join(k for k in ("low", "high", "stale") if cfg.get(f"alert_{k}"))
                    or "off"),
         ("Update check", yes(cfg.get("update_check", True))),

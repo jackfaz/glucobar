@@ -50,11 +50,13 @@ class SetGetTest(IsolatedConfig):
         cfg = dict(DEFAULT_CONFIG)
         self.assertEqual(cli.parse_assignments(["unit=mmol/l", "low=80", "elements=desktop,tray",
                                                 "desktop_hours=6", "taskbar_bg=auto",
-                                                "refresh_seconds=10"], cfg),
+                                                "refresh_seconds=10", "color_low=#0000FF"],
+                                               cfg),
                          {"unit": "mmol/L", "low": 80, "elements": ["tray", "desktop"],
-                          "desktop_hours": 6, "taskbar_bg": None, "refresh_seconds": 10})
+                          "desktop_hours": 6, "taskbar_bg": None, "refresh_seconds": 10,
+                          "color_low": "#0000ff"})
         for wrong in (["colore=rosso"], ["low=abc"], ["low=10"], ["elements=orologio"],
-                      ["low=190"], ["unit"], ["refresh_seconds=5"]):
+                      ["low=190"], ["unit"], ["refresh_seconds=5"], ["color_low=red"]):
             with self.assertRaises(ValueError, msg=wrong):
                 cli.parse_assignments(wrong, cfg)
 

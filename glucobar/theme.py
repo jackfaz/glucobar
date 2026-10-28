@@ -1,7 +1,10 @@
 """Colori di GlucoBar: tema chiaro o scuro (anche automatico, come Windows o macOS) e
 due tavolozze per il valore, quella standard (verde, arancione, rosso) e una per chi
 distingue male il rosso dal verde (blu, giallo/arancione, vermiglione: colori di
-Okabe e Ito, leggibili con tutte le forme comuni di daltonismo)."""
+Okabe e Ito, leggibili con tutte le forme comuni di daltonismo).
+
+Ognuno dei quattro colori del valore (nel range, alto, molto alto, basso) si può anche
+scegliere a mano dalla finestra Impostazioni: vale sopra la tavolozza scelta."""
 
 import subprocess
 import sys
@@ -9,6 +12,9 @@ import time
 
 THEMES = ("auto", "dark", "light")
 PALETTES = ("standard", "colorblind")
+# colore del valore -> chiave in config.json (None = quello della tavolozza)
+COLOR_KEYS = {"in_range": "color_in_range", "high": "color_high",
+              "very_high": "color_very_high", "low": "color_low"}
 
 _BASE = {
     False: dict(bg="#1e1f22", fg="#f2f2f2", dim="#8a8d93", grey="#9a9da3", panel="#15171c",
@@ -25,18 +31,37 @@ _VALUES = {
 }
 
 
+def is_color(value):
+    return isinstance(value, str) and len(value) == 7 and value[0] == "#" and \
+        all(c in "0123456789abcdefABCDEF" for c in value[1:])
+
+
+def mix(color, background, amount):
+    """`amount` di `color` sopra `background` (es. la fascia del range nei grafici)."""
+    a = [int(color[i:i + 2], 16) for i in (1, 3, 5)]
+    b = [int(background[i:i + 2], 16) for i in (1, 3, 5)]
+    return "#" + "".join(f"{round(x * amount + y * (1 - amount)):02x}" for x, y in zip(a, b))
+
+
 class Palette:
-    def __init__(self, palette, light):
+    def __init__(self, palette, light, custom=None):
         self.light = light
         for name, value in _BASE[light].items():
             setattr(self, name, value)
-        self.in_range, self.high, self.danger, self.band = _VALUES[(palette, light)]
+        self.in_range, self.high, danger, self.band = _VALUES[(palette, light)]
+        self.very_high = self.low = danger
+        for name, value in (custom or {}).items():
+            if is_color(value):
+                setattr(self, name, value.lower())
+        if (custom or {}).get("in_range") and is_color(custom["in_range"]):
+            self.band = mix(self.in_range, self.panel, 0.16)
 
     def value(self, cfg, mgdl):
-        """Colore di una misura: fuori dalle soglie basso/molto alto, sopra l'obiettivo,
-        nel range."""
-        if mgdl < cfg["low"] or mgdl > cfg["very_high"]:
-            return self.danger
+        """Colore di una misura: basso, molto alto, sopra l'obiettivo o nel range."""
+        if mgdl < cfg["low"]:
+            return self.low
+        if mgdl > cfg["very_high"]:
+            return self.very_high
         if mgdl > cfg["high"]:
             return self.high
         return self.in_range
@@ -103,4 +128,5 @@ def palette(cfg, light=None):
     name = cfg.get("palette", "standard")
     if name not in PALETTES:
         name = "standard"
-    return Palette(name, is_light(cfg) if light is None else bool(light))
+    custom = {kind: cfg.get(key) for kind, key in COLOR_KEYS.items() if cfg.get(key)}
+    return Palette(name, is_light(cfg) if light is None else bool(light), custom)

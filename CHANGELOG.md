@@ -15,11 +15,18 @@ uses [Semantic Versioning](https://semver.org/).
   the serial number, ready to paste into the form. Dexcom Share and Nightscout do not report
   the sensor, so for them there is only the menu item.
 - **Settings window** (*Settings…* in the right-click menu): theme (light, dark or automatic,
-  following Windows or macOS also when it changes), colours of the value (standard,
-  colour-blind friendly, or your own colour for in range, high, very high and low, picked
-  with the system colour picker) and thresholds in your unit. Every change shows right away
-  on the taskbar, the icon, the small window and the desktop panel. The colours can also be
-  set with `glucobar set color_in_range=#00c060` and so on.
+  following Windows or macOS also when it changes), every colour, and thresholds in your
+  unit. Colours are picked with the system colour picker:
+  - the value: in range, high, very high, low and old value (standard, colour-blind friendly
+    or your own);
+  - the small window and the desktop panel, separately for the light and the dark theme:
+    backgrounds, text, secondary text, chart line, grid, target range band, errors;
+  - the value on the taskbar: transparent or solid background, its colour, and the minutes
+    under the value.
+
+  Every change shows right away on the taskbar, the icon, the small window and the desktop
+  panel. The colours of the value can also be set with `glucobar set color_low=#0000ff`
+  and so on.
 - **Alerts**, off by default: low glucose, very high glucose, no new data. One message per
   episode. They do not replace your sensor's alarms, and GlucoBar says so the first time.
 - **Person**: if your LibreLinkUp account follows more than one person, choose who to show.

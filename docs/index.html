@@ -174,6 +174,56 @@
   .c-panel .gpanel { --u: .86cqw; left: 7cqw; top: 3.7cqw; }
   .c-tray .gbar { --u: .84cqw; left: 8cqw; top: 33cqw; }
   .c-tray .gtip { --u: .84cqw; left: 26cqw; top: 17cqw; }
+  /* in casa: luce smart, Home Assistant, orologio a LED e display ESP32 collegati a GlucoBar */
+  @property --glow { syntax: "<color>"; inherits: true; initial-value: #3ecf6e; }
+  .home-stage { aspect-ratio: 16 / 9; border-radius: 16px; border: 1px solid var(--line); box-shadow: var(--shadow);
+                --glow: #3ecf6e; transition: --glow .9s; }
+  .home-stage .ambient { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(38% 70% at 15% 55%, color-mix(in srgb, var(--glow) 30%, transparent), transparent 75%); }
+  .lamp { position: absolute; left: 6cqw; top: 0; width: 18cqw; height: 46cqw; }
+  .lamp .cord { position: absolute; left: 50%; top: 0; width: .25cqw; height: 7cqw; background: #3a3d45; transform: translateX(-50%); }
+  .lamp .shade { position: absolute; left: 1.5cqw; right: 1.5cqw; top: 7cqw; height: 7cqw; background: linear-gradient(#2d3038, #1d1f25);
+                 clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%); }
+  .lamp .bulb { position: absolute; left: 50%; top: 12.6cqw; width: 4cqw; height: 4cqw; border-radius: 50%; transform: translateX(-50%);
+                background: var(--glow); box-shadow: 0 0 3cqw 1.2cqw var(--glow), 0 0 9cqw 3cqw color-mix(in srgb, var(--glow) 45%, transparent); }
+  .lamp .beam { position: absolute; left: -4cqw; right: -4cqw; top: 14cqw; bottom: 0;
+                background: linear-gradient(color-mix(in srgb, var(--glow) 34%, transparent), transparent 92%);
+                clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); }
+  .home-stage .tag { position: absolute; font-size: 1.25cqw; color: #c9ccd1; background: rgba(255,255,255,.07);
+                     border: 1px solid rgba(255,255,255,.1); border-radius: 99px; padding: .25cqw 1cqw; white-space: nowrap; }
+  .ha { position: absolute; left: 29cqw; top: 4.5cqw; width: 29cqw; padding: 1.6cqw 1.8cqw; border-radius: 1.2cqw;
+        background: #1c1c1e; border: 1px solid #2c2c30; box-shadow: 0 1.5cqw 4cqw rgba(0,0,0,.5); font-size: 1.3cqw; color: #e1e1e1; }
+  .ha .hd { display: flex; align-items: center; gap: 1cqw; color: #b5b5b5; }
+  .ha .ic { width: 3cqw; height: 3cqw; border-radius: 50%; display: grid; place-items: center;
+            background: color-mix(in srgb, var(--glow) 22%, transparent); }
+  .ha .ic svg { width: 1.7cqw; height: 1.7cqw; fill: var(--glow); }
+  .ha .big { font-size: 4.6cqw; font-weight: 600; margin: 1cqw 0 .2cqw; line-height: 1; }
+  .ha .big small { font-size: 1.6cqw; color: #9a9a9a; font-weight: 400; margin-left: .5cqw; }
+  .ha .attrs { color: #9a9a9a; }
+  .ha .chart { position: relative; height: 5.5cqw; margin: 1.2cqw 0 1cqw; }
+  .ha .auto { display: flex; align-items: center; gap: .8cqw; padding: .8cqw 1cqw; border-radius: .8cqw;
+              background: #26262a; color: #cfcfcf; font-size: 1.15cqw; }
+  .ha .auto i { width: 1.4cqw; height: 1.4cqw; border-radius: 50%; background: var(--glow); box-shadow: 0 0 .8cqw var(--glow); flex: none; }
+  .ledclock { position: absolute; right: 4cqw; top: 6cqw; width: 30cqw; height: 9.5cqw; border-radius: 1cqw; padding: 1cqw 1.4cqw;
+              background: linear-gradient(#141518, #0b0c0e); border: 1px solid #2b2d33; box-shadow: 0 1.5cqw 4cqw rgba(0,0,0,.55); }
+  .ledclock canvas, .esp .screen canvas { position: relative; width: 100%; height: 100%; display: block; }
+  .ledclock .wrapc, .esp .screen .wrapc { position: relative; width: 100%; height: 100%; }
+  .esp { position: absolute; right: 6cqw; top: 23cqw; width: 26cqw; height: 17cqw; border-radius: .8cqw; padding: 1.4cqw;
+         background: linear-gradient(135deg, #0f4c45, #0b3a35); border: 1px solid #13665d; box-shadow: 0 1.5cqw 4cqw rgba(0,0,0,.5); }
+  .esp .pins { position: absolute; left: 1cqw; right: 1cqw; bottom: .4cqw; height: .6cqw;
+               background: repeating-linear-gradient(90deg, #c9a74a 0 .5cqw, transparent .5cqw 1.2cqw); }
+  .esp .screen { position: absolute; left: 2cqw; right: 2cqw; top: 1.6cqw; bottom: 2.2cqw; background: #000; border-radius: .3cqw;
+                 border: .3cqw solid #1a1a1a; display: flex; flex-direction: column; justify-content: center; padding-left: 2cqw; }
+  .esp .ev { font-family: "Courier New", monospace; font-weight: 700; font-size: 5.4cqw; line-height: 1; }
+  .esp .em { font-family: "Courier New", monospace; color: #9aa; font-size: 1.3cqw; margin-top: .6cqw; }
+  .home-stage .gbar { --u: .36cqw; left: 30cqw; top: 44cqw; }
+  .home-stage svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .home-stage svg.wires path { fill: none; stroke: #5b6170; stroke-width: .18; stroke-dasharray: .8 .8; animation: flow 1.6s linear infinite; }
+  @keyframes flow { to { stroke-dashoffset: -1.6; } }
+  .recording .home-stage { position: fixed; inset: 0; width: 100vw; z-index: 100; border-radius: 0; border: 0; }
+  .recording * { transition: none !important; }
+  @media (prefers-reduced-motion: reduce) { .home-stage svg.wires path { animation: none; } }
+
 
   /* immagini delle sezioni */
   .feature .stage { border-radius: 14px; border: 1px solid var(--line); box-shadow: var(--shadow); }
@@ -674,6 +724,47 @@
   </div>
 </section>
 
+<section id="smart-home">
+  <div class="wrap">
+    <h2>Your glucose, around the house</h2>
+    <p class="intro">Turn on <em>Settings → Connections</em> and other devices can show the value too:
+      a light that turns red when you go low, a Home Assistant dashboard, an LED clock on the shelf or
+      a small ESP32 display on the bedside table. GlucoBar publishes the value over MQTT, with
+      Home Assistant discovery, and on a local address that speaks Nightscout, so displays made for
+      Nightscout work as they are. Your sensor password never leaves the PC.</p>
+    <figure class="demo">
+      <div class="stage home-stage js-glow" role="img"
+           aria-label="A smart light, a Home Assistant card, an LED clock and an ESP32 display, all changing colour with the glucose value sent by GlucoBar on the PC"><div aria-hidden="true">
+        <div class="ambient"></div>
+        <svg class="wires" viewBox="0 0 100 56.25" preserveAspectRatio="none">
+          <path d="M50 44 C 50 40, 47 36, 46 32.5"/>
+          <path d="M54 44 C 60 40, 62 33, 68 32"/>
+          <path d="M52 44 C 60 36, 58 14, 66 11"/>
+          <path d="M29 20 C 25 20, 22 17, 19.5 15"/>
+        </svg>
+        <div class="lamp"><div class="beam"></div><div class="cord"></div><div class="shade"></div><div class="bulb"></div></div>
+        <span class="tag" style="left:8cqw;top:47cqw">Smart light</span>
+        <div class="ha">
+          <div class="hd"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 2.5C9 7 6 10.3 6 14a6 6 0 0 0 12 0c0-3.7-3-7-6-11.5z"/></svg></span><span>Glucose Anna</span></div>
+          <div class="big"><span class="js-val">112</span><small>mg/dL</small> <span class="js-arrow" style="font-size:3cqw;color:#b5b5b5">&#8594;</span></div>
+          <div class="attrs">Delta <span class="js-delta">+0</span> &#183; updated <span class="js-clock">00:00</span></div>
+          <div class="chart"><canvas class="js-chart" data-kind="spark"></canvas></div>
+          <div class="auto"><i></i>Automation: light colour follows glucose, red below 70</div>
+        </div>
+        <span class="tag" style="left:29cqw;top:0.9cqw">Home Assistant</span>
+        <div class="ledclock"><div class="wrapc"><canvas class="js-chart" data-kind="matrix"></canvas></div></div>
+        <span class="tag" style="right:4cqw;top:16.6cqw">LED clock</span>
+        <div class="esp"><div class="screen"><div class="ev js-col"><span class="js-val">112</span> <span class="js-arrow">&#8594;</span></div>
+          <div class="em">mg/dL <span class="js-clock">00:00</span></div></div><div class="pins"></div></div>
+        <span class="tag" style="right:6cqw;top:41.2cqw">ESP32 display</span>
+        <div class="gbar"><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">1 min</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div>
+        <span class="tag" style="left:30cqw;top:40.4cqw">GlucoBar on the PC</span>
+      </div></div>
+      <figcaption>A simulated day, one hour per second. The readings are made up.</figcaption>
+    </figure>
+  </div>
+</section>
+
 <section id="sensors">
   <div class="wrap">
     <h2>Sensors</h2>
@@ -1040,8 +1131,45 @@
       ctx.fillStyle = colorFor(canvas, V(n));
       ctx.beginPath(); ctx.arc(x(n), y(V(n)), 1.6 * f, 0, Math.PI * 2); ctx.fill();
     }
+    var FONT3 = {   // cifre 3x5 e frecce 5x5 per l'orologio a LED
+      "0": ["111", "101", "101", "101", "111"], "1": ["010", "110", "010", "010", "111"],
+      "2": ["111", "001", "111", "100", "111"], "3": ["111", "001", "111", "001", "111"],
+      "4": ["101", "101", "111", "001", "001"], "5": ["111", "100", "111", "001", "111"],
+      "6": ["111", "100", "111", "101", "111"], "7": ["111", "001", "010", "010", "010"],
+      "8": ["111", "101", "111", "101", "111"], "9": ["111", "101", "111", "001", "111"],
+      "\u2191": ["00100", "01110", "10101", "00100", "00100"], "\u2197": ["01111", "00011", "00101", "01001", "10000"],
+      "\u2192": ["00100", "00010", "11111", "00010", "00100"], "\u2198": ["10000", "01001", "00101", "00011", "01111"],
+      "\u2193": ["00100", "00100", "10101", "01110", "00100"]
+    };
+    function matrix(canvas, n) {   // 32 x 8 LED, come un orologio AWTRIX
+      var ctx = canvas.getContext("2d"), W = canvas.width, H = canvas.height;
+      var cols = 32, rows = 8, cell = Math.min(W / cols, H / rows), ox = (W - cell * cols) / 2, oy = (H - cell * rows) / 2;
+      var v = V(n), glyphs = String(v).split("").concat([" ", arrow(v - V(n - 1))]);
+      var lit = {}, x = 0;
+      var width = glyphs.reduce(function (w, g) { return w + (g === " " ? 1 : FONT3[g][0].length + 1); }, -1);
+      x = Math.floor((cols - width) / 2);
+      glyphs.forEach(function (g) {
+        if (g === " ") { x += 1; return; }
+        FONT3[g].forEach(function (row, r) {
+          row.split("").forEach(function (bit, c) { if (bit === "1") lit[(x + c) + "," + (r + 1)] = true; });
+        });
+        x += FONT3[g][0].length + 1;
+      });
+      ctx.clearRect(0, 0, W, H);
+      var on = colorFor(canvas, v);
+      for (var cy = 0; cy < rows; cy++) {
+        for (var cx = 0; cx < cols; cx++) {
+          ctx.fillStyle = lit[cx + "," + cy] ? on : "#1b1c20";
+          ctx.beginPath();
+          ctx.arc(ox + (cx + .5) * cell, oy + (cy + .5) * cell, cell * .38, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
     function drawCharts(n) {
-      charts.forEach(function (c) { if (c.width > 1) (c.dataset.kind === "spark" ? spark : day)(c, n); });
+      charts.forEach(function (c) {
+        if (c.width > 1) ({ spark: spark, matrix: matrix }[c.dataset.kind] || day)(c, n);
+      });
     }
     var rbBoxes = Array.prototype.slice.call(document.querySelectorAll('[data-pal="rainbow"]'));
     function paintRainbow() {
@@ -1063,6 +1191,7 @@
       all(".js-val", function (e) { e.textContent = v; });
       all(".js-arrow", function (e) { e.textContent = a; });
       all(".js-col", function (e) { e.style.color = colorFor(e, v); });
+      all(".js-glow", function (e) { e.style.setProperty("--glow", colorFor(e, v)); });
       all(".js-delta", function (e) { e.textContent = (d >= 0 ? "+" : "") + d; });
       all(".js-clock", function (e) { e.textContent = hhmm(n); });
       all(".js-sub", function (e) { e.textContent = "mg/dL \u00b7 1 min ago \u00b7 " + (change >= 0 ? "+" : "") + change + " in 15 min"; });
@@ -1091,6 +1220,12 @@
         drawCharts(last);
       });
       charts.forEach(function (c) { ro.observe(c); });
+    }
+    if (/[?&]record/.test(location.search)) {   // per registrare il video: un fotogramma alla volta
+      document.documentElement.classList.add("recording");
+      window.demoFrame = function (n) { last = n; show(n); paintRainbow(); };
+      show(0);
+      return;
     }
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       last = 210; show(last); paintRainbow(); return;

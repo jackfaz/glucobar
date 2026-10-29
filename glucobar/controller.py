@@ -17,9 +17,8 @@ import traceback
 import webbrowser
 
 from . import alerts, i18n, instance, reminders, sensor, support, theme, updates
-from .alerts import AlertWatch
+from .alerts import ALARMS, REPEAT_CHOICES, AlertWatch
 
-ALARMS = ("low", "high")   # gli avvisi il cui suono si può ripetere
 from .config import (ELEMENTS, MIN_REFRESH, REFRESH_CHOICES, log, normalize_elements,
                      peek_config, save_config)
 from .i18n import element_name, refresh_label, t
@@ -37,7 +36,8 @@ LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_
              "theme", "palette", "alert_low", "alert_high", "alert_stale", "update_check",
              "auto_update", "sensor_life_days", "ui_colors", "taskbar_text", "show_delta",
              "trend_style", "predict", "alert_soon", "nicknames", "people_shown",
-             "alert_sound", "alert_repeat", "alert_repeat_seconds",
+             "alert_sound", "alert_volume", "sound_low", "sound_high", "sound_other",
+             "sound_pack", "repeat_low", "repeat_high",
              "hover_chart", "desktop_on_top", "desktop_over_fullscreen",
              *COLOR_KEYS.values())
 REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "taskbar_text", "desktop_alpha", "trend_style",
@@ -66,7 +66,8 @@ class Controller:
         self.others = []     # altre persone mostrate insieme: [{"id", "label", "current"}]
         self.other_alerts = {}   # id -> AlertWatch delle altre persone
         self.silenced = set()    # (persona, avviso) zittiti fino alla fine dell'episodio
-        self._last_sound = 0
+        self._last_sound = {}    # avviso -> quando ha suonato l'ultima volta
+        self._alarm_sounding = False
         self.error = None
         self.updated_at = None
         self.busy = False
@@ -291,6 +292,7 @@ class Controller:
         # sta nella finestra Impostazioni, divisa per argomento
         items += [
             Item(t("menu_sensor"), children=self.sensor_items()),
+            Item(t("menu_alerts"), children=self.alert_items()),
             Item(t("menu_settings"), self.open_settings),
             Item(t("menu_reminders"), self.open_reminders),
             SEPARATOR,
@@ -320,9 +322,9 @@ class Controller:
         return sensor.info(getattr(self.client, "connection", None))
 
     # ---- comandi del menu ----
-    def open_settings(self):
+    def open_settings(self, tab=None):
         from .settings import SettingsWindow
-        SettingsWindow.open(self)
+        SettingsWindow.open(self, tab)
 
     def open_reminders(self):
         from .reminders_ui import RemindersWindow
@@ -649,13 +651,14 @@ class Controller:
                     title += " – " + self.person_label(pid)
                 log(f"avviso: {kind}")
                 actions = []
-                if kind in ALARMS and cfg.get("alert_repeat"):
+                if kind in ALARMS and self.repeat_seconds(kind) and cfg.get("alert_sound", True):
                     # il suono si ripete: il messaggio resta finché non lo si zittisce
                     actions = [(t("alert_silence"), lambda p=pid, k=kind: self.silence(p, k))]
                 self.notify(title, t(f"alert_{kind}", v=value, n=minutes), actions=actions,
                             timeout=60)
                 if cfg.get("alert_sound", True):
-                    self.sound_now()
+                    self.sound_now(kind)
+                    self._alarm_sounding = kind in ALARMS
 
     # ---- suono degli avvisi (basso e molto alto), anche ripetuto ----
     def alarms_active(self):
@@ -666,29 +669,113 @@ class Controller:
                 for kind in watch.active if kind in ALARMS}
 
     def repeat_alarm(self):
-        """Ogni secondo: con "ripeti il suono", suona di nuovo finché il valore non torna
-        nel range o finché non si preme Zittisci."""
+        """Ogni secondo: per basso e molto alto, ognuno col suo intervallo, suona di nuovo
+        finché il valore non torna nel range o finché non si preme Zittisci. Un suono
+        lungo si ferma appena si torna nel range."""
         active = self.alarms_active()
         self.silenced &= active   # episodio finito: la prossima volta suona di nuovo
-        if not (self.cfg.get("alert_repeat") and self.cfg.get("alert_sound", True)):
+        loud = {kind for _pid, kind in active - self.silenced}
+        if not loud or not self.cfg.get("alert_sound", True):
+            if self._alarm_sounding:
+                self._alarm_sounding = False
+                from . import sound
+                sound.stop()
             return
-        if active - self.silenced and time.time() - self._last_sound >= self.repeat_seconds():
-            self.sound_now()
+        now = time.time()
+        for kind in ALARMS:
+            every = self.repeat_seconds(kind)
+            if kind in loud and every and now - self._last_sound.get(kind, 0) >= every:
+                self.sound_now(kind)
+                self._alarm_sounding = True
+                break   # basso e alto insieme (due persone): uno alla volta
 
-    def repeat_seconds(self):
+    def repeat_seconds(self, kind):
+        """Ogni quanti secondi ripetere il suono di un avviso; 0 = una volta sola."""
         try:
-            return max(10, int(self.cfg.get("alert_repeat_seconds") or 15))
+            seconds = int(self.cfg.get(f"repeat_{kind}") or 0)
         except (TypeError, ValueError):
-            return 15
+            return 0
+        return max(10, seconds) if seconds > 0 else 0
 
-    def sound_now(self):
+    def sound_ref(self, kind):
+        return self.cfg.get(f"sound_{kind if kind in ALARMS else 'other'}")
+
+    def sound_now(self, kind="low", ref=None):
+        """Suona subito il suono di un avviso (o `ref`, per provarlo)."""
         from . import sound
-        self._last_sound = time.time()
-        sound.play()
+        self._last_sound[kind] = time.time()
+        return sound.play(ref or self.sound_ref(kind), self.cfg.get("alert_volume", 100))
 
     def silence(self, pid, kind):
+        from . import sound
         self.silenced.add((pid, kind))
+        sound.stop()
         log(f"suono zittito: {kind}")
+
+    def silence_all(self):
+        for pid, kind in self.alarms_active():
+            self.silence(pid, kind)
+
+    def set_sound(self, kind, ref):
+        """Suono scelto per un avviso; si sente subito, per sapere com'è."""
+        self.set_options(**{f"sound_{kind}": ref})
+        self.sound_now(kind)
+
+    def set_repeat(self, kind, seconds):
+        self.set_options(**{f"repeat_{kind}": seconds})
+
+    def set_sound_pack(self, pack):
+        """Un pacchetto: un suono per ogni avviso, scelti da pack.json o dal nome."""
+        from . import sound
+        refs = sound.pack_sounds(pack)
+        self.set_options(sound_pack=pack, **{f"sound_{k}": ref for k, ref in refs.items()})
+        self.sound_now("low")
+
+    def toggle_alert_sound(self):
+        self.set_options(alert_sound=not self.cfg.get("alert_sound", True))
+        if not self.cfg["alert_sound"]:
+            self.silence_all()
+
+    def alert_label(self, kind):
+        cfg, unit = self.cfg, self.cfg["unit"]
+        if kind == "stale":
+            return t("alert_menu_stale", n=cfg["stale_minutes"])
+        limit = cfg["low" if kind == "low" else "very_high"]
+        return t(f"alert_menu_{kind}", v=f"{fmt_value(cfg, limit)} {unit}")
+
+    def alert_items(self):
+        """Il sottomenu "Avvisi": quali avvisi, con che suono e ogni quanto ripeterlo, a
+        portata di clic destro (anche la finestra Impostazioni ha tutto)."""
+        from . import sound
+        cfg = self.cfg
+        packs = [sound.BUILTIN_PACK] + list(sound.packs())
+        items = [Item(self.alert_label(k), self.toggle_alert, k, checked=bool(cfg.get(f"alert_{k}")))
+                 for k in ("low", "high", "stale")]
+        items += [SEPARATOR,
+                  Item(t("alert_sound_on"), self.toggle_alert_sound,
+                       checked=cfg.get("alert_sound", True)),
+                 Item(t("alert_silence"), self.silence_all,
+                      enabled=bool(self.alarms_active() - self.silenced))]
+        if len(packs) > 1:
+            items += [SEPARATOR, Item(t("sound_pack"), children=radio_items(
+                [(p, p) for p in packs], cfg.get("sound_pack"), self.set_sound_pack))]
+        items.append(SEPARATOR)
+        groups = sound.choices()
+        for kind in ("low", "high"):
+            current = cfg.get(f"sound_{kind}")
+            if len(groups) == 1:
+                choose = radio_items(groups[0][1], current, lambda r, k=kind: self.set_sound(k, r))
+            else:
+                choose = [Item(group, children=radio_items(
+                    refs, current, lambda r, k=kind: self.set_sound(k, r)))
+                    for group, refs in groups]
+            items.append(Item(t(f"sound_for_{kind}", name=sound.label(current)),
+                              children=choose))
+            choices = [(0, t("repeat_off"))] + [(s, refresh_label(s)) for s in REPEAT_CHOICES]
+            items.append(Item(t(f"repeat_{kind}_menu"), children=radio_items(
+                choices, self.repeat_seconds(kind), lambda s, k=kind: self.set_repeat(k, s))))
+        items += [SEPARATOR, Item(t("sound_settings"), self.open_settings, "alerts")]
+        return items
 
     def check_sensor(self):
         if self.cfg.get("source", "libre") != "libre":

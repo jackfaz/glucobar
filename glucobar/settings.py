@@ -1,17 +1,19 @@
 """Finestra Impostazioni (clic destro → Impostazioni…), divisa in schede per argomento:
-Generale, Valori e avvisi, Aspetto, Elementi, Aggiornamenti. Ogni scelta si applica
+Generale, Valori, Avvisi e suoni, Aspetto, Elementi, Aggiornamenti. Ogni scelta si applica
 subito a tutti gli elementi aperti (barra, icona, finestrella, pannello), così si vede
 com'è prima di chiudere. Il menu col clic destro tiene solo le azioni rapide.
 
 I colori del valore valgono con entrambi i temi; quelli di finestrella e pannello sono
 del tema in uso (chiaro o scuro), così cambiare tema non li mescola."""
 
+import os
 import sys
 import tkinter as tk
-from tkinter import colorchooser, messagebox, ttk
+from tkinter import colorchooser, filedialog, messagebox, ttk
 
-from . import __version__, autostart, credentials, updates
+from . import __version__, autostart, credentials, sound, updates
 from .config import ELEMENTS, save_config
+from .alerts import ALARMS, REPEAT_CHOICES
 from .i18n import LANGUAGES, element_name, refresh_label, t
 from .theme import COLOR_KEYS, PALETTES, THEMES, UI_KEYS, is_light, palette
 from .ui_common import FONT, TREND_STYLES, ask_range, fmt_value
@@ -24,7 +26,7 @@ SAMPLES = {
     "low": lambda cfg: max(40, cfg["low"] - 10),
     "stale": lambda cfg: (cfg["low"] + cfg["high"]) // 2,
 }
-TABS = ("general", "values", "look", "elements", "connect", "updates")
+TABS = ("general", "values", "alerts", "look", "elements", "connect", "updates")
 
 
 class SettingsWindow:
@@ -53,6 +55,7 @@ class SettingsWindow:
         self.vars = []   # le variabili Tk devono vivere quanto la finestra
         self.tab_general(self.tab("general"))
         self.tab_values(self.tab("values"))
+        self.tab_alerts(self.tab("alerts"))
         self.tab_look(self.tab("look"))
         self.tab_elements(self.tab("elements"))
         self.tab_connect(self.tab("connect"))
@@ -204,42 +207,6 @@ class SettingsWindow:
         tk.Button(box, text=t("settings_change"), font=(FONT, 9),
                   command=self.change_range).pack(side="right")
 
-        box = self.section(frame, t("menu_alerts"))
-        self.alert_boxes = {}
-        for kind in ("low", "high", "stale"):
-            v = self.var(tk.BooleanVar, bool(cfg.get(f"alert_{kind}")))
-            box_ = tk.Checkbutton(box, variable=v, font=(FONT, 10), anchor="w",
-                                  command=lambda k=kind: ctl.toggle_alert(k))
-            box_.pack(fill="x")
-            self.alert_boxes[kind] = box_
-        row = tk.Frame(box)
-        row.pack(fill="x", pady=(4, 0))
-        self.var(tk.BooleanVar, cfg.get("alert_sound", True))
-        sound_var = self.vars[-1]
-        tk.Checkbutton(row, text=t("alert_sound_on"), variable=sound_var, font=(FONT, 10),
-                       command=lambda: ctl.set_options(alert_sound=sound_var.get())).pack(side="left")
-        tk.Button(row, text=t("alert_test"), font=(FONT, 9), command=ctl.sound_now).pack(
-            side="left", padx=(8, 0))
-        row = tk.Frame(box)
-        row.pack(fill="x")
-        self.var(tk.BooleanVar, cfg.get("alert_repeat"))
-        repeat_var = self.vars[-1]
-        tk.Checkbutton(row, text=t("alert_repeat_on"), variable=repeat_var, font=(FONT, 10),
-                       command=lambda: ctl.set_options(alert_repeat=repeat_var.get())).pack(side="left")
-        choices = [15, 30, 60, 120, 300]
-        seconds = ctl.repeat_seconds()
-        if seconds not in choices:
-            choices = sorted(choices + [seconds])
-        every = ttk.Combobox(row, values=[refresh_label(s) for s in choices], state="readonly",
-                             width=7)
-        every.current(choices.index(seconds))
-        every.pack(side="left", padx=(4, 4))
-        every.bind("<<ComboboxSelected>>", lambda _e: ctl.set_options(
-            alert_repeat_seconds=choices[every.current()]))
-        tk.Label(row, text=t("alert_repeat_until"), font=(FONT, 10)).pack(side="left")
-        tk.Label(box, text=t("alert_menu_note"), font=(FONT, 9), fg="#6b6f76",
-                 anchor="w").pack(fill="x", pady=(4, 0))
-
         box = self.section(frame, t("settings_beside"))
         self.radios(box, [(n, t(f"beside_{n}")) for n in TREND_STYLES],
                     cfg.get("trend_style", "arrow"), lambda n: ctl.set_options(trend_style=n))
@@ -258,6 +225,137 @@ class SettingsWindow:
                                                 lambda on, k=key: self.set_predict(k, on))
         tk.Label(box, text=t("predict_note"), font=(FONT, 9), fg="#6b6f76", anchor="w",
                  justify="left", wraplength=520).pack(fill="x", pady=(4, 0))
+
+    # ---- Avvisi e suoni ----
+    def tab_alerts(self, frame):
+        cfg, ctl = self.cfg, self.ctl
+        box = self.section(frame, t("menu_alerts"))
+        self.alert_boxes = {}
+        for kind in ("low", "high", "stale"):
+            v = self.var(tk.BooleanVar, bool(cfg.get(f"alert_{kind}")))
+            box_ = tk.Checkbutton(box, variable=v, font=(FONT, 10), anchor="w",
+                                  command=lambda k=kind: ctl.toggle_alert(k))
+            box_.pack(fill="x")
+            self.alert_boxes[kind] = box_
+        tk.Label(box, text=t("alert_menu_note"), font=(FONT, 9), fg="#6b6f76",
+                 anchor="w").pack(fill="x", pady=(2, 0))
+
+        box = self.section(frame, t("settings_sounds"))
+        row = tk.Frame(box)
+        row.pack(fill="x")
+        self.sound_on = self.var(tk.BooleanVar, cfg.get("alert_sound", True))
+        tk.Checkbutton(row, text=t("alert_sound_on"), variable=self.sound_on, font=(FONT, 10),
+                       command=lambda: ctl.set_options(alert_sound=self.sound_on.get())).pack(
+            side="left")
+        volume = tk.Scale(row, from_=0, to=100, orient="horizontal", length=130, showvalue=False,
+                          command=lambda v: ctl.set_options(alert_volume=int(float(v))))
+        volume.set(cfg.get("alert_volume", 100))
+        volume.pack(side="right")
+        volume.bind("<ButtonRelease-1>", lambda _e: ctl.sound_now("low"))
+        tk.Label(row, text=t("sound_volume"), font=(FONT, 10)).pack(side="right", padx=(0, 6))
+
+        row = tk.Frame(box)
+        row.pack(fill="x", pady=(6, 2))
+        tk.Label(row, text=t("sound_pack"), font=(FONT, 10)).pack(side="left")
+        self.pack_box = ttk.Combobox(row, state="readonly", width=26)
+        self.pack_box.pack(side="left", padx=6)
+        self.pack_box.bind("<<ComboboxSelected>>", lambda _e: self.choose_pack())
+        tk.Button(row, text=t("sound_import"), font=(FONT, 9),
+                  command=self.import_pack).pack(side="left")
+        tk.Button(row, text=t("sound_folder"), font=(FONT, 9),
+                  command=sound.open_folder).pack(side="left", padx=(4, 0))
+
+        grid = tk.Frame(box)
+        grid.pack(fill="x", pady=(2, 0))
+        tk.Label(grid, text=t("sound_repeat_head"), font=(FONT, 9), fg="#6b6f76").grid(
+            row=0, column=4, sticky="w")
+        self.sound_boxes, self.repeat_boxes = {}, {}
+        repeats = [0, *REPEAT_CHOICES]
+        for row_, kind in enumerate(sound.KINDS, 1):
+            tk.Label(grid, text=t(f"sound_kind_{kind}"), font=(FONT, 10), anchor="w").grid(
+                row=row_, column=0, sticky="w", padx=(0, 8), pady=2)
+            combo = ttk.Combobox(grid, state="readonly", width=30)
+            combo.grid(row=row_, column=1, pady=2)
+            combo.bind("<<ComboboxSelected>>", lambda _e, k=kind: self.choose_sound(k))
+            self.sound_boxes[kind] = combo
+            tk.Button(grid, text=t("sound_browse"), font=(FONT, 9),
+                      command=lambda k=kind: self.browse_sound(k)).grid(row=row_, column=2, padx=4)
+            tk.Button(grid, text="\u25b6", font=(FONT, 9), width=2,
+                      command=lambda k=kind: ctl.sound_now(k)).grid(row=row_, column=3)
+            if kind in ALARMS:
+                every = ttk.Combobox(grid, state="readonly", width=8, values=[
+                    refresh_label(s) if s else t("repeat_off") for s in repeats])
+                seconds = ctl.repeat_seconds(kind)
+                every.current(repeats.index(seconds) if seconds in repeats else 1)
+                every.grid(row=row_, column=4, padx=(8, 0), sticky="w")
+                every.bind("<<ComboboxSelected>>", lambda _e, k=kind, c=every: ctl.set_repeat(
+                    k, repeats[c.current()]))
+                self.repeat_boxes[kind] = every
+        tk.Label(box, text=t("sound_note"), font=(FONT, 9), fg="#6b6f76", anchor="w",
+                 justify="left", wraplength=560).pack(fill="x", pady=(4, 0))
+        self.refresh_sounds()
+
+    def refresh_sounds(self):
+        """Elenchi di suoni e pacchetti (cambiano importando o aggiungendo cartelle)."""
+        groups = sound.choices()
+        self.sound_refs = [ref for _group, refs in groups for ref, _label in refs]
+        labels = [sound.label(ref) for ref in self.sound_refs]
+        for kind, combo in self.sound_boxes.items():
+            combo.config(values=labels)
+            ref = self.cfg.get(f"sound_{kind}")
+            if ref not in self.sound_refs:
+                ref = sound.DEFAULTS[kind]
+            combo.current(self.sound_refs.index(ref))
+        self.pack_names = [group for group, _refs in groups]
+        self.pack_box.config(values=self.pack_names)
+        current = self.cfg.get("sound_pack")
+        self.pack_box.current(self.pack_names.index(current) if current in self.pack_names else 0)
+
+    def choose_sound(self, kind):
+        self.ctl.set_sound(kind, self.sound_refs[self.sound_boxes[kind].current()])
+
+    def choose_pack(self):
+        self.ctl.set_sound_pack(self.pack_names[self.pack_box.current()])
+        self.refresh_sounds()
+
+    def ask_files(self, multiple):
+        types = [(t("sound_files"), " ".join(f"*{e}" for e in sound.AUDIO_EXT + (".zip",)))]
+        self.win.attributes("-topmost", False)   # la finestra per scegliere deve stare sopra
+        ask = filedialog.askopenfilenames if multiple else filedialog.askopenfilename
+        paths = ask(parent=self.win, title=t("sound_browse"), filetypes=types)
+        self.win.attributes("-topmost", True)
+        return list(paths) if multiple else ([paths] if paths else [])
+
+    def import_pack(self):
+        """Un .zip o dei file audio diventano un pacchetto (dal nome dello zip o della
+        cartella), e lo si usa subito."""
+        paths = self.ask_files(multiple=True)
+        if not paths:
+            return
+        try:
+            pack, refs = sound.import_files(paths, pack=sound.safe_name(
+                os.path.basename(os.path.dirname(paths[0]))))
+        except (OSError, ValueError) as e:
+            messagebox.showerror(t("settings_sounds"), str(e), parent=self.win)
+            return
+        if refs:
+            self.ctl.set_sound_pack(pack)
+        self.refresh_sounds()
+
+    def browse_sound(self, kind):
+        paths = self.ask_files(multiple=False)
+        if not paths:
+            return
+        try:
+            pack, refs = sound.import_files(paths)
+        except (OSError, ValueError) as e:
+            messagebox.showerror(t("settings_sounds"), str(e), parent=self.win)
+            return
+        if refs and paths[0].lower().endswith(".zip"):
+            self.ctl.set_sound_pack(pack)
+        elif refs:
+            self.ctl.set_sound(kind, refs[0])
+        self.refresh_sounds()
 
     def set_predict(self, key, on):
         """La stima della tendenza si accende solo dopo aver letto (una volta) cosa è e
@@ -616,13 +714,8 @@ class SettingsWindow:
         self.range_lbl.config(text=t("settings_range_now", low=fmt_value(cfg, cfg["low"]),
                                      high=fmt_value(cfg, cfg["high"]),
                                      very_high=fmt_value(cfg, cfg["very_high"]), unit=unit))
-        alert_labels = {
-            "low": t("alert_menu_low", v=f"{fmt_value(cfg, cfg['low'])} {unit}"),
-            "high": t("alert_menu_high", v=f"{fmt_value(cfg, cfg['very_high'])} {unit}"),
-            "stale": t("alert_menu_stale", n=cfg["stale_minutes"]),
-        }
         for kind, box in self.alert_boxes.items():
-            box.config(text=alert_labels[kind])
+            box.config(text=self.ctl.alert_label(kind))
         sensor = t(f"sensor_{cfg.get('source', 'libre')}").split(" · ")[0]
         self.account_lbl.config(text=f"{sensor}\n{cfg.get('email') or '-'}")
 

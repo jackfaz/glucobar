@@ -180,10 +180,12 @@ def safe_name(name):
     return name[:80] or "sound"
 
 
-def import_files(paths):
-    """Copia file audio (o un .zip) tra i pacchetti. Restituisce (pacchetto, [ref])."""
+def import_files(paths, pack=None):
+    """Copia file audio (o un .zip) tra i pacchetti: i file sciolti in `pack` (di
+    default "My sounds"), uno zip in un pacchetto col suo nome. Restituisce
+    (pacchetto, [ref])."""
     os.makedirs(SOUNDS_DIR, exist_ok=True)
-    refs, pack = [], None
+    refs = []
     for path in paths:
         if path.lower().endswith(".zip"):
             pack = safe_name(os.path.splitext(os.path.basename(path))[0])
@@ -191,7 +193,7 @@ def import_files(paths):
             continue
         if not is_audio(os.path.basename(path)):
             continue
-        pack = pack or MY_SOUNDS
+        pack = pack if pack and pack != BUILTIN_PACK else MY_SOUNDS
         folder = os.path.join(SOUNDS_DIR, pack)
         os.makedirs(folder, exist_ok=True)
         name = safe_name(os.path.basename(path))
@@ -228,26 +230,52 @@ def open_folder():
         subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", SOUNDS_DIR])
 
 
+# ---- Windows: MP3, M4A e gli altri formati diventano WAV ----
+def decoded(path):
+    """Su Windows PlaySound suona solo i WAV: gli altri file li converte Media Foundation
+    (il decodificatore di Windows) in un WAV tenuto da parte. Su Mac e Linux il file così
+    com'è. Errore se Windows non sa leggere il file."""
+    if sys.platform != "win32" or path.lower().endswith(".wav"):
+        return path
+    import hashlib
+    st = os.stat(path)
+    key = hashlib.sha1(f"{path}|{st.st_size}|{st.st_mtime}".encode()).hexdigest()[:16]
+    out = os.path.join(CACHE_DIR, "decoded", key + ".wav")
+    if not os.path.exists(out):
+        from . import mfdecode
+        channels, rate, frames = mfdecode.decode(path)
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        with wave.open(out + ".tmp", "wb") as f:
+            f.setnchannels(channels)
+            f.setsampwidth(2)
+            f.setframerate(rate)
+            f.writeframes(frames)
+        os.replace(out + ".tmp", out)
+    return out
+
+
+def duration(path):
+    """Durata in secondi (solo WAV), 0 se non si sa."""
+    try:
+        with wave.open(path) as f:
+            return f.getnframes() / f.getframerate()
+    except Exception:
+        return 0
+
+
 # ---- riproduzione ----
-_ALIAS = "glucobar_alert"
 _proc = None
-_mci_open = False
-
-
-def _mci(command):
-    import ctypes
-    buf = ctypes.create_unicode_buffer(256)
-    err = ctypes.windll.winmm.mciSendStringW(command, buf, 255, 0)
-    return err, buf.value
+_until = 0   # Windows: quando finisce il suono in corso (PlaySound non lo dice)
 
 
 def stop():
     """Ferma il suono in corso (i suoni lunghi, quando si torna nel range o si zittisce)."""
-    global _proc, _mci_open
+    global _proc, _until
     try:
-        if _mci_open:
-            _mci(f"close {_ALIAS}")
-            _mci_open = False
+        if sys.platform == "win32":
+            import winsound
+            winsound.PlaySound(None, 0)
+            _until = 0
         if _proc and _proc.poll() is None:
             _proc.terminate()
         _proc = None
@@ -255,28 +283,34 @@ def stop():
         log(f"suono non fermato: {e}")
 
 
+def _windows_volume(volume):
+    """Volume dei suoni di GlucoBar (solo i suoi: Windows tiene un volume per programma)."""
+    import ctypes
+    level = int(0xFFFF * volume / 100)
+    ctypes.windll.winmm.waveOutSetVolume(None, level | (level << 16))
+
+
 def play(ref=None, volume=100):
     """Suona senza aspettare la fine (fermando quello di prima); mai un errore che
-    fermi GlucoBar. Restituisce False se il file non si può riprodurre."""
-    global _proc, _mci_open
+    fermi GlucoBar. Se un file non si può suonare, suona quello di GlucoBar."""
+    global _proc, _until
     stop()
+    volume = max(0, min(100, int(volume)))
     try:
         path = resolve(ref)
-        volume = max(0, min(100, int(volume)))
         if sys.platform == "win32":
-            # MCI (Windows Media): WAV, MP3, M4A e gli altri formati di Windows
-            err, _ = _mci(f'open "{path}" type mpegvideo alias {_ALIAS}')
-            if err:
-                log(f"suono non aperto ({err}): {os.path.basename(path)}")
-                if path.lower().endswith(".wav"):
-                    import winsound
-                    winsound.PlaySound(path, winsound.SND_FILENAME | winsound.SND_ASYNC)
-                    return True
-                return False
-            _mci_open = True
-            _mci(f"setaudio {_ALIAS} volume to {volume * 10}")
-            err, _ = _mci(f"play {_ALIAS}")
-            return not err
+            import time
+            import winsound
+            try:
+                path = decoded(path)
+            except Exception as e:
+                log(f"suono non letto ({os.path.basename(path)}): {e}")
+                path = builtin_path("beeps")
+            _windows_volume(volume)
+            winsound.PlaySound(path, winsound.SND_FILENAME | winsound.SND_ASYNC
+                               | winsound.SND_NODEFAULT)
+            _until = time.time() + duration(path)
+            return True
         if sys.platform == "darwin":
             _proc = subprocess.Popen(["afplay", "-v", str(volume / 100), path])
             return True
@@ -297,11 +331,10 @@ def play(ref=None, volume=100):
         return False
 
 
-def playing():
-    """Il suono è ancora in corso? (Per i test.)"""
+def check(ref):
+    """Il suono si può riprodurre? (Su Windows prova a convertirlo; per l'importazione.)"""
     try:
-        if sys.platform == "win32":
-            return _mci_open and _mci(f"status {_ALIAS} mode")[1] == "playing"
-        return bool(_proc and _proc.poll() is None)
-    except Exception:
+        return duration(decoded(resolve(ref))) > 0 or sys.platform != "win32"
+    except Exception as e:
+        log(f"suono non letto ({ref}): {e}")
         return False

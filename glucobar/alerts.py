@@ -11,6 +11,8 @@ from . import stats
 
 # "soon": la stima della tendenza (stats.predict) scende sotto la soglia bassa
 KINDS = ("low", "high", "stale", "soon")
+ALARMS = ("low", "high")                  # quelli il cui suono si può ripetere
+REPEAT_CHOICES = (15, 30, 60, 120, 300)   # ogni quanti secondi
 
 
 def soon_minutes(cfg, history, current, now=None):

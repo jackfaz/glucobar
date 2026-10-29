@@ -1,5 +1,7 @@
-"""I suoni degli avvisi su Windows vero (workflow ui-test.yml): i suoni di GlucoBar e i
-file dei pacchetti (WAV, MP3, M4A, MP4) si aprono e partono con MCI, e si fermano.
+"""I suoni degli avvisi su Windows vero (workflow ui-test.yml): un pacchetto importato
+da zip, i file MP3, M4A e MP4 convertiti in WAV da Media Foundation (con la durata
+giusta) e i suoni di GlucoBar. I computer di GitHub non hanno l'audio: qui si controlla
+che i file si leggano e che suonarli non dia errori, non che si sentano.
 
 Uso: python tools/win_sound_test.py [--strict]
 I risultati sono negli avvisi del job; con --strict esce con 1 se qualcosa non va.
@@ -23,39 +25,43 @@ def notice(title, text, level="notice"):
     print(f"::{level} title={title}::{text}", flush=True)
 
 
-def mci_error(code):
-    import ctypes
-    buf = ctypes.create_unicode_buffer(256)
-    ctypes.windll.winmm.mciGetErrorStringW(code, buf, 255)
-    return buf.value
-
-
 def main():
     from glucobar import sound
     shutil.rmtree(sound.SOUNDS_DIR, ignore_errors=True)
-    # un pacchetto da zip, come lo importa la finestra Impostazioni
+    shutil.rmtree(sound.CACHE_DIR, ignore_errors=True)
     archive = os.path.join(os.environ.get("TEMP", "."), "Test pack.zip")
     with zipfile.ZipFile(archive, "w") as z:
         for name in os.listdir(DATA):
             z.write(os.path.join(DATA, name), f"inside/{name}")
     pack, refs = sound.import_files([archive])
-    problems = []
     notice("Suoni: importati", f"{pack}: {refs}")
+    problems = []
     for ref in [f"builtin:{n}" for n in sound.BUILTIN] + refs:
-        path = sound.resolve(ref)
-        err, _ = sound._mci(f'open "{path}" type mpegvideo alias probe')
-        length = sound._mci("status probe length")[1] if not err else ""
-        sound._mci("close probe")
-        ok = sound.play(ref, 30)
-        time.sleep(0.3)
-        mode = sound._mci(f"status {sound._ALIAS} mode")[1]
+        start = time.time()
+        try:
+            wav = sound.decoded(sound.resolve(ref))
+            length, error = sound.duration(wav), ""
+        except Exception as e:
+            length, error = 0, repr(e)
+        took = time.time() - start
+        played = sound.play(ref, 40)
         sound.stop()
-        good = not err and ok and length not in ("", "0")
-        notice(f"Suono {ref}", f"{'ok' if good else 'NO'} | apertura={err} {mci_error(err) if err else ''}"
-               f" | durata={length} ms | play={ok} | stato={mode}",
+        # chime: un secondo; i suoni di GlucoBar almeno 0.3 s
+        good = (0.9 < length < 1.2) if not ref.startswith("builtin:") else length > 0.3
+        notice(f"Suono {ref}", f"{'ok' if good else 'NO'} | durata={length:.2f} s | "
+               f"conversione {took:.2f} s | play={played} {error}",
                "notice" if good else "error")
         if not good:
             problems.append(ref)
+    # un file che non è audio: errore chiaro, e play() suona quello di GlucoBar
+    bad = os.path.join(sound.SOUNDS_DIR, pack, "broken.mp3")
+    with open(bad, "wb") as f:
+        f.write(b"not audio" * 100)
+    ok = not sound.check(f"{pack}/broken.mp3")
+    notice("Suono rovinato", f"{'ok' if ok else 'NO'} | riconosciuto come non leggibile",
+           "notice" if ok else "error")
+    if not ok:
+        problems.append("broken")
     return 1 if problems and "--strict" in sys.argv else 0
 
 

@@ -49,3 +49,7 @@ jobs:
       - name: Alert sounds test
         if: always()
         run: python tools/win_sound_test.py --strict
+
+      - name: Alert sounds settings test
+        if: always()
+        run: python tools/win_sound_ui_test.py --strict

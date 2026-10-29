@@ -180,7 +180,7 @@
                 --glow: #3ecf6e; transition: --glow .9s;
                 /* niente bagliore rosso di sfondo: quando la luce è spenta deve sembrarlo */
                 background: radial-gradient(55% 80% at 100% 0%, rgba(38, 130, 78, .32), transparent 70%), #141519; }
-  /* la luce: spenta nel range, rossa quando il valore è alto o basso */
+  /* la luce: spenta di solito, rossa quando il valore è basso (sotto 70) o molto alto (sopra 250) */
   .home-stage .ambient { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .6s;
     background: radial-gradient(38% 70% at 15% 55%, rgba(255, 45, 45, .32), transparent 75%); }
   .home-stage.lamp-on .ambient, .home-stage.lamp-on .lamp .beam { opacity: 1; }
@@ -736,7 +736,7 @@
   <div class="wrap">
     <h2>Your glucose, around the house</h2>
     <p class="intro">Turn on <em>Settings → Connections</em> and other devices can show the value too:
-      a light that turns red only when you are out of range, a Home Assistant dashboard, an LED clock on the shelf or
+      a light that turns red only when you go below 70 or above 250, a Home Assistant dashboard, an LED clock on the shelf or
       a small ESP32 display on the bedside table. GlucoBar publishes the value over MQTT, with
       Home Assistant discovery, and on a local address that speaks Nightscout, so displays made for
       Nightscout work as they are. Your sensor password never leaves the PC.</p>
@@ -757,7 +757,7 @@
           <div class="big"><span class="js-val">112</span><small>mg/dL</small> <span class="js-arrow" style="font-size:3cqw;color:#b5b5b5">&#8594;</span></div>
           <div class="attrs">Delta <span class="js-delta">+0</span> &#183; updated <span class="js-clock">00:00</span></div>
           <div class="chart"><canvas class="js-chart" data-kind="spark"></canvas></div>
-          <div class="auto"><i></i><span>Automation: light red when glucose is below 70 or above 180 · <b class="js-lamp-state">off</b></span></div>
+          <div class="auto"><i></i><span>Automation: light red when glucose is below 70 or above 250 · <b class="js-lamp-state">off</b></span></div>
         </div>
         <span class="tag" style="left:29cqw;top:0.9cqw">Home Assistant</span>
         <div class="ledclock"><div class="wrapc"><canvas class="js-chart" data-kind="matrix"></canvas></div></div>
@@ -1028,7 +1028,7 @@
     for (var i = -OFF; i <= STEPS; i++) {
       var h = ((i % STEPS) + STEPS) % STEPS * 24 / STEPS;
       var v = 112 + bump(h, 5.8, 1.3, 18) + bump(h, 8.3, .75, 92) + bump(h, 13.4, .85, 62)
-              - bump(h, 16.6, .6, 62) + bump(h, 20.4, .85, 98) - bump(h, 2.8, 1.2, 14)
+              - bump(h, 16.6, .6, 62) + bump(h, 20.4, 1.0, 165) - bump(h, 2.8, 1.2, 14)
               + 4 * Math.sin(i / 3.1) + 3 * Math.sin(i / 7.7);
       values.push(Math.max(48, Math.min(320, Math.round(v))));
     }
@@ -1201,9 +1201,9 @@
       all(".js-col", function (e) { e.style.color = colorFor(e, v); });
       all(".js-glow", function (e) {
         e.style.setProperty("--glow", colorFor(e, v));
-        e.classList.toggle("lamp-on", v < 70 || v > 180);   // la luce: solo fuori dal range
+        e.classList.toggle("lamp-on", v < 70 || v > 250);   // la luce: solo bassa o molto alta
       });
-      all(".js-lamp-state", function (e) { e.textContent = v < 70 || v > 180 ? "on" : "off"; });
+      all(".js-lamp-state", function (e) { e.textContent = v < 70 || v > 250 ? "on" : "off"; });
       all(".js-delta", function (e) { e.textContent = (d >= 0 ? "+" : "") + d; });
       all(".js-clock", function (e) { e.textContent = hhmm(n); });
       all(".js-sub", function (e) { e.textContent = "mg/dL \u00b7 1 min ago \u00b7 " + (change >= 0 ? "+" : "") + change + " in 15 min"; });

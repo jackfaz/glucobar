@@ -284,7 +284,7 @@ before it turns on:
 *Settings → Connections* (off by default) lets other programs and devices read the value,
 without knowing your sensor password.
 
-<p align="center"><img src="docs/smart-home.gif" alt="A smart light that turns red only when glucose is out of range, a Home Assistant card, an LED clock and an ESP32 display following the value from GlucoBar (simulated readings)" width="720"></p>
+<p align="center"><img src="docs/smart-home.gif" alt="A smart light that turns red only when glucose is below 70 or above 250, a Home Assistant card, an LED clock and an ESP32 display following the value from GlucoBar (simulated readings)" width="720"></p>
 
 **Local web address.** GlucoBar answers on `http://127.0.0.1:17580` (port configurable). Tick
 *Also for other devices on my home network* to use it from an ESP32, a phone or Home
@@ -302,7 +302,7 @@ key, passed as `?token=…` or in the `api-secret` header.
 **MQTT.** GlucoBar publishes the value to a broker, for example Home Assistant's Mosquitto
 add-on: with *Home Assistant: create the sensors automatically* a **Glucose** sensor appears by
 itself (one per person), with trend, delta and state as attributes, ready for automations
-such as turning a light red. The MQTT password is kept in Windows Credential Manager
+such as turning a light red below 70 or above 250. The MQTT password is kept in Windows Credential Manager
 (`GlucoBar:MQTT`).
 
 ## Terminal

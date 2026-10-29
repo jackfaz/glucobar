@@ -8,9 +8,9 @@ del tema in uso (chiaro o scuro), così cambiare tema non li mescola."""
 
 import sys
 import tkinter as tk
-from tkinter import colorchooser, ttk
+from tkinter import colorchooser, messagebox, ttk
 
-from . import __version__, autostart, updates
+from . import __version__, autostart, credentials, updates
 from .config import ELEMENTS, save_config
 from .i18n import LANGUAGES, element_name, refresh_label, t
 from .theme import COLOR_KEYS, PALETTES, THEMES, UI_KEYS, is_light, palette
@@ -24,7 +24,7 @@ SAMPLES = {
     "low": lambda cfg: max(40, cfg["low"] - 10),
     "stale": lambda cfg: (cfg["low"] + cfg["high"]) // 2,
 }
-TABS = ("general", "values", "look", "elements", "updates")
+TABS = ("general", "values", "look", "elements", "connect", "updates")
 
 
 class SettingsWindow:
@@ -55,6 +55,7 @@ class SettingsWindow:
         self.tab_values(self.tab("values"))
         self.tab_look(self.tab("look"))
         self.tab_elements(self.tab("elements"))
+        self.tab_connect(self.tab("connect"))
         self.tab_updates(self.tab("updates"))
 
         bottom = tk.Frame(win)
@@ -122,6 +123,8 @@ class SettingsWindow:
         tk.Button(box, text=t("menu_account"), font=(FONT, 9),
                   command=self.change_account).pack(side="right")
 
+        self.people_section(frame)
+
         box = self.section(frame, t("menu_language"))
         names = ["Auto"] + list(LANGUAGES.values())
         codes = ["auto"] + list(LANGUAGES)
@@ -144,6 +147,38 @@ class SettingsWindow:
             box = self.section(frame, t("settings_startup"))
             label = t("menu_autostart" if sys.platform == "darwin" else "menu_autostart_win")
             self.check(box, label, autostart.is_enabled(), autostart.set_enabled)
+
+    def people_section(self, frame):
+        """Soprannome di ogni persona seguita e, con LibreLinkUp, chi mostrare insieme
+        sulla barra."""
+        ctl = self.ctl
+        box = self.section(frame, t("settings_people"))
+        patients = getattr(ctl.client, "patients", None) or []
+        primary = getattr(ctl.client, "patient_id", None)
+        shown = self.cfg.get("people_shown") or []
+        grid = tk.Frame(box)
+        grid.pack(fill="x")
+        tk.Label(grid, text=t("settings_people_nickname"), font=(FONT, 9), fg="#6b6f76").grid(
+            row=0, column=1, sticky="w")
+        for row, (pid, name) in enumerate(patients or [(None, t("settings_people_you"))], 1):
+            label = name + (f"  ({t('settings_people_main')})"
+                            if len(patients) > 1 and pid == primary else "")
+            tk.Label(grid, text=label, font=(FONT, 10), anchor="w").grid(
+                row=row, column=0, sticky="w", padx=(0, 10), pady=2)
+            entry = tk.Entry(grid, width=14, font=(FONT, 10))
+            entry.insert(0, (self.cfg.get("nicknames") or {}).get(ctl.person_key(pid), ""))
+            entry.grid(row=row, column=1, sticky="w", pady=2)
+            for event in ("<FocusOut>", "<Return>"):
+                entry.bind(event, lambda _e, p=pid, en=entry: ctl.set_nickname(p, en.get()))
+            if len(patients) > 1 and pid != primary:
+                self.var(tk.BooleanVar, False)
+                v = self.vars[-1]
+                v.set(pid in shown)
+                tk.Checkbutton(grid, text=t("settings_people_also"), variable=v, font=(FONT, 9),
+                               command=lambda p=pid: ctl.toggle_person_shown(p)).grid(
+                    row=row, column=2, sticky="w", padx=(10, 0))
+        tk.Label(box, text=t("settings_people_note"), font=(FONT, 9), fg="#6b6f76", anchor="w",
+                 justify="left", wraplength=380).pack(fill="x", pady=(4, 0))
 
     def change_account(self):
         self.win.attributes("-topmost", False)   # la finestra dell'account deve stare sopra
@@ -183,9 +218,32 @@ class SettingsWindow:
         self.radios(box, [(n, t(f"beside_{n}")) for n in TREND_STYLES],
                     cfg.get("trend_style", "arrow"), lambda n: ctl.set_options(trend_style=n))
 
-        box = self.section(frame, t("settings_show_values"))
+        # "sotto il valore" nella stessa sezione: la scheda resta abbastanza bassa per
+        # gli schermi piccoli
+        tk.Label(box, text=t("settings_show_values"), font=(FONT, 9), fg="#6b6f76",
+                 anchor="w").pack(fill="x", pady=(6, 0))
         self.check(box, t("menu_delta"), cfg.get("show_delta"),
                    lambda on: ctl.set_options(show_delta=on))
+
+        box = self.section(frame, t("predict_title"))
+        self.predict_vars = {}
+        for key, label in (("predict", t("predict_show")), ("alert_soon", t("predict_alert"))):
+            self.predict_vars[key] = self.check(box, label, cfg.get(key),
+                                                lambda on, k=key: self.set_predict(k, on))
+        tk.Label(box, text=t("predict_note"), font=(FONT, 9), fg="#6b6f76", anchor="w",
+                 justify="left", wraplength=380).pack(fill="x", pady=(4, 0))
+
+    def set_predict(self, key, on):
+        """La stima della tendenza si accende solo dopo aver letto (una volta) cosa è e
+        cosa non è."""
+        if on and not self.cfg.get("predict_ack"):
+            if not messagebox.askokcancel(t("predict_title"), t("predict_disclaimer"),
+                                          icon="warning", parent=self.win):
+                self.predict_vars[key].set(False)
+                return
+            self.cfg["predict_ack"] = True
+        self.ctl.set_options(**{key: on})
+        self.win.lift()
 
     def change_range(self):
         values = ask_range(self.cfg, self.win)
@@ -313,6 +371,140 @@ class SettingsWindow:
     def set_and_lift(self, **changes):
         self.ctl.set_options(**changes)   # ricrea gli elementi: questa finestra resta davanti
         self.win.lift()
+
+    # ---- Connessioni (ponte locale, vedi bridge.py) ----
+    def tab_connect(self, frame):
+        cfg = self.cfg
+        note = {"font": (FONT, 9), "fg": "#6b6f76", "anchor": "w", "justify": "left",
+                "wraplength": 420}
+
+        box = self.section(frame, t("bridge_http"))
+        tk.Label(box, text=t("bridge_http_note"), **note).pack(fill="x")
+        self.check(box, t("bridge_http_on"), cfg.get("bridge_http"),
+                   lambda on: self.set_bridge(bridge_http=on))
+        self.check(box, t("bridge_lan"), cfg.get("bridge_lan"),
+                   lambda on: self.set_bridge(bridge_lan=on))
+        grid = tk.Frame(box)
+        grid.pack(fill="x", pady=(4, 0))
+        self.http_fields = {
+            "bridge_port": self.field(grid, 0, t("bridge_port"), cfg.get("bridge_port"), 7),
+            "bridge_token": self.field(grid, 1, t("bridge_token"), cfg.get("bridge_token"), 20),
+        }
+        tk.Button(grid, text=t("bridge_apply"), font=(FONT, 9), command=self.apply_http).grid(
+            row=1, column=2, padx=(8, 0))
+        row = tk.Frame(box)
+        row.pack(fill="x", pady=(6, 0))
+        self.http_lbl = tk.Label(row, font=(FONT, 10), anchor="w", justify="left")
+        self.http_lbl.pack(side="left")
+        self.http_copy = tk.Button(row, text=t("bridge_copy"), font=(FONT, 9), command=self.copy_url)
+        self.http_open = tk.Button(row, text=t("bridge_open"), font=(FONT, 9), command=self.open_url)
+
+        box = self.section(frame, t("bridge_mqtt"))
+        tk.Label(box, text=t("bridge_mqtt_note"), **note).pack(fill="x")
+        self.check(box, t("bridge_mqtt_on"), cfg.get("mqtt"), lambda on: self.set_bridge(mqtt=on))
+        grid = tk.Frame(box)
+        grid.pack(fill="x", pady=(4, 0))
+        self.mqtt_fields = {
+            "mqtt_host": self.field(grid, 0, t("bridge_host"), cfg.get("mqtt_host"), 20),
+            "mqtt_port": self.field(grid, 1, t("bridge_port"), cfg.get("mqtt_port"), 7),
+            "mqtt_user": self.field(grid, 2, t("bridge_user"), cfg.get("mqtt_user"), 20),
+            "mqtt_password": self.field(grid, 3, t("bridge_password"), "", 20, show="•"),
+            "mqtt_topic": self.field(grid, 4, t("bridge_topic"), cfg.get("mqtt_topic"), 20),
+        }
+        self.check(box, t("bridge_discovery"), cfg.get("mqtt_discovery", True),
+                   lambda on: self.set_bridge(mqtt_discovery=on))
+        row = tk.Frame(box)
+        row.pack(fill="x", pady=(4, 0))
+        tk.Button(row, text=t("bridge_apply"), font=(FONT, 9), command=self.apply_mqtt).pack(side="left")
+        self.mqtt_lbl = tk.Label(row, font=(FONT, 10), anchor="w")
+        self.mqtt_lbl.pack(side="left", padx=(10, 0))
+        self.bridge_status()
+
+    @staticmethod
+    def field(grid, row, label, value, width, show=""):
+        tk.Label(grid, text=label, font=(FONT, 10), anchor="w").grid(row=row, column=0, sticky="w", pady=1)
+        entry = tk.Entry(grid, width=width, font=(FONT, 10), show=show)
+        entry.insert(0, "" if value is None else str(value))
+        entry.grid(row=row, column=1, sticky="w", padx=(8, 0), pady=1)
+        return entry
+
+    def set_bridge(self, **changes):
+        self.cfg.update(changes)
+        save_config(self.cfg)
+        if self.ctl.bridge:
+            self.ctl.bridge.reconfigure()
+            self.ctl.bridge.update()
+        self.win.after(300, self.bridge_status)
+
+    def apply_http(self):
+        try:
+            port = int(self.http_fields["bridge_port"].get())
+            if not 1024 <= port <= 65535:
+                raise ValueError
+        except ValueError:
+            self.http_lbl.config(text=t("bridge_bad_port"), fg="#c62828")
+            return
+        self.set_bridge(bridge_port=port, bridge_token=self.http_fields["bridge_token"].get().strip())
+
+    def apply_mqtt(self):
+        fields = self.mqtt_fields
+        try:
+            port = int(fields["mqtt_port"].get())
+        except ValueError:
+            port = 1883
+        user = fields["mqtt_user"].get().strip()
+        password = fields["mqtt_password"].get()
+        if password:
+            credentials.set_password(user or "mqtt", password, "mqtt")
+            fields["mqtt_password"].delete(0, "end")
+        if self.ctl.bridge:
+            self.ctl.bridge._mqtt_conf = None   # riconnette anche se cambia solo la password
+        self.set_bridge(mqtt_host=fields["mqtt_host"].get().strip(), mqtt_port=port,
+                        mqtt_user=user, mqtt_topic=fields["mqtt_topic"].get().strip() or "glucobar")
+
+    def bridge_status(self):
+        """Indirizzi e stato del collegamento, aggiornati finché la finestra è aperta."""
+        if not self.win.winfo_exists() or not hasattr(self, "http_lbl"):
+            return
+        bridge = self.ctl.bridge
+        urls = bridge.addresses() if bridge else []
+        self.http_copy.pack_forget()
+        self.http_open.pack_forget()
+        if not self.cfg.get("bridge_http"):
+            self.http_lbl.config(text=t("bridge_off"), fg="#6b6f76")
+        elif bridge and bridge.http_error:
+            self.http_lbl.config(text=t("bridge_error", e=bridge.http_error), fg="#c62828")
+        elif urls:
+            self.http_lbl.config(text=t("bridge_running", url=urls[0]), fg="#1e9e4a")
+            self.http_copy.pack(side="left", padx=(10, 0))
+            self.http_open.pack(side="left", padx=(6, 0))
+        mqtt = bridge.mqtt if bridge else None
+        if not self.cfg.get("mqtt"):
+            self.mqtt_lbl.config(text=t("bridge_off"), fg="#6b6f76")
+        elif mqtt and mqtt.status == "ok":
+            self.mqtt_lbl.config(text=t("bridge_mqtt_ok"), fg="#1e9e4a")
+        elif mqtt and mqtt.status.startswith("error"):
+            self.mqtt_lbl.config(text=t("bridge_mqtt_error", e=mqtt.status[7:]), fg="#c62828")
+        else:
+            self.mqtt_lbl.config(text=t("bridge_mqtt_wait"), fg="#6b6f76")
+        self.win.after(2000, self.bridge_status)
+
+    def bridge_url(self):
+        urls = self.ctl.bridge.addresses() if self.ctl.bridge else []
+        token = (self.cfg.get("bridge_token") or "").strip()
+        return (urls[0] + (f"/?token={token}" if token else "")) if urls else None
+
+    def copy_url(self):
+        url = self.bridge_url()
+        if url:
+            self.win.clipboard_clear()
+            self.win.clipboard_append(url)
+
+    def open_url(self):
+        import webbrowser
+        url = self.bridge_url()
+        if url:
+            webbrowser.open(url)
 
     # ---- Aggiornamenti ----
     def tab_updates(self, frame):

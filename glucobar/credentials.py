@@ -17,7 +17,8 @@ last_problem = None
 
 # sorgente (vedi sources.SOURCES) -> voce nel Gestione credenziali
 TARGETS = {"libre": "GlucoBar:LibreLinkUp", "dexcom": "GlucoBar:Dexcom",
-           "nightscout": "GlucoBar:Nightscout"}   # per Nightscout: il token
+           "nightscout": "GlucoBar:Nightscout",   # per Nightscout: il token
+           "mqtt": "GlucoBar:MQTT"}               # ponte locale: broker MQTT (bridge.py)
 
 if sys.platform == "win32":
     import ctypes

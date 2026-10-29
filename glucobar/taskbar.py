@@ -19,6 +19,7 @@ import traceback
 from .config import log, save_config
 from .i18n import t
 from .menus import Item, menu_open, popup, radio_items
+from .sources import TREND_ARROWS
 from .theme import palette, taskbar_light
 from . import stats
 from .ui_common import (FONT, age_minutes, beside_value, bind_right_click, delta_beside,
@@ -248,6 +249,8 @@ class TaskbarView:
         self.info_lbl.grid(row=1, column=0, columnspan=2)
         for lbl in (self.value_lbl, self.arrow_lbl, self.info_lbl):
             lbl.configure(padx=0, pady=0, bd=0)
+        self.extra = []   # le altre persone mostrate insieme: (valore, freccia, minuti)
+        self._fonts = None
 
         # Con lo sfondo trasparente Windows fa passare i clic alla barra sotto, tranne che
         # sulle cifre: il clic destro apriva il menu della barra. Sopra il valore c'è
@@ -372,6 +375,11 @@ class TaskbarView:
         self.value_lbl.configure(font=(FONT, -int(height * 0.42 * k), "bold"))
         self.arrow_lbl.configure(font=(FONT, -int(height * 0.36 * k), "bold"))
         self.info_lbl.configure(font=(FONT, -int(height * 0.21 * min(k, 1.0))))
+        self._fonts = (self.value_lbl.cget("font"), self.arrow_lbl.cget("font"),
+                       self.info_lbl.cget("font"))
+        for labels in self.extra:
+            for lbl, font in zip(labels, self._fonts):
+                lbl.configure(font=font)
         width = int(height * 1.75 * k)
         if delta_beside(self.cfg):
             # più largo per il delta accanto al valore, pensando al caso più lungo, così
@@ -382,6 +390,8 @@ class TaskbarView:
             need = (tkfont.Font(font=self.value_lbl.cget("font")).measure("88.8" if mmol else "388")
                     + tkfont.Font(font=self.arrow_lbl.cget("font")).measure(sample))
             width = max(width, need + int(height * 0.3))
+        if self.extra:   # una colonna in più per ogni persona, con un po' di spazio tra loro
+            width = width * (1 + len(self.extra)) + int(height * 0.35) * len(self.extra)
         return width, height
 
     def value_rect(self):
@@ -570,9 +580,49 @@ class TaskbarView:
         save_config(self.cfg)
         self.reposition()
 
+    def sync_extra(self):
+        """Tante colonne quante le altre persone da mostrare (non sulle barre verticali,
+        troppo strette)."""
+        others = self.ctl.others if self.edge in ("top", "bottom") else []
+        if len(others) == len(self.extra):
+            return
+        for labels in self.extra:
+            for lbl in labels:
+                lbl.destroy()
+        self.extra = []
+        gap = int((self.root.winfo_height() or 40) * 0.35)
+        for i, _other in enumerate(others, 1):
+            labels = []
+            for row, column, sticky in ((0, 2 * i, "e"), (0, 2 * i + 1, "w"), (1, 2 * i, None)):
+                lbl = tk.Label(self.box, text="", bg=self.bg, fg=self.dim, padx=0, pady=0, bd=0)
+                lbl.grid(row=row, column=column, sticky=sticky,
+                         columnspan=2 if row else 1, padx=(gap, 0) if column == 2 * i else 0)
+                if self._fonts:
+                    lbl.configure(font=self._fonts[len(labels)])
+                bind_right_click(lbl, lambda e: self.show_menu(e.x_root, e.y_root))
+                labels.append(lbl)
+            self.extra.append(labels)
+        self.last_geometry = None   # la larghezza cambia
+        self.reposition()
+
+    def render_extra(self):
+        for (value, arrow, info), other in zip(self.extra, self.ctl.others):
+            c = other["current"]
+            stale = is_stale(self.cfg, c)
+            color = self.c.stale if stale else self.c.value(self.cfg, c["mgdl"])
+            value.config(text=fmt_value(self.cfg, c["mgdl"]), fg=color)
+            mark = "" if stale else TREND_ARROWS.get(c["trend"], "")
+            arrow.config(text=" " + mark if mark else "", fg=color)
+            age = age_minutes(c)
+            when = t("now") if age == 0 else t("min_short", n=age)
+            info.config(text=f"{other['label']} · {when}" if other["label"] else when,
+                        fg=self.c.error if stale else self.dim)
+
     def render(self):
         c, error = self.ctl.current, self.ctl.error
         self.hover.render()
+        self.sync_extra()
+        self.render_extra()
         if not c:
             self.value_lbl.config(text="--", fg=self.dim)
             self.arrow_lbl.config(text="")
@@ -586,6 +636,9 @@ class TaskbarView:
         beside = beside_value(self.cfg, self.ctl.history, c)
         self.arrow_lbl.config(text=" " + beside if beside else "", fg=color)
         info = t("now") if age == 0 else t("min_short", n=age)
+        name = self.ctl.display_name() if self.ctl.others else ""
+        if name:
+            info = f"{name} · {info}"
         delta = stats.delta(self.ctl.history, c) \
             if self.cfg.get("show_delta") and not delta_beside(self.cfg) else None
         if delta is not None and not stale:

@@ -29,7 +29,12 @@ jobs:
       - name: Take screenshots
         run: python tools/win_screenshots.py shots
 
+      - name: New features on Windows
+        if: always()
+        run: python tools/win_new_features.py shots
+
       - name: Save them in the "screenshots" branch
+        if: always()
         shell: pwsh
         run: |
           Set-Location shots

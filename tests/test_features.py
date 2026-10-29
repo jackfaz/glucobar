@@ -84,6 +84,21 @@ class AlertTest(unittest.TestCase):
         self.cfg["alert_low"] = True
         self.assertEqual(self.watch.check(self.cfg, reading(65)), ["low"])
 
+    def test_trend_estimate_going_low(self):
+        now = time.time()
+        falling = [reading(150 - 2 * m, minutes_ago=30 - m, now=now) for m in range(0, 31, 5)]
+        current = falling[-1]                                   # 90, -2 al minuto: 70 tra 10 min
+        cfg = dict(self.cfg, alert_soon=True)
+        self.assertAlmostEqual(alerts.soon_minutes(cfg, falling, current, now), 10)
+        self.assertIn("soon", alerts.AlertWatch().check(cfg, current, now, falling))
+        self.assertNotIn("soon", alerts.AlertWatch().check(dict(cfg, alert_soon=False),
+                                                            current, now, falling))
+        flat = [reading(120, minutes_ago=30 - m, now=now) for m in range(0, 31, 5)]
+        self.assertEqual(alerts.AlertWatch().check(cfg, flat[-1], now, flat), [])
+        # già sotto la soglia: c'è l'avviso "basso", non quello della stima
+        low = [reading(80 - 2 * m, minutes_ago=30 - m, now=now) for m in range(0, 31, 5)]
+        self.assertEqual(alerts.AlertWatch().check(cfg, low[-1], now, low), ["low"])
+
 
 def connection(sn, activated):
     return {"sensor": {"sn": sn, "a": activated, "pt": 4}}

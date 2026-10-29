@@ -60,3 +60,39 @@ class DeltaTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PredictTest(unittest.TestCase):
+    def test_straight_line(self):
+        now = 1_800_000_000
+        history = [{"mgdl": 200 - 2 * m, "time": now - (30 - m) * 60} for m in range(0, 31, 5)]
+        current = history[-1]                                         # 140, -2 al minuto
+        pred = stats.predict(history, current, now=now)
+        self.assertAlmostEqual(pred["slope"], -2, places=5)
+        minutes, value, low, high = pred["points"][-1]
+        self.assertEqual((minutes, round(value)), (30, 80))
+        self.assertTrue(low < value < high)
+        first = pred["points"][0]                                     # la fascia si allarga
+        self.assertLess(first[3] - first[2], high - low)
+        self.assertAlmostEqual(stats.minutes_to(pred, 100), 20)
+        self.assertIsNone(stats.minutes_to(pred, 70))                 # oltre i 30 minuti
+        clamped = stats.predict([dict(m, mgdl=m["mgdl"] - 100) for m in history],
+                                dict(current, mgdl=40), now=now)
+        self.assertEqual(clamped["points"][-1][1], 40)                # mai sotto 40
+
+    def test_not_enough_data(self):
+        now = 1_800_000_000
+        current = {"mgdl": 120, "time": now}
+        self.assertIsNone(stats.predict([current], current, now=now))
+        close = [{"mgdl": 118, "time": now - 120}, current]       # 2 minuti: solo rumore
+        self.assertIsNone(stats.predict(close, current, now=now))
+        old = {"mgdl": 120, "time": now - 20 * 60}                  # dato vecchio
+        self.assertIsNone(stats.predict([dict(old, time=old["time"] - 600), old], old, now=now))
+
+    def test_rising_and_limits(self):
+        now = 1_800_000_000
+        history = [{"mgdl": 100 + 10 * m, "time": now - (15 - m) * 60} for m in (0, 15)]
+        pred = stats.predict(history, history[-1], now=now)
+        self.assertEqual(pred["slope"], 4.0)                        # limitata a 4 mg/dL/min
+        self.assertEqual(pred["points"][-1][1], 250 + 120)
+        self.assertIsNone(stats.minutes_to(pred, 70))

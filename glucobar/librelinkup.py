@@ -31,6 +31,8 @@ class LibreLinkUp:
         self.account_id = None
         self.patient_id = None
         self.patients = []       # [(id, nome)] delle persone seguite con questo account
+        self.currents = {}       # id -> ultima misura di ogni persona (da /llu/connections)
+        self.extras = {}         # le altre persone da mostrare (cfg people_shown) -> misura
         self._patients_at = 0
         self.connection = None   # ultima risposta completa (contiene i dati del sensore)
 
@@ -132,9 +134,14 @@ class LibreLinkUp:
         return res["data"]
 
     def fetch(self):
-        """Ritorna (misura_corrente, storico): ogni misura è {mgdl, trend, time}."""
-        if not self.patient_id or time.time() - self._patients_at > 3600:
+        """Ritorna (misura_corrente, storico): ogni misura è {mgdl, trend, time}.
+        Le altre persone da mostrare insieme finiscono in `extras` (solo il valore
+        attuale: arriva con l'elenco delle persone, una richiesta in più in tutto)."""
+        wanted = [pid for pid in self.cfg.get("people_shown") or [] if pid != self.patient_id]
+        if not self.patient_id or wanted or time.time() - self._patients_at > 3600:
             self.load_patients()   # anche più tardi: si può iniziare a seguire qualcun altro
+        self.extras = {pid: self.currents[pid] for pid in wanted
+                       if pid in self.currents and pid != self.patient_id}
         data = self._get(f"/llu/connections/{self.patient_id}/graph")
         self.connection = data["connection"]
         current = parse_measurement(data["connection"]["glucoseMeasurement"])
@@ -148,6 +155,8 @@ class LibreLinkUp:
         if not conns:
             raise LibreError(t("err_no_patient"))
         self.patients = [(conn["patientId"], patient_name(conn)) for conn in conns]
+        self.currents = {conn["patientId"]: parse_measurement(conn["glucoseMeasurement"])
+                         for conn in conns if conn.get("glucoseMeasurement")}
         self._patients_at = time.time()
         ids = [pid for pid, _name in self.patients]
         if self.patient_id not in ids:

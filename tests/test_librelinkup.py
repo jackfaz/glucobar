@@ -59,11 +59,15 @@ class FakeLibreView(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.headers.get("Account-Id") != hashlib.sha256(USER_ID.encode()).hexdigest():
             return self.send_json({"message": "unauthorized"}, 401)
-        if self.path == "/llu/connections":
-            return self.send_json({"status": 0, "data": [
-                {"patientId": "p1", "firstName": "Anna", "lastName": "Rossi"},
-                {"patientId": "p2", "firstName": "Luca", "lastName": ""}]})
         now = datetime.now(timezone.utc) - timedelta(minutes=2)
+        if self.path == "/llu/connections":
+            self.state["connections"] = self.state.get("connections", 0) + 1
+            return self.send_json({"status": 0, "data": [
+                {"patientId": "p1", "firstName": "Anna", "lastName": "Rossi",
+                 "glucoseMeasurement": measurement(now, 142, 4)},
+                {"patientId": "p2", "firstName": "Luca", "lastName": "",
+                 "glucoseMeasurement": measurement(now, 99, 2)},
+                {"patientId": "p3", "firstName": "Sara", "lastName": ""}]})
         history = [measurement(now - timedelta(minutes=5 * i), 120 + i) for i in range(5, 0, -1)]
         value = 99 if "/p2/" in self.path else 142
         self.send_json({"status": 0, "data": {
@@ -111,13 +115,27 @@ class LibreLinkUpTest(unittest.TestCase):
 
     def test_people_followed(self):
         self.client.fetch()
-        self.assertEqual(self.client.patients, [("p1", "Anna Rossi"), ("p2", "Luca")])
+        self.assertEqual(self.client.patients, [("p1", "Anna Rossi"), ("p2", "Luca"), ("p3", "Sara")])
         self.assertEqual(self.client.patient_id, "p1")
         self.cfg["patient_id"] = "p2"   # scelta salvata dal menu, al prossimo avvio
         client = LibreLinkUp(self.cfg, save=lambda cfg: None)
         current, _history = client.fetch()
         self.assertEqual((client.patient_id, current["mgdl"]), ("p2", 99))
         self.assertEqual(client.connection["sensor"]["sn"], "0M00ABCDEF")
+
+    def test_other_people_shown_together(self):
+        self.cfg["people_shown"] = ["p2", "p3", "p1"]   # p1 è la principale, p3 senza dati
+        self.client.fetch()
+        self.assertEqual(list(self.client.extras), ["p2"])
+        self.assertEqual(self.client.extras["p2"]["mgdl"], 99)
+        before = FakeLibreView.state["connections"]
+        self.client.fetch()   # con altre persone l'elenco si rilegge ogni volta
+        self.assertEqual(FakeLibreView.state["connections"], before + 1)
+        self.cfg["people_shown"] = []
+        self.client.fetch()   # senza: una volta all'ora
+        self.client.fetch()
+        self.assertEqual(FakeLibreView.state["connections"], before + 1)
+        self.assertEqual(self.client.extras, {})
 
     def test_wrong_password(self):
         self.password = "sbagliata"

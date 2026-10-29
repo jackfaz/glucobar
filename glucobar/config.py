@@ -95,6 +95,11 @@ DEFAULT_CONFIG = {
     "alert_high": False,
     "alert_stale": False,
     "alerts_note_shown": False,
+    # stima della tendenza (sperimentale, spenta di default): dove andrebbe il valore se
+    # continuasse come negli ultimi minuti; va accettata l'avvertenza la prima volta
+    "predict": False,
+    "alert_soon": False,        # avviso se la stima scende sotto la soglia bassa
+    "predict_ack": False,
     # avviso di nuova versione: una richiesta al giorno a GitHub
     "update_check": True,
     "update_checked_at": 0,
@@ -104,10 +109,25 @@ DEFAULT_CONFIG = {
     # LibreLinkUp: persona seguita (se più d'una) e sensore in uso, per i promemoria di
     # fine sensore e la richiesta di sostituzione
     "patient_id": None,
+    "people_shown": [],         # altre persone mostrate insieme sulla barra (id LibreLinkUp)
+    "nicknames": {},            # soprannomi: id della persona (o "self") -> "Marco"
     "sensor_life_days": 14,     # 15 per i sensori Plus
     "sensor_sn": None,
     "sensor_activated": None,
     "sensor_notified": [],
+    # ponte locale (bridge.py, spento di default): il valore ad altri dispositivi
+    "bridge_http": False,       # server HTTP (API JSON, come Nightscout, pagina per OBS)
+    "bridge_port": 17580,
+    "bridge_lan": False,        # False: solo questo computer; True: tutta la rete di casa
+    "bridge_token": "",         # chiave facoltativa (?token=... o api-secret)
+    "mqtt": False,              # pubblica su un broker MQTT (es. Home Assistant)
+    "mqtt_host": "",
+    "mqtt_port": 1883,
+    "mqtt_user": "",            # la password sta in Gestione credenziali (GlucoBar:MQTT)
+    "mqtt_topic": "glucobar",
+    "mqtt_discovery": True,     # i sensori compaiono da soli in Home Assistant
+    # promemoria (finestra Promemoria, vedi reminders.py)
+    "reminders": [],
     "tray_hint_shown": False,   # notifica "dov'è l'icona" già mostrata
     "tray_promoted": False,     # icona già resa visibile accanto all'orologio (una volta sola)
 }

@@ -14,6 +14,7 @@ from PIL import Image, ImageDraw, ImageFont
 from .config import log, save_config
 from .i18n import t
 from .menus import to_pystray
+from .sources import TREND_ARROWS
 from .theme import palette, taskbar_light
 from .ui_common import GREY, age_minutes, asset_path, beside_value, fmt_value, is_stale
 
@@ -156,6 +157,12 @@ class TrayIcon:
         title = f"{value} {arrow} {cfg['unit']} · {when}"
         if stale:
             title += " · " + t("stale")
+        if ctl.others:   # le altre persone mostrate insieme, una riga ciascuna
+            title = f"{ctl.display_name()}: {title}"
+            for other in ctl.others:
+                m = other["current"]
+                arrow_o = "" if is_stale(cfg, m) else TREND_ARROWS.get(m["trend"], "")
+                title += f"\n{other['label']}: {fmt_value(cfg, m['mgdl'])} {arrow_o}"
         if ctl.error:
             title += f"\n⚠ {ctl.error}"
         self.icon.title = title[:127]  # limite di Windows per il tooltip

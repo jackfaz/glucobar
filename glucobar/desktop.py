@@ -15,7 +15,7 @@ from . import stats
 from .config import save_config
 from .i18n import t
 from .menus import Item, menu_open, popup, radio_items
-from .theme import palette
+from .theme import mix, palette
 from .ui_common import FONT, age_minutes, beside_value, bind_right_click, fmt_value, is_stale
 from .taskbar import IS_WIN
 
@@ -239,9 +239,14 @@ class DesktopView:
             arrow = beside_value(cfg, self.ctl.history, c)
             age = age_minutes(c)
             parts = [cfg["unit"], t("now") if age == 0 else t("min_ago", n=age)]
+            if self.ctl.display_name():
+                parts.insert(0, self.ctl.display_name())
             delta = stats.change(points, c)
             if delta is not None:
                 parts.append(t("desk_change", delta=self.fmt_delta(delta)))
+            if self.prediction():
+                end = self.prediction()["points"][-1]
+                parts.append(t("predict_sub", v=fmt_value(cfg, end[1]), n=end[0]))
             sub, sub_color = " · ".join(parts), pal.error if stale else pal.dim
         else:
             color, value, arrow = pal.dim, "--", ""
@@ -276,7 +281,7 @@ class DesktopView:
         col_w = (max((normal.measure(r[0]) for r in rows), default=0) + pad +
                  max((bold.measure(r[1]) for r in rows), default=0))
         table_w = 2 * col_w + pad
-        top = pad + head_h
+        top = max(pad + head_h, cv.bbox(sid)[3] + 2)   # il sottotitolo può andare a capo
         if rows and W - head_right - 3 * pad >= table_w:
             x0, y0, line_h = W - pad - table_w, pad + 2, head_h * 0.3
             for i, (label, val, col) in enumerate(rows):
@@ -311,11 +316,21 @@ class DesktopView:
         self.draw_chart(points, pad + axis_w, top + pad * 0.5, W - pad,
                         H - pad - foot_h - (-f_tiny * 1.5), hours, f_tiny)
 
+    def prediction(self):
+        """La stima della tendenza, se accesa (vedi stats.predict)."""
+        if not self.cfg.get("predict") or not self.ctl.current:
+            return None
+        if is_stale(self.cfg, self.ctl.current):
+            return None
+        return stats.predict(self.ctl.history, self.ctl.current)
+
     def draw_chart(self, points, left, top, right, bottom, hours, f_tiny):
         cv, cfg, pal = self.canvas, self.cfg, self.c
         if right - left < 40 or bottom - top < 30:
             return
         now = time.time()
+        pred = self.prediction()
+        end = now + pred["points"][-1][0] * 60 if pred else now   # spazio per la stima
         t0 = now - hours * 3600
         lo_v = 40
         hi_v = max(300, min(400, max((p["mgdl"] for p in points), default=0) + 20))
@@ -325,7 +340,7 @@ class DesktopView:
             return bottom - (v - lo_v) / (hi_v - lo_v) * (bottom - top)
 
         def x(ts):
-            return left + (ts - t0) / (now - t0) * (right - left)
+            return left + (ts - t0) / (end - t0) * (right - left)
 
         # fascia del range e soglie
         cv.create_rectangle(left, y(cfg["high"]), right, y(cfg["low"]), fill=pal.band, outline="")
@@ -340,13 +355,29 @@ class DesktopView:
         step = 1 if hours <= 3 else 2 if hours <= 6 else 3
         tick = datetime.fromtimestamp(t0).replace(minute=0, second=0, microsecond=0)
         ts = tick.timestamp() + 3600
-        while ts < now:
+        while ts < end:
             hour = datetime.fromtimestamp(ts)
             if hour.hour % step == 0:
                 cv.create_line(x(ts), top, x(ts), bottom, fill=pal.grid)
                 cv.create_text(x(ts), bottom + 3, text=hour.strftime("%H:%M"), anchor="n",
                                fill=pal.dim, font=(FONT, f_tiny))
             ts += 3600
+
+        if pred:
+            # la stima: una fascia tenue che si allarga e una linea tratteggiata, dopo
+            # l'ultima lettura (vedi stats.predict: non è una previsione vera)
+            t_now = pred["time"]
+            upper = [(x(t_now), y(pred["from"]))] + [
+                (x(t_now + m * 60), y(hi)) for m, _v, _lo, hi in pred["points"]]
+            lower = [(x(t_now + m * 60), y(lo)) for m, _v, lo, _hi in reversed(pred["points"])]
+            cv.create_polygon(*[c for xy in upper + lower for c in xy],
+                              fill=mix(pal.line, pal.panel, 0.16), outline="")
+            line = [(x(t_now), y(pred["from"]))] + [
+                (x(t_now + m * 60), y(v)) for m, v, _lo, _hi in pred["points"]]
+            cv.create_line(*[c for xy in line for c in xy], fill=pal.dim, width=1.5, dash=(4, 3))
+            last_x, last_y = line[-1]
+            cv.create_text(last_x - 2, last_y - 3, text="?", anchor="se", fill=pal.dim,
+                           font=(FONT, f_tiny, "bold"))
 
         if len(points) >= 2:
             coords = []

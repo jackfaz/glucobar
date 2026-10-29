@@ -720,6 +720,8 @@ begin
            SW_HIDE, ewWaitUntilTerminated, ResultCode);
       Exec(ExpandConstant('{sys}\cmdkey.exe'), '/delete:GlucoBar:Nightscout', '',
            SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Exec(ExpandConstant('{sys}\cmdkey.exe'), '/delete:GlucoBar:MQTT', '',
+           SW_HIDE, ewWaitUntilTerminated, ResultCode);
       DelTree(ExpandConstant('{userappdata}\GlucoBar'), True, True, True);
       DeleteFile(ExpandConstant('{%USERPROFILE}\.glicemia_widget.json'));
     end;

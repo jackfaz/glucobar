@@ -16,7 +16,7 @@ import tkinter as tk
 import traceback
 import webbrowser
 
-from . import i18n, instance, sensor, support, theme, updates
+from . import alerts, i18n, instance, reminders, sensor, support, theme, updates
 from .alerts import AlertWatch
 from .config import (ELEMENTS, MIN_REFRESH, REFRESH_CHOICES, log, normalize_elements,
                      peek_config, save_config)
@@ -34,7 +34,7 @@ LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_
              "taskbar_scale", "window_scale", "desktop_hours", "desktop_alpha", "desktop_locked",
              "theme", "palette", "alert_low", "alert_high", "alert_stale", "update_check",
              "auto_update", "sensor_life_days", "ui_colors", "taskbar_text", "show_delta",
-             "trend_style",
+             "trend_style", "predict", "alert_soon", "nicknames", "people_shown",
              "hover_chart", "desktop_on_top", "desktop_over_fullscreen",
              *COLOR_KEYS.values())
 REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "taskbar_text", "desktop_alpha", "trend_style",
@@ -60,6 +60,8 @@ class Controller:
         self.client = make_client(cfg)
         self.current = None
         self.history = []
+        self.others = []     # altre persone mostrate insieme: [{"id", "label", "current"}]
+        self.other_alerts = {}   # id -> AlertWatch delle altre persone
         self.error = None
         self.updated_at = None
         self.busy = False
@@ -77,6 +79,7 @@ class Controller:
         self.tray = None
         self._promoting = False   # tentativi in corso di mettere l'icona accanto all'orologio
         self._calls = queue.Queue()
+        self.bridge = None
 
         self.root = tk.Tk()   # nascosta: le viste sono Toplevel figlie
         self.root.withdraw()
@@ -90,6 +93,11 @@ class Controller:
             # senza icona non resterebbe nulla da vedere: barra (Windows) o finestrella (Mac)
             elements = [e for e in ELEMENTS if e != "tray"][:1]
         self.set_elements(elements)
+        try:
+            from .bridge import Bridge
+            self.bridge = Bridge(self)
+        except Exception:
+            log("ponte locale non avviato:\n" + traceback.format_exc())
         self.root.after(100, self._drain_calls)
         self._tick()
         self.root.after(3000, self.announce_version)
@@ -241,6 +249,8 @@ class Controller:
 
     def quit(self):
         log("uscita")
+        if self.bridge:
+            self.bridge.stop()
         if self.tray:
             self.tray.stop()
         for element in list(self.views):
@@ -265,13 +275,19 @@ class Controller:
             for e in ELEMENTS if self.available(e)]))
         patients = getattr(self.client, "patients", None) or []
         if len(patients) > 1:
+            shown = self.cfg.get("people_shown") or []
+            choices = [(pid, self.person_label(pid, full=True)) for pid, _name in patients]
             items.append(Item(t("menu_person"), children=radio_items(
-                patients, self.client.patient_id, self.set_patient)))
+                choices, self.client.patient_id, self.set_patient) + [SEPARATOR] + [
+                Item(t("menu_person_also", name=label), self.toggle_person_shown, pid,
+                     checked=pid in shown)
+                for pid, label in choices if pid != self.client.patient_id]))
         # il resto (unità, aggiornamento, avvisi, lingua, account, avvio, nuove versioni)
         # sta nella finestra Impostazioni, divisa per argomento
         items += [
             Item(t("menu_sensor"), children=self.sensor_items()),
             Item(t("menu_settings"), self.open_settings),
+            Item(t("menu_reminders"), self.open_reminders),
             SEPARATOR,
             Item(t("menu_quit"), self.quit),
         ]
@@ -303,6 +319,55 @@ class Controller:
         from .settings import SettingsWindow
         SettingsWindow.open(self)
 
+    def open_reminders(self):
+        from .reminders_ui import RemindersWindow
+        RemindersWindow.open(self)
+
+    # ---- promemoria (reminders.py) ----
+    def sensor_end(self):
+        """Fine prevista del sensore in uso (solo FreeStyle Libre), per i promemoria."""
+        if self.cfg.get("source", "libre") != "libre":
+            return None
+        return reminders.sensor_end(self.cfg, sensor.life_days(self.cfg))
+
+    def find_reminder(self, rem_id):
+        return next((r for r in self.cfg.get("reminders") or [] if r.get("id") == rem_id), None)
+
+    def check_reminders(self):
+        now, end = time.time(), self.sensor_end()
+        for rem in self.cfg.get("reminders") or []:
+            if not reminders.due(rem, now, end):
+                continue
+            reminders.fire(rem, now, end)
+            save_config(self.cfg)
+            log(f"promemoria: {rem['id']}")
+            rem_id = rem["id"]
+            self.notify(t("rem_toast_title"), rem["title"], actions=[
+                (t("rem_done"), lambda: self.reminder_done(rem_id)),
+                (t("rem_later", n=refresh_label(15 * 60)), lambda: self.reminder_snooze(rem_id, 15)),
+                (t("rem_later", n=refresh_label(60 * 60)), lambda: self.reminder_snooze(rem_id, 60)),
+            ])
+
+    def reminder_done(self, rem_id):
+        rem = self.find_reminder(rem_id)
+        if rem:
+            reminders.done(rem, time.time())
+            save_config(self.cfg)
+            self.refresh_reminders_window()
+
+    def reminder_snooze(self, rem_id, minutes):
+        rem = self.find_reminder(rem_id)
+        if rem:
+            reminders.snooze(rem, time.time(), minutes)
+            save_config(self.cfg)
+            self.refresh_reminders_window()
+
+    def refresh_reminders_window(self):
+        from .reminders_ui import RemindersWindow
+        window = RemindersWindow.current
+        if window and window.win.winfo_exists():
+            window.refresh()
+
     def restyle(self):
         self._theme_key = self.theme_key()
         self.rebuild_views()
@@ -326,6 +391,7 @@ class Controller:
 
     def set_patient(self, patient_id):
         self.cfg["patient_id"] = patient_id
+        self.others = [o for o in self.others if o["id"] != patient_id]
         # il sensore è di un'altra persona: niente avvisi di "sensore cambiato"
         self.cfg.update(sensor_sn=None, sensor_activated=None, sensor_notified=[])
         save_config(self.cfg)
@@ -333,6 +399,55 @@ class Controller:
         self.current, self.history, self.error = None, [], None
         self.render()
         self.refresh()
+
+    # ---- persone seguite (LibreLinkUp: più persone con lo stesso account) ----
+    def person_key(self, pid=None):
+        """Chiave dei soprannomi: l'id della persona (LibreLinkUp) o "self"."""
+        return str(pid or getattr(self.client, "patient_id", None) or "self")
+
+    def person_label(self, pid=None, full=False):
+        """Il soprannome scelto o il nome; full=True: "Soprannome (Nome Cognome)"."""
+        key = self.person_key(pid)
+        nickname = ((self.cfg.get("nicknames") or {}).get(key) or "").strip()
+        names = dict(getattr(self.client, "patients", None) or [])
+        name = names.get(pid or getattr(self.client, "patient_id", None), "")
+        if full:
+            return f"{nickname} ({name})" if nickname and name else nickname or name
+        return nickname or name.split(" ")[0]
+
+    def display_name(self):
+        """Il nome da scrivere accanto al valore principale: il soprannome se c'è,
+        altrimenti il nome solo quando si vedono più persone insieme."""
+        nickname = (self.cfg.get("nicknames") or {}).get(self.person_key(), "").strip()
+        return nickname or (self.person_label() if self.others else "")
+
+    def set_nickname(self, pid, nickname):
+        nicknames = dict(self.cfg.get("nicknames") or {})
+        nickname = nickname.strip()[:20]
+        if nickname:
+            nicknames[self.person_key(pid)] = nickname
+        else:
+            nicknames.pop(self.person_key(pid), None)
+        self.cfg["nicknames"] = nicknames
+        save_config(self.cfg)
+        self.relabel_others()
+        self.render()
+
+    def toggle_person_shown(self, pid):
+        shown = list(self.cfg.get("people_shown") or [])
+        if pid in shown:
+            shown.remove(pid)
+        else:
+            shown.append(pid)
+        self.cfg["people_shown"] = shown
+        save_config(self.cfg)
+        self.others = [o for o in self.others if o["id"] in shown]
+        self.render()
+        self.refresh()
+
+    def relabel_others(self):
+        for other in self.others:
+            other["label"] = self.person_label(other["id"])
 
     def copy_serial(self, sn):
         self.root.clipboard_clear()
@@ -489,10 +604,17 @@ class Controller:
         threading.Thread(target=self._fetch_worker, daemon=True).start()
 
     def _fetch_worker(self):
-        self.post(self._on_data, *fetch_safely(self.client))
+        current, history, err = fetch_safely(self.client)
+        extras = dict(getattr(self.client, "extras", None) or {})
+        self.post(self._on_data, current, history, err, extras)
 
-    def _on_data(self, current, history, err):
+    def _on_data(self, current, history, err, extras=None):
         self.busy = False
+        if extras is not None:
+            primary = getattr(self.client, "patient_id", None)
+            self.others = [{"id": pid, "label": self.person_label(pid), "current": extras[pid]}
+                           for pid in self.cfg.get("people_shown") or []
+                           if pid in extras and pid != primary]
         if err and err != self.error:
             log(f"dati: {err}")
         elif current and not self.current:
@@ -507,12 +629,21 @@ class Controller:
 
     def check_alerts(self):
         cfg = self.cfg
-        for kind in self.alerts.check(cfg, self.current):
-            c = self.current
-            value = f"{fmt_value(cfg, c['mgdl'])} {cfg['unit']}" if c else ""
-            minutes = int((time.time() - c["time"]) // 60) if c else 0
-            log(f"avviso: {kind}")
-            self.notify(t("alert_title"), t(f"alert_{kind}", v=value, n=minutes), timeout=60)
+        people = [(None, self.alerts, self.current, self.history)] + [
+            (o["id"], self.other_alerts.setdefault(o["id"], AlertWatch()), o["current"], None)
+            for o in self.others]
+        for pid, watch, c, history in people:
+            for kind in watch.check(cfg, c, history=history):
+                value = f"{fmt_value(cfg, c['mgdl'])} {cfg['unit']}" if c else ""
+                minutes = int((time.time() - c["time"]) // 60) if c else 0
+                if kind == "soon":
+                    minutes = round(alerts.soon_minutes(cfg, history, c) or 0)
+                    value = f"{fmt_value(cfg, cfg['low'])} {cfg['unit']}"
+                title = t("alert_title")
+                if self.others or pid:   # più persone: di chi è l'avviso
+                    title += " – " + self.person_label(pid)
+                log(f"avviso: {kind}")
+                self.notify(title, t(f"alert_{kind}", v=value, n=minutes), timeout=60)
 
     def check_sensor(self):
         if self.cfg.get("source", "libre") != "libre":
@@ -613,12 +744,15 @@ class Controller:
             self.render()   # aggiorna i "minuti fa"
             self.check_alerts()   # "nessun dato" scatta anche senza letture nuove
             self.check_sensor()
+            self.check_reminders()
             self.check_updates()
         self.root.after(1000, self._tick)
 
     def render(self):
         for view in self.views.values():
             view.render()
+        if self.bridge:
+            self.bridge.update()
         if self.tray:
             self.tray.render()
             self.tray.update_menu()

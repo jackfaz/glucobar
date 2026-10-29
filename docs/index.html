@@ -76,8 +76,19 @@
   nav.links { display: flex; gap: 20px; margin-left: auto; }
   nav.links a { color: var(--dim); text-decoration: none; font-size: 15px; }
   nav.links a:hover { color: var(--fg); }
+  nav.links { align-items: center; }
+  nav.links a.donate {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+    border: 1px solid var(--line, rgba(127,127,127,.35)); border-radius: 999px; color: var(--fg);
+  }
+  nav.links a.donate svg { width: 14px; height: 14px; color: #e5484d; }
+  nav.links a.donate:hover { border-color: #e5484d; }
   @media (max-width: 760px) { nav.links .opt { display: none; } }
-  @media (max-width: 460px) { nav.links { gap: 14px; } }
+  @media (max-width: 460px) {
+    nav.links { gap: 14px; }
+    nav.links .opt2 { display: none; }
+    nav.links a.donate { padding: 5px 10px; }
+  }
 
   /* apertura */
   .hero { padding: 64px 0 40px; }
@@ -487,7 +498,8 @@
       <a href="#install">Install</a>
       <a class="opt" href="#faq">FAQ</a>
       <a href="#help">Help</a>
-      <a href="https://github.com/jackfaz/glucobar">GitHub</a>
+      <a class="opt2" href="https://github.com/jackfaz/glucobar">GitHub</a>
+      <a class="donate" href="https://paypal.me/giacomofazioli" title="GlucoBar is free. If it helps you, you can support it with a donation."><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.3 3 4.5 6.7 4.5c2.1 0 3.6 1.1 4.3 2.6h2c.7-1.5 2.2-2.6 4.3-2.6 3.7 0 5.8 3.8 4.3 7.3C19.5 16.4 12 21 12 21z" fill="currentColor"/></svg>Donate</a>
     </nav>
   </div>
 </header>

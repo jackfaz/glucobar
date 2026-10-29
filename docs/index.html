@@ -177,17 +177,22 @@
   /* in casa: luce smart, Home Assistant, orologio a LED e display ESP32 collegati a GlucoBar */
   @property --glow { syntax: "<color>"; inherits: true; initial-value: #3ecf6e; }
   .home-stage { aspect-ratio: 16 / 9; border-radius: 16px; border: 1px solid var(--line); box-shadow: var(--shadow);
-                --glow: #3ecf6e; transition: --glow .9s; }
-  .home-stage .ambient { position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(38% 70% at 15% 55%, color-mix(in srgb, var(--glow) 30%, transparent), transparent 75%); }
+                --glow: #3ecf6e; transition: --glow .9s;
+                /* niente bagliore rosso di sfondo: quando la luce è spenta deve sembrarlo */
+                background: radial-gradient(55% 80% at 100% 0%, rgba(38, 130, 78, .32), transparent 70%), #141519; }
+  /* la luce: spenta nel range, rossa quando il valore è alto o basso */
+  .home-stage .ambient { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .6s;
+    background: radial-gradient(38% 70% at 15% 55%, rgba(255, 45, 45, .32), transparent 75%); }
+  .home-stage.lamp-on .ambient, .home-stage.lamp-on .lamp .beam { opacity: 1; }
   .lamp { position: absolute; left: 6cqw; top: 0; width: 18cqw; height: 46cqw; }
   .lamp .cord { position: absolute; left: 50%; top: 0; width: .25cqw; height: 7cqw; background: #3a3d45; transform: translateX(-50%); }
   .lamp .shade { position: absolute; left: 1.5cqw; right: 1.5cqw; top: 7cqw; height: 7cqw; background: linear-gradient(#2d3038, #1d1f25);
                  clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%); }
   .lamp .bulb { position: absolute; left: 50%; top: 12.6cqw; width: 4cqw; height: 4cqw; border-radius: 50%; transform: translateX(-50%);
-                background: var(--glow); box-shadow: 0 0 3cqw 1.2cqw var(--glow), 0 0 9cqw 3cqw color-mix(in srgb, var(--glow) 45%, transparent); }
+                background: #34363c; transition: background .6s, box-shadow .6s; }
+  .lamp-on .lamp .bulb { background: #ff3b3b; box-shadow: 0 0 3cqw 1.2cqw #ff3b3b, 0 0 9cqw 3cqw rgba(255, 45, 45, .45); }
   .lamp .beam { position: absolute; left: -4cqw; right: -4cqw; top: 14cqw; bottom: 0;
-                background: linear-gradient(color-mix(in srgb, var(--glow) 34%, transparent), transparent 92%);
+                background: linear-gradient(rgba(255, 45, 45, .34), transparent 92%); opacity: 0; transition: opacity .6s;
                 clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); }
   .home-stage .tag { position: absolute; font-size: 1.25cqw; color: #c9ccd1; background: rgba(255,255,255,.07);
                      border: 1px solid rgba(255,255,255,.1); border-radius: 99px; padding: .25cqw 1cqw; white-space: nowrap; }
@@ -203,7 +208,10 @@
   .ha .chart { position: relative; height: 5.5cqw; margin: 1.2cqw 0 1cqw; }
   .ha .auto { display: flex; align-items: center; gap: .8cqw; padding: .8cqw 1cqw; border-radius: .8cqw;
               background: #26262a; color: #cfcfcf; font-size: 1.15cqw; }
-  .ha .auto i { width: 1.4cqw; height: 1.4cqw; border-radius: 50%; background: var(--glow); box-shadow: 0 0 .8cqw var(--glow); flex: none; }
+  .ha .auto i { width: 1.4cqw; height: 1.4cqw; border-radius: 50%; background: #4a4d55; flex: none; transition: background .6s; }
+  .lamp-on .ha .auto i { background: #ff3b3b; box-shadow: 0 0 .8cqw #ff3b3b; }
+  .ha .auto b { font-weight: 600; color: #8a8d93; }
+  .lamp-on .ha .auto b { color: #ff6b6b; }
   .ledclock { position: absolute; right: 4cqw; top: 6cqw; width: 30cqw; height: 9.5cqw; border-radius: 1cqw; padding: 1cqw 1.4cqw;
               background: linear-gradient(#141518, #0b0c0e); border: 1px solid #2b2d33; box-shadow: 0 1.5cqw 4cqw rgba(0,0,0,.55); }
   .ledclock canvas, .esp .screen canvas { position: relative; width: 100%; height: 100%; display: block; }
@@ -728,7 +736,7 @@
   <div class="wrap">
     <h2>Your glucose, around the house</h2>
     <p class="intro">Turn on <em>Settings → Connections</em> and other devices can show the value too:
-      a light that turns red when you go low, a Home Assistant dashboard, an LED clock on the shelf or
+      a light that turns red only when you are out of range, a Home Assistant dashboard, an LED clock on the shelf or
       a small ESP32 display on the bedside table. GlucoBar publishes the value over MQTT, with
       Home Assistant discovery, and on a local address that speaks Nightscout, so displays made for
       Nightscout work as they are. Your sensor password never leaves the PC.</p>
@@ -749,7 +757,7 @@
           <div class="big"><span class="js-val">112</span><small>mg/dL</small> <span class="js-arrow" style="font-size:3cqw;color:#b5b5b5">&#8594;</span></div>
           <div class="attrs">Delta <span class="js-delta">+0</span> &#183; updated <span class="js-clock">00:00</span></div>
           <div class="chart"><canvas class="js-chart" data-kind="spark"></canvas></div>
-          <div class="auto"><i></i>Automation: light colour follows glucose, red below 70</div>
+          <div class="auto"><i></i><span>Automation: light red when glucose is below 70 or above 180 · <b class="js-lamp-state">off</b></span></div>
         </div>
         <span class="tag" style="left:29cqw;top:0.9cqw">Home Assistant</span>
         <div class="ledclock"><div class="wrapc"><canvas class="js-chart" data-kind="matrix"></canvas></div></div>
@@ -1191,7 +1199,11 @@
       all(".js-val", function (e) { e.textContent = v; });
       all(".js-arrow", function (e) { e.textContent = a; });
       all(".js-col", function (e) { e.style.color = colorFor(e, v); });
-      all(".js-glow", function (e) { e.style.setProperty("--glow", colorFor(e, v)); });
+      all(".js-glow", function (e) {
+        e.style.setProperty("--glow", colorFor(e, v));
+        e.classList.toggle("lamp-on", v < 70 || v > 180);   // la luce: solo fuori dal range
+      });
+      all(".js-lamp-state", function (e) { e.textContent = v < 70 || v > 180 ? "on" : "off"; });
       all(".js-delta", function (e) { e.textContent = (d >= 0 ? "+" : "") + d; });
       all(".js-clock", function (e) { e.textContent = hhmm(n); });
       all(".js-sub", function (e) { e.textContent = "mg/dL \u00b7 1 min ago \u00b7 " + (change >= 0 ? "+" : "") + change + " in 15 min"; });

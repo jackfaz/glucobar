@@ -284,7 +284,7 @@ before it turns on:
 *Settings → Connections* (off by default) lets other programs and devices read the value,
 without knowing your sensor password.
 
-<p align="center"><img src="docs/smart-home.gif" alt="A smart light, a Home Assistant card, an LED clock and an ESP32 display changing colour with the glucose value from GlucoBar (simulated readings)" width="720"></p>
+<p align="center"><img src="docs/smart-home.gif" alt="A smart light that turns red only when glucose is out of range, a Home Assistant card, an LED clock and an ESP32 display following the value from GlucoBar (simulated readings)" width="720"></p>
 
 **Local web address.** GlucoBar answers on `http://127.0.0.1:17580` (port configurable). Tick
 *Also for other devices on my home network* to use it from an ESP32, a phone or Home

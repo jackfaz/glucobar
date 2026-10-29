@@ -4,6 +4,30 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.11.0] - 2026-10-29
+
+### Added
+- **A sound for each alert, and your own sounds**: low, very high and no data each have
+  their own sound. GlucoBar has seven of its own (falling beeps for low and rising beeps for
+  very high by default, so you can tell them apart without looking), and any WAV, MP3 or M4A
+  file works too: *Browse…* next to each alert. On Windows the files are converted once with
+  Windows' own decoder, so nothing extra is installed.
+- **Sound packs**: a folder of sounds, or a `.zip` brought in with *Import…*, becomes a pack
+  you pick from a list; GlucoBar chooses the sound for each alert from the file names, or from
+  an optional `pack.json`. All the sounds of every pack can also be mixed one by one.
+- **Repeat low and very high separately**: e.g. low every 15 seconds and very high every
+  minute, each until the value is back in range. A long sound stops as soon as you are back
+  in range or press *Silence*.
+- **Volume** slider for the alert sounds (only GlucoBar's, not the rest of the computer).
+- **Alerts in the right-click menu**: *Alerts* turns each alert on or off and changes the
+  pack, the sound and the repeat interval without opening Settings, and has *Silence*.
+  (Thanks to the Reddit user who asked for all of this.)
+
+### Changed
+- Settings: alerts and sounds have their own tab, *Alerts and sounds*; the former *Values
+  and alerts* tab is now *Values*. If you had *Repeat the sound* on in 0.10.1, both alerts
+  keep repeating at the interval you chose.
+
 ## [0.10.1] - 2026-10-29
 
 ### Added
@@ -435,6 +459,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.11.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.0
 [0.10.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.10.1
 [0.10.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.10.0
 [0.9.8]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.8

@@ -644,7 +644,7 @@
       <div class="gbar"><div class="wall"></div><div class="strip"><div class="gv"><div class="gvv js-col"><span class="js-val">112</span><span class="gva js-arrow">&#8594;</span></div><div class="gvm">1 min</div></div><div class="gicons"><span>&#94;</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></div><div class="gclock"><div class="js-clock">00:00</div><div>28/10/2026</div></div></div></div>
       <div class="gset gappear">
         <div class="title">GlucoBar settings</div>
-        <div class="tabs"><span>General</span><span>Values and alerts</span><span class="on">Appearance</span><span>Elements</span><span>Updates</span></div>
+        <div class="tabs"><span>General</span><span>Values</span><span class="on">Appearance</span><span>Elements</span><span>Updates</span></div>
         <div class="cols">
           <div>
             <div class="group"><b>Theme</b><div class="opt"><i class="on"></i>Automatic theme (follow the system)</div><div class="opt"><i class=""></i>Dark theme</div><div class="opt"><i class=""></i>Light theme</div></div>
@@ -680,8 +680,9 @@
       <div class="text">
         <h2>Alerts, sensor and updates</h2>
         <ul>
-          <li><strong>Optional alerts</strong> for low, very high or no data. Off by default, and not
-            a replacement for your sensor's alarms.</li>
+          <li><strong>Optional alerts</strong> for low, very high or no data, each with its own sound
+            (GlucoBar's, your own files or a sound pack), repeating until you are back in range if you
+            want. Off by default, and not a replacement for your sensor's alarms.</li>
           <li><strong>Sensor day</strong> and a reminder before it ends. If a FreeStyle Libre sensor
             stops early, a button opens the replacement form for your country with the serial number
             already copied.</li>
@@ -706,11 +707,11 @@
       <div class="stage f-menu" role="img" aria-label="The right-click menu of the small window with the Show submenu open, in front of the Settings window"><div aria-hidden="true">
         <div class="gset">
           <div class="title">GlucoBar settings</div>
-          <div class="tabs"><span>General</span><span class="on">Values and alerts</span><span>Appearance</span><span>Elements</span></div>
+          <div class="tabs"><span>General</span><span>Values</span><span class="on">Alerts and sounds</span><span>Appearance</span><span>Elements</span></div>
           <div class="group"><b>Alerts</b>
             <div class="opt"><i class="box on"></i>Low glucose</div><div class="opt"><i class="box"></i>Very high glucose</div><div class="opt"><i class="box on"></i>No data for 15 minutes</div></div>
-          <div class="group"><b>Next to the value</b>
-            <div class="opt"><i></i>Trend arrow</div><div class="opt"><i></i>Change (delta) instead of the arrow</div><div class="opt"><i class="on"></i>Arrow and change</div></div>
+          <div class="group"><b>Sounds</b>
+            <div class="opt"><i class="box on"></i>Play a sound with the alerts</div><div class="opt">Low: Falling beeps, every 15 s</div><div class="opt">Very high: Rising beeps, every 1 min</div></div>
         </div>
         <div class="gwin " data-pal="standard"><div class="wtop"><span class="wval js-col js-val">112</span><span class="warrow js-col js-arrow">&#8594;</span></div><div class="wsub">mg/dL &#183; 1 min ago</div><div class="wspark"><canvas class="js-chart" data-kind="spark"></canvas></div></div>
         <div class="gmenu main"><div>Refresh now</div><div class="sub hl">Show</div><div class="sub">Sensor</div><div>Settings&#8230;</div><hr><div>Quit GlucoBar</div></div>

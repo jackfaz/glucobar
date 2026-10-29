@@ -96,8 +96,15 @@ DEFAULT_CONFIG = {
     "alert_stale": False,
     "alerts_note_shown": False,
     "alert_sound": True,        # un suono quando scatta un avviso
-    "alert_repeat": False,      # e di nuovo ogni tot secondi finché non si torna nel range
-    "alert_repeat_seconds": 15,
+    "alert_volume": 100,        # 0-100
+    # suono per avviso: "builtin:nome" (di GlucoBar) o "pacchetto/file.mp3" (vedi sound.py)
+    "sound_low": "builtin:falling",
+    "sound_high": "builtin:rising",
+    "sound_other": "builtin:chime",   # nessun dato, stima della tendenza
+    "sound_pack": "GlucoBar",   # l'ultimo pacchetto scelto, per mostrarlo nel menu
+    # basso e molto alto: di nuovo ogni tot secondi finché non si torna nel range (0 = no)
+    "repeat_low": 0,
+    "repeat_high": 0,
     # stima della tendenza (sperimentale, spenta di default): dove andrebbe il valore se
     # continuasse come negli ultimi minuti; va accettata l'avvertenza la prima volta
     "predict": False,
@@ -191,6 +198,12 @@ def load_config():
             # 0.2.0: una modalità alla volta, sempre con l'icona vicino all'orologio
             cfg["elements"] = [saved["mode"], "tray"]
         cfg.pop("mode", None)
+        if "alert_repeat" in saved:
+            # 0.10.1: un solo intervallo per basso e molto alto
+            if saved["alert_repeat"] and "repeat_low" not in saved:
+                cfg["repeat_low"] = cfg["repeat_high"] = saved.get("alert_repeat_seconds", 15)
+            cfg.pop("alert_repeat", None)
+            cfg.pop("alert_repeat_seconds", None)
         _scrub_legacy()
     elif os.path.exists(LEGACY_CONFIG_PATH):
         cfg = _import_legacy(cfg)

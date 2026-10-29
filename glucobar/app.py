@@ -91,7 +91,7 @@ def self_test():
     try:
         from . import (alerts, controller, desktop, dexcom, instance,  # noqa: F401
                        librelinkup, menus, nightscout, notify, peek, sensor, settings,
-                       support, theme, updates, window)
+                       sound, support, theme, updates, window)
         if sys.platform == "darwin":
             from . import macbar  # noqa: F401
             log("self-test ok (barra dei menu del Mac)")

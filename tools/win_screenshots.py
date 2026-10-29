@@ -171,7 +171,7 @@ def main():
                 min(sw, max(px + peek.root.winfo_width(), x1) + 30), sh)
 
     from glucobar.i18n import t as ctl_t
-    from glucobar.settings import SettingsWindow
+    from glucobar.settings import TABS, SettingsWindow
     steps = [
         (4000, promote),
         (6000, lambda: (grab("desktop-dark"), grab("elements-dark", elements_box),
@@ -179,8 +179,9 @@ def main():
         (500, lambda: popup_menu(ctl.views["window"], "menu", next_step)),
         (None, lambda: ctl.open_settings()),
         (2000, lambda: grab("settings", frame(SettingsWindow.current.win))),
-        *[step for n, name in enumerate(("general", "values", "look", "elements", "updates"))
-          for step in ((300, lambda n=n: SettingsWindow.current.notebook.select(n)),
+        *[step for name in ("general", "values", "alerts", "look", "elements", "updates")
+          for step in ((300, lambda name=name: SettingsWindow.current.notebook.select(
+              TABS.index(name))),
                        (900, lambda name=name: grab(f"settings-{name}",
                                                     frame(SettingsWindow.current.win))))],
         (500, lambda: SettingsWindow.current.close()),

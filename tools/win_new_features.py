@@ -144,7 +144,13 @@ def main():
         win = SettingsWindow.current.win
         grab("settings-connect", frame(win))
         SettingsWindow.open(ctl, "values")
-        ctl.root.after(800, lambda: (grab("settings-values", frame(win)), step5()))
+        ctl.root.after(800, lambda: (grab("settings-values", frame(win)), step4b()))
+
+    def step4b():
+        from glucobar.settings import SettingsWindow
+        SettingsWindow.open(ctl, "alerts")
+        win = SettingsWindow.current.win
+        ctl.root.after(800, lambda: (grab("settings-alerts", frame(win)), step5()))
 
     def step5():
         from glucobar.settings import SettingsWindow

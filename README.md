@@ -80,9 +80,10 @@ high, very high, low and old, backgrounds, text, chart and grid.
 
 <p align="center"><img src="docs/screenshots/messages.png" alt="Messages for a new version, a sensor that stopped, and low glucose" width="368"></p>
 
-- **Optional alerts** for low, very high or no data, with a sound that can repeat every 15
-  seconds (or up to 5 minutes) until the value is back in range or you press *Silence*. Off by
-  default, and not a replacement for your sensor's alarms.
+- **Optional alerts** for low, very high or no data, each with its own sound: GlucoBar's, or
+  your own files and sound packs. The low and very high sounds can repeat, each at its own
+  interval, until the value is back in range or you press *Silence*. Off by default, and not
+  a replacement for your sensor's alarms.
 - **Sensor** (FreeStyle Libre): day of use, a reminder before it ends and, if it stops early,
   a button that opens the manufacturer's replacement form with the serial number copied.
 - **Updates from inside the app**: one click installs the new version and keeps your
@@ -216,11 +217,12 @@ in GlucoBar instead: it works the same way.
 ## Use
 
 - **Right-click any GlucoBar element** (the icon, the value on the taskbar, the window or the
-  panel): refresh, *Show* (tick the elements you want), *Sensor*, *Settings…*, quit.
+  panel): refresh, *Show* (tick the elements you want), *Alerts* (which alerts, their sounds
+  and how often to repeat them), *Sensor*, *Settings…*, quit.
   **Double-click**: refresh now.
 - **Settings…** has everything else, in tabs: *General* (account, language, unit, how often
-  to update, start with Windows), *Values and alerts* (thresholds, alerts, delta),
-  *Appearance* (theme and every colour), *Elements* (what to show, taskbar value, desktop
+  to update, start with Windows), *Values* (thresholds, delta, trend estimate), *Alerts and
+  sounds*, *Appearance* (theme and every colour), *Elements* (what to show, taskbar value, desktop
   panel) and *Updates* (installed version, *Check for updates now*, automatic updates).
 - Windows 11 hides new icons under the **^** arrow: drag the GlucoBar icon onto the taskbar to
   keep it visible.
@@ -231,7 +233,7 @@ in GlucoBar instead: it works the same way.
   the panel, right-click for the chart period, to lock it in place, or to keep it *Always
   on top* of other windows (it hides while an app is full screen).
 - Value on the taskbar: keep the mouse on it for a second to see the full chart just above
-  it. Right-click → *Size* to make it smaller or larger. *Settings → Values and alerts →
+  it. Right-click → *Size* to make it smaller or larger. *Settings → Values →
   Show the change (delta)* adds the change since the previous reading (e.g. "3 min +5").
 - *Settings…*: theme (light, dark or automatic, following Windows or macOS), every colour
   (the value in range, high, very high, low and old; backgrounds, text, chart and grid of the
@@ -240,6 +242,11 @@ in GlucoBar instead: it works the same way.
 - *Alerts* (off by default): a message when glucose is low, very high, or when no new data
   has arrived for a while. They come from the sensor's online service, a few minutes late,
   and only while the computer is on: **they do not replace your sensor's alarms**.
+- *Alert sounds* (right-click → *Alerts*, or *Settings → Alerts and sounds*): a sound for low,
+  one for very high and one for no data, from GlucoBar's own or from a sound pack, with a
+  volume slider. Low and very high can repeat every 15 seconds up to 5 minutes, each at its
+  own interval, until the value is back in range; *Silence* on the message (or in the menu)
+  stops it until the next time. See [Your own sounds](#your-own-sounds).
 - *Sensor*: with LibreLinkUp, the day of use and the serial number (click to copy it), a
   reminder 24 hours and 2 hours before the end, and a message if the sensor seems to have
   stopped early or was replaced early. *Request a sensor replacement…* opens the
@@ -267,9 +274,27 @@ children). Right-click → **Person** chooses the main one, shown on every eleme
 minutes. Alerts say whose they are. In *Settings → General → People* you can give everyone a
 nickname, which appears next to the value; it works with Dexcom and Nightscout too.
 
+## Your own sounds
+
+Each alert can use any sound file: *Settings → Alerts and sounds → Browse…* next to it. WAV,
+MP3 and M4A work everywhere (on Windows, GlucoBar converts them once with Windows' own
+decoder).
+
+A **sound pack** is a folder of sound files inside GlucoBar's sounds folder (*Open folder*
+in the same tab), or a `.zip` you bring in with *Import…*. Pick the pack from the list or
+from the right-click menu, and GlucoBar picks a sound for each alert from the file names
+(*low*, *urgent*, *high*, *signal loss*...). To choose them yourself, add a `pack.json` to
+the folder:
+
+```json
+{"low": "my low.mp3", "high": "my high.mp3", "other": "no data.wav"}
+```
+
+Every sound in every pack also shows up in each alert's list, so you can mix them.
+
 ## Trend estimate (experimental)
 
-*Settings → Values and alerts → Trend estimate* draws, after the last reading on the desktop
+*Settings → Values → Trend estimate* draws, after the last reading on the desktop
 panel and the hover chart, where the value would go in the next 30 minutes if it kept the
 trend of the last 30, with a band that widens with time. It can also warn you when the
 estimate goes below your low threshold. It is off by default and asks you to read what it is
@@ -327,7 +352,7 @@ If GlucoBar is running, it applies the new settings within two seconds.
 Silent install with your choices (handy for scripts and winget):
 
 ```text
-GlucoBar-Setup-0.10.1.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
+GlucoBar-Setup-0.11.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
 ```
 
 ## Settings
@@ -362,7 +387,9 @@ GlucoBar-Setup-0.10.1.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG
 | `color_in_range` / `color_high` / `color_very_high` / `color_low` / `color_stale` | auto | Your own colour for the value, e.g. `#00c060`; `auto` = the palette's |
 | `taskbar_text` | auto | Colour of the minutes under the value on the taskbar |
 | `alert_low` / `alert_high` / `alert_stale` | false | Alerts for low (below `low`), very high (above `very_high`) and no data (`stale_minutes`) |
-| `alert_sound` / `alert_repeat` / `alert_repeat_seconds` | true / false / 15 | Play a sound with the alerts / repeat it while low or very high, every N seconds |
+| `alert_sound` / `alert_volume` | true / 100 | Play a sound with the alerts, and how loud (0–100) |
+| `sound_low` / `sound_high` / `sound_other` | GlucoBar's | Sound for low, very high, and no data or estimate: `builtin:falling`, `rising`, `beeps`, `chime`, `urgent`, `siren`, `soft`, or `Pack name/file.mp3` |
+| `repeat_low` / `repeat_high` | 0 | Repeat the low or very high sound every N seconds (10–600) until back in range; 0 = once |
 | `update_check` | true | Check once a day whether a new version is out |
 | `auto_update` | false | Windows: install new versions without asking |
 | `sensor_life_days` | 14 | LibreLinkUp: how long your sensor lasts, for the end reminders (15 for Plus sensors) |
@@ -423,12 +450,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.10.1 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.11.0 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow*, tick *release* to publish the version written in `glucobar/__init__.py`
-(pushing a tag like `v0.10.1` works too). The mode previews are made with
+(pushing a tag like `v0.11.0` works too). The mode previews are made with
 `tools/compose_previews.py`.
 
 Each build also installs the previous release, opens it and installs the new version over it

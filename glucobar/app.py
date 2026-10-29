@@ -96,7 +96,7 @@ def self_test():
             from . import macbar  # noqa: F401
             log("self-test ok (barra dei menu del Mac)")
         else:
-            from . import notifyicon, taskbar, tray  # noqa: F401
+            from . import mfdecode, notifyicon, taskbar, tray  # noqa: F401
             import pystray
             log(f"self-test ok (pystray backend {pystray.Icon.__module__})")
         return 0

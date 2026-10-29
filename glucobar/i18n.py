@@ -352,6 +352,7 @@ STRINGS = {
         "repeat_low_menu": "Ripeti basso",
         "repeat_high_menu": "Ripeti molto alto",
         "sound_settings": "Altre impostazioni degli avvisi…",
+        "sound_unreadable": "Questi file non si possono riprodurre: {names}. Prova a convertirli in WAV o MP3.",
     },
     "en": {
         "connecting": "connecting…",
@@ -688,6 +689,7 @@ STRINGS = {
         "repeat_low_menu": "Repeat low",
         "repeat_high_menu": "Repeat very high",
         "sound_settings": "More alert settings…",
+        "sound_unreadable": "These files can't be played: {names}. Try converting them to WAV or MP3.",
     },
     "es": {
         "connecting": "conectando…",
@@ -1024,6 +1026,7 @@ STRINGS = {
         "repeat_low_menu": "Repetir bajo",
         "repeat_high_menu": "Repetir muy alto",
         "sound_settings": "Más ajustes de avisos…",
+        "sound_unreadable": "Estos archivos no se pueden reproducir: {names}. Prueba a convertirlos a WAV o MP3.",
     },
     "fr": {
         "connecting": "connexion…",
@@ -1360,6 +1363,7 @@ STRINGS = {
         "repeat_low_menu": "Répéter bas",
         "repeat_high_menu": "Répéter très haut",
         "sound_settings": "Plus de réglages d'alertes…",
+        "sound_unreadable": "Ces fichiers ne peuvent pas être lus : {names}. Essayez de les convertir en WAV ou MP3.",
     },
     "de": {
         "connecting": "verbinde…",
@@ -1696,6 +1700,7 @@ STRINGS = {
         "repeat_low_menu": "Niedrig wiederholen",
         "repeat_high_menu": "Sehr hoch wiederholen",
         "sound_settings": "Weitere Warnungseinstellungen…",
+        "sound_unreadable": "Diese Dateien können nicht abgespielt werden: {names}. Versuchen Sie, sie in WAV oder MP3 umzuwandeln.",
     },
     "pt": {
         "connecting": "a ligar…",
@@ -2032,6 +2037,7 @@ STRINGS = {
         "repeat_low_menu": "Repetir baixo",
         "repeat_high_menu": "Repetir muito alto",
         "sound_settings": "Mais definições de avisos…",
+        "sound_unreadable": "Estes ficheiros não podem ser reproduzidos: {names}. Experimente convertê-los para WAV ou MP3.",
     },
 }
 

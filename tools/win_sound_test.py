@@ -11,6 +11,7 @@ import os
 import shutil
 import sys
 import time
+import wave
 import zipfile
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -48,7 +49,13 @@ def main():
         sound.stop()
         # chime: un secondo; i suoni di GlucoBar almeno 0.3 s
         good = (0.9 < length < 1.2) if not ref.startswith("builtin:") else length > 0.3
-        notice(f"Suono {ref}", f"{'ok' if good else 'NO'} | durata={length:.2f} s | "
+        fmt = ""
+        try:
+            with wave.open(wav) as w:
+                fmt = f"{w.getnchannels()} canali {w.getframerate()} Hz"
+        except Exception:
+            pass
+        notice(f"Suono {ref}", f"{'ok' if good else 'NO'} | durata={length:.2f} s {fmt} | "
                f"conversione {took:.2f} s | play={played} {error}",
                "notice" if good else "error")
         if not good:

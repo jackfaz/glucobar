@@ -395,6 +395,7 @@ class Controller:
             self.notify(t("alert_title"), t("alerts_note"), timeout=30)
         save_config(self.cfg)
         self.check_alerts()
+        self.sync_settings()
 
     def set_patient(self, patient_id):
         self.cfg["patient_id"] = patient_id
@@ -716,13 +717,22 @@ class Controller:
         for pid, kind in self.alarms_active():
             self.silence(pid, kind)
 
+    def sync_settings(self):
+        """La finestra Impostazioni, se è aperta, mostra le scelte fatte dal menu."""
+        from .settings import SettingsWindow
+        window = SettingsWindow.current
+        if window and window.win.winfo_exists():
+            window.refresh_sounds()
+
     def set_sound(self, kind, ref):
         """Suono scelto per un avviso; si sente subito, per sapere com'è."""
         self.set_options(**{f"sound_{kind}": ref})
         self.sound_now(kind)
+        self.sync_settings()
 
     def set_repeat(self, kind, seconds):
         self.set_options(**{f"repeat_{kind}": seconds})
+        self.sync_settings()
 
     def set_sound_pack(self, pack):
         """Un pacchetto: un suono per ogni avviso, scelti da pack.json o dal nome."""
@@ -730,11 +740,13 @@ class Controller:
         refs = sound.pack_sounds(pack)
         self.set_options(sound_pack=pack, **{f"sound_{k}": ref for k, ref in refs.items()})
         self.sound_now("low")
+        self.sync_settings()
 
     def toggle_alert_sound(self):
         self.set_options(alert_sound=not self.cfg.get("alert_sound", True))
         if not self.cfg["alert_sound"]:
             self.silence_all()
+        self.sync_settings()
 
     def alert_label(self, kind):
         cfg, unit = self.cfg, self.cfg["unit"]

@@ -13,6 +13,7 @@ MF_VERSION = 0x00020070
 FIRST_AUDIO_STREAM = 0xFFFFFFFD
 ALL_STREAMS = 0xFFFFFFFE
 END_OF_STREAM = 0x2
+TYPE_CHANGED = 0x20   # il decodificatore ha cambiato formato (es. AAC a 22 kHz)
 
 
 class GUID(ctypes.Structure):
@@ -66,7 +67,6 @@ def decode(path, max_seconds=60):
     _check(mfplat.MFStartup(MF_VERSION, 0))
     reader = c_void_p()
     wanted = c_void_p()
-    actual = c_void_p()
     try:
         _check(mfreadwrite.MFCreateSourceReaderFromURL(wintypes.LPCWSTR(path), None,
                                                        byref(reader)))
@@ -79,22 +79,20 @@ def decode(path, max_seconds=60):
         _call(wanted, ATTR_SET_UINT32, [POINTER(GUID), c_uint32], byref(MT_AUDIO_BITS), 16)
         _call(reader, READER_SET_TYPE, [c_uint32, c_void_p, c_void_p],
               FIRST_AUDIO_STREAM, None, wanted)
-        _call(reader, READER_GET_TYPE, [c_uint32, POINTER(c_void_p)],
-              FIRST_AUDIO_STREAM, byref(actual))
-        channels, rate, bits = (c_uint32(), c_uint32(), c_uint32())
-        for guid, out in ((MT_AUDIO_CHANNELS, channels), (MT_AUDIO_RATE, rate),
-                          (MT_AUDIO_BITS, bits)):
-            _call(actual, ATTR_GET_UINT32, [POINTER(GUID), POINTER(c_uint32)],
-                  byref(guid), byref(out))
-        if bits.value != 16:
-            raise OSError(f"Media Foundation: {bits.value} bit")
-        limit = max_seconds * rate.value * channels.value * 2
+        channels, rate = _format(reader)
         data = bytearray()
-        while len(data) < limit:
+        while len(data) < max_seconds * rate * channels * 2:
             index, flags, stamp, sample = c_uint32(), c_uint32(), c_uint64(), c_void_p()
             _call(reader, READER_READ, [c_uint32, c_uint32, POINTER(c_uint32), POINTER(c_uint32),
                                         POINTER(c_uint64), POINTER(c_void_p)],
                   FIRST_AUDIO_STREAM, 0, byref(index), byref(flags), byref(stamp), byref(sample))
+            if flags.value & TYPE_CHANGED:
+                # il formato vero arriva col primo pezzo; se cambia dopo (raro), i pezzi
+                # nel formato di prima non si possono mescolare ai nuovi
+                new = _format(reader)
+                if new != (channels, rate):
+                    data.clear()
+                channels, rate = new
             if sample:
                 data += _sample_bytes(sample)
                 _release(sample)
@@ -102,13 +100,32 @@ def decode(path, max_seconds=60):
                 break
         if not data:
             raise OSError("Media Foundation: nessun suono nel file")
-        return channels.value, rate.value, bytes(data[:limit])
+        return channels, rate, bytes(data[:max_seconds * rate * channels * 2])
     finally:
-        for obj in (actual, wanted, reader):
+        for obj in (wanted, reader):
             _release(obj)
         mfplat.MFShutdown()
         if com >= 0:
             ole32.CoUninitialize()
+
+
+def _format(reader):
+    """(canali, campioni al secondo) che il lettore restituisce adesso, a 16 bit."""
+    actual = c_void_p()
+    _call(reader, READER_GET_TYPE, [c_uint32, POINTER(c_void_p)],
+          FIRST_AUDIO_STREAM, byref(actual))
+    try:
+        values = []
+        for guid in (MT_AUDIO_CHANNELS, MT_AUDIO_RATE, MT_AUDIO_BITS):
+            out = c_uint32()
+            _call(actual, ATTR_GET_UINT32, [POINTER(GUID), POINTER(c_uint32)],
+                  byref(guid), byref(out))
+            values.append(out.value)
+    finally:
+        _release(actual)
+    if values[2] != 16:
+        raise OSError(f"Media Foundation: {values[2]} bit")
+    return values[0], values[1]
 
 
 def _sample_bytes(sample):

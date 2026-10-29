@@ -230,9 +230,9 @@ class SettingsWindow:
     def tab_alerts(self, frame):
         cfg, ctl = self.cfg, self.ctl
         box = self.section(frame, t("menu_alerts"))
-        self.alert_boxes = {}
+        self.alert_boxes, self.alert_vars = {}, {}
         for kind in ("low", "high", "stale"):
-            v = self.var(tk.BooleanVar, bool(cfg.get(f"alert_{kind}")))
+            v = self.alert_vars[kind] = self.var(tk.BooleanVar, bool(cfg.get(f"alert_{kind}")))
             box_ = tk.Checkbutton(box, variable=v, font=(FONT, 10), anchor="w",
                                   command=lambda k=kind: ctl.toggle_alert(k))
             box_.pack(fill="x")
@@ -270,7 +270,7 @@ class SettingsWindow:
         tk.Label(grid, text=t("sound_repeat_head"), font=(FONT, 9), fg="#6b6f76").grid(
             row=0, column=4, sticky="w")
         self.sound_boxes, self.repeat_boxes = {}, {}
-        repeats = [0, *REPEAT_CHOICES]
+        self.repeats = repeats = [0, *REPEAT_CHOICES]
         for row_, kind in enumerate(sound.KINDS, 1):
             tk.Label(grid, text=t(f"sound_kind_{kind}"), font=(FONT, 10), anchor="w").grid(
                 row=row_, column=0, sticky="w", padx=(0, 8), pady=2)
@@ -296,7 +296,15 @@ class SettingsWindow:
         self.refresh_sounds()
 
     def refresh_sounds(self):
-        """Elenchi di suoni e pacchetti (cambiano importando o aggiungendo cartelle)."""
+        """Elenchi di suoni e pacchetti (cambiano importando o aggiungendo cartelle) e le
+        scelte di adesso, anche se cambiate dal menu col clic destro."""
+        for kind, v in self.alert_vars.items():
+            v.set(bool(self.cfg.get(f"alert_{kind}")))
+        self.sound_on.set(self.cfg.get("alert_sound", True))
+        for kind, combo in self.repeat_boxes.items():
+            seconds = self.ctl.repeat_seconds(kind)
+            if seconds in self.repeats:
+                combo.current(self.repeats.index(seconds))
         groups = sound.choices()
         self.sound_refs = [ref for _group, refs in groups for ref, _label in refs]
         labels = [sound.label(ref) for ref in self.sound_refs]
@@ -338,9 +346,21 @@ class SettingsWindow:
         except (OSError, ValueError) as e:
             messagebox.showerror(t("settings_sounds"), str(e), parent=self.win)
             return
-        if refs:
+        if self.readable(refs):
             self.ctl.set_sound_pack(pack)
         self.refresh_sounds()
+
+    def readable(self, refs):
+        """Prova a leggere i file importati (su Windows li converte già adesso) e dice
+        quali non si possono suonare. Vero se almeno uno va bene."""
+        self.win.config(cursor="watch")
+        self.win.update_idletasks()
+        bad = [ref for ref in refs if not sound.check(ref)]
+        self.win.config(cursor="")
+        if bad:
+            messagebox.showwarning(t("settings_sounds"), t("sound_unreadable", names=", ".join(
+                ref.partition("/")[2] for ref in bad[:8])), parent=self.win)
+        return len(bad) < len(refs)
 
     def browse_sound(self, kind):
         paths = self.ask_files(multiple=False)
@@ -351,9 +371,11 @@ class SettingsWindow:
         except (OSError, ValueError) as e:
             messagebox.showerror(t("settings_sounds"), str(e), parent=self.win)
             return
-        if refs and paths[0].lower().endswith(".zip"):
+        if not self.readable(refs):
+            pass
+        elif paths[0].lower().endswith(".zip"):
             self.ctl.set_sound_pack(pack)
-        elif refs:
+        else:
             self.ctl.set_sound(kind, refs[0])
         self.refresh_sounds()
 

@@ -29,6 +29,11 @@ def notice(title, text, level="notice"):
     print(f"::{level} title={title}::{text}", flush=True)
 
 
+def flat(text):
+    """Un traceback su una riga: negli avvisi del job si vede solo la prima."""
+    return " / ".join(line.strip() for line in text.strip().splitlines()[-6:])
+
+
 def main():
     FakeLibreView.state = {"logins": 0, "redirect": False, "redirected": False, "terms": False}
     server = HTTPServer(("127.0.0.1", 0), FakeLibreView)
@@ -55,7 +60,7 @@ def main():
     errors = []
 
     def report(exc, val, tb):
-        errors.append("".join(traceback.format_exception(exc, val, tb))[-600:])
+        errors.append(flat("".join(traceback.format_exception(exc, val, tb))))
     ctl.root.report_callback_exception = report
 
     def window():
@@ -92,7 +97,7 @@ def main():
             try:
                 fn()
             except Exception:
-                errors.append(traceback.format_exc()[-600:])
+                errors.append(flat(traceback.format_exc()))
             ctl.root.after(delay, run, i + 1)
     ctl.root.after(4000, run)
     ctl.run()

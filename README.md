@@ -80,8 +80,9 @@ high, very high, low and old, backgrounds, text, chart and grid.
 
 <p align="center"><img src="docs/screenshots/messages.png" alt="Messages for a new version, a sensor that stopped, and low glucose" width="368"></p>
 
-- **Optional alerts** for low, very high or no data. Off by default, and not a replacement
-  for your sensor's alarms.
+- **Optional alerts** for low, very high or no data, with a sound that can repeat every 15
+  seconds (or up to 5 minutes) until the value is back in range or you press *Silence*. Off by
+  default, and not a replacement for your sensor's alarms.
 - **Sensor** (FreeStyle Libre): day of use, a reminder before it ends and, if it stops early,
   a button that opens the manufacturer's replacement form with the serial number copied.
 - **Updates from inside the app**: one click installs the new version and keeps your
@@ -361,6 +362,7 @@ GlucoBar-Setup-0.10.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG
 | `color_in_range` / `color_high` / `color_very_high` / `color_low` / `color_stale` | auto | Your own colour for the value, e.g. `#00c060`; `auto` = the palette's |
 | `taskbar_text` | auto | Colour of the minutes under the value on the taskbar |
 | `alert_low` / `alert_high` / `alert_stale` | false | Alerts for low (below `low`), very high (above `very_high`) and no data (`stale_minutes`) |
+| `alert_sound` / `alert_repeat` / `alert_repeat_seconds` | true / false / 15 | Play a sound with the alerts / repeat it while low or very high, every N seconds |
 | `update_check` | true | Check once a day whether a new version is out |
 | `auto_update` | false | Windows: install new versions without asking |
 | `sensor_life_days` | 14 | LibreLinkUp: how long your sensor lasts, for the end reminders (15 for Plus sensors) |

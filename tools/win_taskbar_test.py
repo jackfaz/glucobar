@@ -381,6 +381,32 @@ def small_window_hwnd(pid):
     return None
 
 
+def resize_small_window(app):
+    """Trascina l'angolo in basso a destra della finestrella: deve diventare più grande
+    senza spostarsi (fino alla 0.10.0 si spostava insieme al mouse)."""
+    hwnd = small_window_hwnd(app.pid)
+    if not hwnd:
+        return "ridimensionamento: finestrella non trovata", False
+    before = wintypes.RECT()
+    user32.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(before))
+    x, y = before.right - 4, before.bottom - 4
+    user32.SetCursorPos(x, y)
+    time.sleep(0.3)
+    user32.mouse_event(0x0002, 0, 0, 0, 0)   # sinistro giù
+    for step in range(1, 9):
+        user32.SetCursorPos(x + 10 * step, y + 5 * step)
+        time.sleep(0.08)
+    user32.mouse_event(0x0004, 0, 0, 0, 0)   # sinistro su
+    time.sleep(1.0)
+    after = wintypes.RECT()
+    user32.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(after))
+    moved = (after.left - before.left, after.top - before.top)
+    grown = after.right - after.left - (before.right - before.left)
+    ok = moved == (0, 0) and grown > 20
+    return (f"ridimensionamento finestrella: spostata di {moved}, più larga di {grown} px, "
+            f"scala salvata {read_config().get('window_scale')}"), ok
+
+
 def hide_small_window_from_its_menu(app):
     """Nel menu della finestrella: Show → Small window. Basta un clic per chiuderla?"""
     tries = []
@@ -546,7 +572,7 @@ def main(exe, strict):
         panel_result, panel_ok = panel_on_top_check(app)
         results.append(panel_result)
         problems += not panel_ok
-        for check in (panel_extra_checks, hide_small_window_from_its_menu):
+        for check in (panel_extra_checks, resize_small_window, hide_small_window_from_its_menu):
             result, ok = check(app)
             results.append(result)
             problems += not ok

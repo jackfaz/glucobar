@@ -275,3 +275,78 @@ class TaskbarEdgeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RepeatAlarmTest(unittest.TestCase):
+    """Il suono ripetuto finché il valore non torna nel range (o finché lo si zittisce)."""
+
+    def setUp(self):
+        from glucobar.controller import Controller
+
+        class Stub:
+            alarms_active = Controller.alarms_active
+            repeat_alarm = Controller.repeat_alarm
+            repeat_seconds = Controller.repeat_seconds
+            silence = Controller.silence
+
+            def __init__(self):
+                self.cfg = dict(DEFAULT_CONFIG, alert_low=True, alert_high=True, alert_repeat=True)
+                self.alerts = alerts.AlertWatch()
+                self.others, self.other_alerts = [], {}
+                self.silenced, self._last_sound, self.sounds = set(), 0, 0
+
+            def sound_now(self):
+                self.sounds += 1
+                self._last_sound = time.time()
+
+        self.ctl = Stub()
+
+    def test_repeats_until_back_in_range(self):
+        ctl = self.ctl
+        ctl.alerts.check(ctl.cfg, reading(60))
+        ctl.repeat_alarm()
+        ctl.repeat_alarm()                       # non prima dell'intervallo
+        self.assertEqual(ctl.sounds, 1)
+        ctl._last_sound -= 16
+        ctl.repeat_alarm()
+        self.assertEqual(ctl.sounds, 2)
+        ctl.alerts.check(ctl.cfg, reading(110))  # di nuovo nel range: basta
+        ctl._last_sound -= 60
+        ctl.repeat_alarm()
+        self.assertEqual(ctl.sounds, 2)
+
+    def test_silence_until_next_episode(self):
+        ctl = self.ctl
+        ctl.alerts.check(ctl.cfg, reading(280))
+        ctl.silence(None, "high")
+        ctl.repeat_alarm()
+        self.assertEqual(ctl.sounds, 0)
+        ctl.alerts.check(ctl.cfg, reading(150))
+        ctl.repeat_alarm()
+        self.assertEqual(ctl.silenced, set())    # episodio finito
+        ctl.alerts.check(ctl.cfg, reading(285))
+        ctl.repeat_alarm()
+        self.assertEqual(ctl.sounds, 1)
+
+    def test_off_or_stale(self):
+        ctl = self.ctl
+        ctl.cfg["alert_repeat"] = False
+        ctl.alerts.check(ctl.cfg, reading(60))
+        ctl.repeat_alarm()
+        self.assertEqual(ctl.sounds, 0)
+        ctl.cfg["alert_repeat"] = True
+        ctl.alerts.check(ctl.cfg, reading(60, minutes_ago=30))   # dato vecchio: niente suono
+        ctl.repeat_alarm()
+        self.assertEqual(ctl.sounds, 0)
+
+
+class SoundTest(unittest.TestCase):
+    def test_wav(self):
+        import tempfile
+        import wave
+        from unittest import mock
+        from glucobar import sound
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(sound, "CONFIG_DIR", tmp):
+            path = sound.alarm_wav()
+            with wave.open(path) as f:
+                self.assertAlmostEqual(f.getnframes() / f.getframerate(), 0.75, delta=0.05)

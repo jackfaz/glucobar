@@ -80,8 +80,9 @@ class SettingsWindow:
 
     @staticmethod
     def section(parent, title, **pack):
-        box = tk.LabelFrame(parent, text=title, font=(FONT, 10), padx=10, pady=6)
-        box.pack(fill="x", pady=(10, 0), **pack)
+        # spazi stretti: la scheda più lunga deve stare anche su uno schermo da 768 pixel
+        box = tk.LabelFrame(parent, text=title, font=(FONT, 10), padx=10, pady=3)
+        box.pack(fill="x", pady=(6, 0), **pack)
         return box
 
     @staticmethod
@@ -211,6 +212,31 @@ class SettingsWindow:
                                   command=lambda k=kind: ctl.toggle_alert(k))
             box_.pack(fill="x")
             self.alert_boxes[kind] = box_
+        row = tk.Frame(box)
+        row.pack(fill="x", pady=(4, 0))
+        self.var(tk.BooleanVar, cfg.get("alert_sound", True))
+        sound_var = self.vars[-1]
+        tk.Checkbutton(row, text=t("alert_sound_on"), variable=sound_var, font=(FONT, 10),
+                       command=lambda: ctl.set_options(alert_sound=sound_var.get())).pack(side="left")
+        tk.Button(row, text=t("alert_test"), font=(FONT, 9), command=ctl.sound_now).pack(
+            side="left", padx=(8, 0))
+        row = tk.Frame(box)
+        row.pack(fill="x")
+        self.var(tk.BooleanVar, cfg.get("alert_repeat"))
+        repeat_var = self.vars[-1]
+        tk.Checkbutton(row, text=t("alert_repeat_on"), variable=repeat_var, font=(FONT, 10),
+                       command=lambda: ctl.set_options(alert_repeat=repeat_var.get())).pack(side="left")
+        choices = [15, 30, 60, 120, 300]
+        seconds = ctl.repeat_seconds()
+        if seconds not in choices:
+            choices = sorted(choices + [seconds])
+        every = ttk.Combobox(row, values=[refresh_label(s) for s in choices], state="readonly",
+                             width=7)
+        every.current(choices.index(seconds))
+        every.pack(side="left", padx=(4, 4))
+        every.bind("<<ComboboxSelected>>", lambda _e: ctl.set_options(
+            alert_repeat_seconds=choices[every.current()]))
+        tk.Label(row, text=t("alert_repeat_until"), font=(FONT, 10)).pack(side="left")
         tk.Label(box, text=t("alert_menu_note"), font=(FONT, 9), fg="#6b6f76",
                  anchor="w").pack(fill="x", pady=(4, 0))
 
@@ -231,7 +257,7 @@ class SettingsWindow:
             self.predict_vars[key] = self.check(box, label, cfg.get(key),
                                                 lambda on, k=key: self.set_predict(k, on))
         tk.Label(box, text=t("predict_note"), font=(FONT, 9), fg="#6b6f76", anchor="w",
-                 justify="left", wraplength=380).pack(fill="x", pady=(4, 0))
+                 justify="left", wraplength=520).pack(fill="x", pady=(4, 0))
 
     def set_predict(self, key, on):
         """La stima della tendenza si accende solo dopo aver letto (una volta) cosa è e

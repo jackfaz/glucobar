@@ -60,9 +60,12 @@ class WindowView:
             wdg.bind("<ButtonRelease-1>", self._drag_end)
             bind_right_click(wdg, self._show_menu)
             wdg.bind("<Double-Button-1>", lambda e: ctl.refresh())
-        self.grip.bind("<ButtonPress-1>", self._resize_start)
-        self.grip.bind("<B1-Motion>", self._resize_move)
-        self.grip.bind("<ButtonRelease-1>", self._resize_end)
+        # "break": Tk passerebbe il trascinamento anche alla finestra intorno all'angolo,
+        # che si spostava mentre la si ridimensionava
+        for event, handler in (("<ButtonPress-1>", self._resize_start),
+                               ("<B1-Motion>", self._resize_move),
+                               ("<ButtonRelease-1>", self._resize_end)):
+            self.grip.bind(event, lambda e, h=handler: h(e) or "break")
 
     def destroy(self):
         self.root.destroy()

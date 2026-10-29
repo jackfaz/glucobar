@@ -95,6 +95,9 @@ DEFAULT_CONFIG = {
     "alert_high": False,
     "alert_stale": False,
     "alerts_note_shown": False,
+    "alert_sound": True,        # un suono quando scatta un avviso
+    "alert_repeat": False,      # e di nuovo ogni tot secondi finché non si torna nel range
+    "alert_repeat_seconds": 15,
     # stima della tendenza (sperimentale, spenta di default): dove andrebbe il valore se
     # continuasse come negli ultimi minuti; va accettata l'avvertenza la prima volta
     "predict": False,

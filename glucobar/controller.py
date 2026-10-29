@@ -18,6 +18,8 @@ import webbrowser
 
 from . import alerts, i18n, instance, reminders, sensor, support, theme, updates
 from .alerts import AlertWatch
+
+ALARMS = ("low", "high")   # gli avvisi il cui suono si può ripetere
 from .config import (ELEMENTS, MIN_REFRESH, REFRESH_CHOICES, log, normalize_elements,
                      peek_config, save_config)
 from .i18n import element_name, refresh_label, t
@@ -35,6 +37,7 @@ LIVE_KEYS = ("elements", "language", "unit", "low", "high", "very_high", "stale_
              "theme", "palette", "alert_low", "alert_high", "alert_stale", "update_check",
              "auto_update", "sensor_life_days", "ui_colors", "taskbar_text", "show_delta",
              "trend_style", "predict", "alert_soon", "nicknames", "people_shown",
+             "alert_sound", "alert_repeat", "alert_repeat_seconds",
              "hover_chart", "desktop_on_top", "desktop_over_fullscreen",
              *COLOR_KEYS.values())
 REBUILD_KEYS = {"taskbar_bg", "taskbar_transparent", "taskbar_text", "desktop_alpha", "trend_style",
@@ -62,6 +65,8 @@ class Controller:
         self.history = []
         self.others = []     # altre persone mostrate insieme: [{"id", "label", "current"}]
         self.other_alerts = {}   # id -> AlertWatch delle altre persone
+        self.silenced = set()    # (persona, avviso) zittiti fino alla fine dell'episodio
+        self._last_sound = 0
         self.error = None
         self.updated_at = None
         self.busy = False
@@ -643,7 +648,47 @@ class Controller:
                 if self.others or pid:   # più persone: di chi è l'avviso
                     title += " – " + self.person_label(pid)
                 log(f"avviso: {kind}")
-                self.notify(title, t(f"alert_{kind}", v=value, n=minutes), timeout=60)
+                actions = []
+                if kind in ALARMS and cfg.get("alert_repeat"):
+                    # il suono si ripete: il messaggio resta finché non lo si zittisce
+                    actions = [(t("alert_silence"), lambda p=pid, k=kind: self.silence(p, k))]
+                self.notify(title, t(f"alert_{kind}", v=value, n=minutes), actions=actions,
+                            timeout=60)
+                if cfg.get("alert_sound", True):
+                    self.sound_now()
+
+    # ---- suono degli avvisi (basso e molto alto), anche ripetuto ----
+    def alarms_active(self):
+        """(persona, avviso) di valore basso o molto alto in corso, tra quelli accesi."""
+        watches = [(None, self.alerts)] + [(o["id"], self.other_alerts.get(o["id"]))
+                                          for o in self.others]
+        return {(pid, kind) for pid, watch in watches if watch
+                for kind in watch.active if kind in ALARMS}
+
+    def repeat_alarm(self):
+        """Ogni secondo: con "ripeti il suono", suona di nuovo finché il valore non torna
+        nel range o finché non si preme Zittisci."""
+        active = self.alarms_active()
+        self.silenced &= active   # episodio finito: la prossima volta suona di nuovo
+        if not (self.cfg.get("alert_repeat") and self.cfg.get("alert_sound", True)):
+            return
+        if active - self.silenced and time.time() - self._last_sound >= self.repeat_seconds():
+            self.sound_now()
+
+    def repeat_seconds(self):
+        try:
+            return max(10, int(self.cfg.get("alert_repeat_seconds") or 15))
+        except (TypeError, ValueError):
+            return 15
+
+    def sound_now(self):
+        from . import sound
+        self._last_sound = time.time()
+        sound.play()
+
+    def silence(self, pid, kind):
+        self.silenced.add((pid, kind))
+        log(f"suono zittito: {kind}")
 
     def check_sensor(self):
         if self.cfg.get("source", "libre") != "libre":
@@ -734,6 +779,7 @@ class Controller:
         wait = self.refresh_seconds()
         if self.error:
             wait = max(wait, 60)   # dopo un errore (password, rete) non insistere troppo
+        self.repeat_alarm()
         if now - self._last_fetch >= wait:
             self.refresh()
         elif now - self._last_render >= 15:

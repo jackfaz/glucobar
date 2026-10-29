@@ -4,6 +4,19 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.10.1] - 2026-10-29
+
+### Added
+- **Alert sound, repeated if you want**: alerts now play a short alarm sound, and with
+  *Repeat the sound every …* (*Settings → Values and alerts*) it plays again every 15 seconds,
+  or up to 5 minutes, while the value stays low or very high, until it is back in range or
+  you press *Silence* on the message (thanks for the suggestion on Reddit). *Test* plays it.
+
+### Fixed
+- Resizing the small window from its corner also moved it with the mouse: the drag reached
+  the window around the corner too. Now it only grows or shrinks. The Windows test drags the
+  corner with the mouse and checks that the window stays where it is.
+
 ## [0.10.0] - 2026-10-29
 
 ### Added
@@ -422,6 +435,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.10.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.10.1
 [0.10.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.10.0
 [0.9.8]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.8
 [0.9.7]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.7

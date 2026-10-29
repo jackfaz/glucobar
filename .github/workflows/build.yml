@@ -72,6 +72,13 @@ jobs:
           $p = Start-Process dist\GlucoBar\GlucoBar.exe -ArgumentList "--self-test" -Wait -PassThru
           Get-Content "$env:APPDATA\GlucoBar\glucobar.log" -ErrorAction SilentlyContinue
           if ($p.ExitCode -ne 0) { exit 1 }
+          # i suoni MP3/M4A convertiti in WAV dall'exe stesso, come fa GlucoBar
+          $wav = "$env:TEMP\chime-test.wav"
+          $p = Start-Process dist\GlucoBar\GlucoBar.exe -Wait -PassThru -ArgumentList `
+            "--decode-sounds", "`"$PWD\tests\data\chime-48k.m4a`"", "`"$wav`""
+          $size = (Get-Item $wav -ErrorAction SilentlyContinue).Length
+          "suono convertito: codice $($p.ExitCode), $size byte"
+          if ($p.ExitCode -ne 0 -or $size -lt 100000) { exit 1 }
           # il comando da terminale (ha la console: PowerShell lo aspetta da solo)
           $v = dist\GlucoBar\glucobar-cli.exe --version
           "glucobar-cli: $v"

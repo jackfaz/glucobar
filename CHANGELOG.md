@@ -4,6 +4,21 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.11.2] - 2026-10-29
+
+### Changed
+- **Sounds wait for Apply**: in *Settings → Alerts and sounds* the sound, pack, repeat and
+  volume you pick are only tried (▶, or right away when you pick one) until you press
+  *Apply*, so you can listen to them all without changing anything. Closing the window with
+  changes not applied asks whether to apply them.
+- **Trend estimate on the chart**: the next 30 minutes have their own shaded zone on the right,
+  labelled *estimate*, instead of a thin strip squeezed against the edge of a 12-hour chart.
+
+### Fixed
+- Changing two sounds one after the other could close GlucoBar. MP3 and M4A files are now
+  converted by a separate GlucoBar process, so a problem in Windows' decoder can no longer
+  close the app, and the window doesn't freeze while a long file is converted.
+
 ## [0.11.1] - 2026-10-29
 
 ### Fixed
@@ -466,6 +481,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.11.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.2
 [0.11.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.1
 [0.11.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.0
 [0.10.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.10.1

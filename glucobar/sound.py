@@ -312,12 +312,13 @@ def play(ref=None, volume=100):
             _until = time.time() + duration(path)
             return True
         if sys.platform == "darwin":
-            _proc = subprocess.Popen(["afplay", "-v", str(volume / 100), path])
-            return True
-        for cmd in (["paplay", f"--volume={volume * 655}", path],
-                    ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet",
-                     "-volume", str(volume), path],
-                    ["aplay", "-q", path]):
+            players = [["afplay", "-v", str(volume / 100), path]]
+        else:
+            players = [["paplay", f"--volume={volume * 655}", path],
+                       ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet",
+                        "-volume", str(volume), path],
+                       ["aplay", "-q", path]]
+        for cmd in players:
             try:
                 _proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL,
                                          stderr=subprocess.DEVNULL)

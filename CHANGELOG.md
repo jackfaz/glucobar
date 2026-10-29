@@ -4,6 +4,13 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.11.1] - 2026-10-29
+
+### Fixed
+- The Mac version of 0.11.0 was not built (a test stopped the build), so the Mac download
+  stayed on 0.10.1. 0.11.1 brings the new alert sounds to the Mac too. On a Mac without a
+  working sound player, alerts fall back to the system beep. Nothing changes on Windows.
+
 ## [0.11.0] - 2026-10-29
 
 ### Added
@@ -459,6 +466,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.11.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.1
 [0.11.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.0
 [0.10.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.10.1
 [0.10.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.10.0

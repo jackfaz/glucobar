@@ -241,17 +241,21 @@ class SettingsWindow:
                  anchor="w").pack(fill="x", pady=(2, 0))
 
         box = self.section(frame, t("settings_sounds"))
+        # le scelte dei suoni restano in sospeso (▶ le fa sentire) finché non si preme
+        # Applica: si possono provare tutti senza cambiare niente
+        self.pending = {}
         row = tk.Frame(box)
         row.pack(fill="x")
         self.sound_on = self.var(tk.BooleanVar, cfg.get("alert_sound", True))
         tk.Checkbutton(row, text=t("alert_sound_on"), variable=self.sound_on, font=(FONT, 10),
-                       command=lambda: ctl.set_options(alert_sound=self.sound_on.get())).pack(
+                       command=lambda: self.change(alert_sound=self.sound_on.get())).pack(
             side="left")
-        volume = tk.Scale(row, from_=0, to=100, orient="horizontal", length=130, showvalue=False,
-                          command=lambda v: ctl.set_options(alert_volume=int(float(v))))
-        volume.set(cfg.get("alert_volume", 100))
-        volume.pack(side="right")
-        volume.bind("<ButtonRelease-1>", lambda _e: ctl.sound_now("low"))
+        self.volume = tk.Scale(row, from_=0, to=100, orient="horizontal", length=130,
+                               showvalue=False)
+        self.volume.set(cfg.get("alert_volume", 100))
+        self.volume.config(command=lambda v: self.change(alert_volume=int(float(v))))
+        self.volume.pack(side="right")
+        self.volume.bind("<ButtonRelease-1>", lambda _e: self.preview("low"))
         tk.Label(row, text=t("sound_volume"), font=(FONT, 10)).pack(side="right", padx=(0, 6))
 
         row = tk.Frame(box)
@@ -281,50 +285,90 @@ class SettingsWindow:
             tk.Button(grid, text=t("sound_browse"), font=(FONT, 9),
                       command=lambda k=kind: self.browse_sound(k)).grid(row=row_, column=2, padx=4)
             tk.Button(grid, text="\u25b6", font=(FONT, 9), width=2,
-                      command=lambda k=kind: ctl.sound_now(k)).grid(row=row_, column=3)
+                      command=lambda k=kind: self.preview(k)).grid(row=row_, column=3)
             if kind in ALARMS:
                 every = ttk.Combobox(grid, state="readonly", width=8, values=[
                     refresh_label(s) if s else t("repeat_off") for s in repeats])
-                seconds = ctl.repeat_seconds(kind)
-                every.current(repeats.index(seconds) if seconds in repeats else 1)
                 every.grid(row=row_, column=4, padx=(8, 0), sticky="w")
-                every.bind("<<ComboboxSelected>>", lambda _e, k=kind, c=every: ctl.set_repeat(
-                    k, repeats[c.current()]))
+                every.bind("<<ComboboxSelected>>", lambda _e, k=kind, c=every: self.change(
+                    **{f"repeat_{k}": repeats[c.current()]}))
                 self.repeat_boxes[kind] = every
-        tk.Label(box, text=t("sound_note"), font=(FONT, 9), fg="#6b6f76", anchor="w",
-                 justify="left", wraplength=560).pack(fill="x", pady=(4, 0))
+        row = tk.Frame(box)
+        row.pack(fill="x", pady=(4, 0))
+        self.apply_button = tk.Button(row, text=t("sound_apply"), width=10, state="disabled",
+                                      command=self.apply_sounds)
+        self.apply_button.pack(side="right", anchor="n", padx=(8, 0))
+        tk.Label(row, text=t("sound_note"), font=(FONT, 9), fg="#6b6f76", anchor="w",
+                 justify="left", wraplength=470).pack(side="left", fill="x")
+        self.refresh_sounds()
+
+    def chosen(self, key):
+        """Il valore scelto adesso: quello in sospeso, o quello in uso."""
+        return self.pending.get(key, self.cfg.get(key))
+
+    def change(self, **values):
+        self.pending.update(values)
+        self.apply_button.config(state="normal")
+
+    def preview(self, kind):
+        ref = self.chosen(f"sound_{kind}")
+        sound.play(ref, self.chosen("alert_volume"))
+
+    def apply_sounds(self):
+        if not self.pending:
+            return
+        changes, self.pending = self.pending, {}
+        self.apply_button.config(state="disabled")
+        self.ctl.set_options(**changes)
+        if not self.cfg.get("alert_sound", True):
+            self.ctl.silence_all()
         self.refresh_sounds()
 
     def refresh_sounds(self):
         """Elenchi di suoni e pacchetti (cambiano importando o aggiungendo cartelle) e le
-        scelte di adesso, anche se cambiate dal menu col clic destro."""
+        scelte di adesso: quelle in sospeso, o quelle in uso (anche se cambiate dal menu
+        col clic destro)."""
         for kind, v in self.alert_vars.items():
             v.set(bool(self.cfg.get(f"alert_{kind}")))
-        self.sound_on.set(self.cfg.get("alert_sound", True))
+        self.sound_on.set(self.chosen("alert_sound") is not False)
+        if "alert_volume" not in self.pending:
+            self.volume.config(command="")   # .set() lo chiamerebbe
+            self.volume.set(self.cfg.get("alert_volume", 100))
+            self.volume.config(command=lambda v: self.change(alert_volume=int(float(v))))
         for kind, combo in self.repeat_boxes.items():
-            seconds = self.ctl.repeat_seconds(kind)
-            if seconds in self.repeats:
-                combo.current(self.repeats.index(seconds))
+            try:
+                seconds = max(0, int(self.chosen(f"repeat_{kind}") or 0))
+            except (TypeError, ValueError):
+                seconds = 0
+            seconds = max(10, seconds) if seconds else 0
+            combo.current(self.repeats.index(seconds) if seconds in self.repeats else 1)
         groups = sound.choices()
         self.sound_refs = [ref for _group, refs in groups for ref, _label in refs]
         labels = [sound.label(ref) for ref in self.sound_refs]
         for kind, combo in self.sound_boxes.items():
             combo.config(values=labels)
-            ref = self.cfg.get(f"sound_{kind}")
+            ref = self.chosen(f"sound_{kind}")
             if ref not in self.sound_refs:
                 ref = sound.DEFAULTS[kind]
             combo.current(self.sound_refs.index(ref))
         self.pack_names = [group for group, _refs in groups]
         self.pack_box.config(values=self.pack_names)
-        current = self.cfg.get("sound_pack")
+        current = self.chosen("sound_pack")
         self.pack_box.current(self.pack_names.index(current) if current in self.pack_names else 0)
 
     def choose_sound(self, kind):
-        self.ctl.set_sound(kind, self.sound_refs[self.sound_boxes[kind].current()])
+        self.change(**{f"sound_{kind}": self.sound_refs[self.sound_boxes[kind].current()]})
+        self.preview(kind)
 
     def choose_pack(self):
-        self.ctl.set_sound_pack(self.pack_names[self.pack_box.current()])
+        self.use_pack(self.pack_names[self.pack_box.current()])
+
+    def use_pack(self, pack):
+        """Un pacchetto: un suono per ogni avviso (in sospeso, come le altre scelte)."""
+        self.change(sound_pack=pack, **{f"sound_{k}": ref
+                                        for k, ref in sound.pack_sounds(pack).items()})
         self.refresh_sounds()
+        self.preview("low")
 
     def ask_files(self, multiple):
         types = [(t("sound_files"), " ".join(f"*{e}" for e in sound.AUDIO_EXT + (".zip",)))]
@@ -336,7 +380,7 @@ class SettingsWindow:
 
     def import_pack(self):
         """Un .zip o dei file audio diventano un pacchetto (dal nome dello zip o della
-        cartella), e lo si usa subito."""
+        cartella), scelto subito (da applicare)."""
         paths = self.ask_files(multiple=True)
         if not paths:
             return
@@ -347,14 +391,18 @@ class SettingsWindow:
             messagebox.showerror(t("settings_sounds"), str(e), parent=self.win)
             return
         if self.readable(refs):
-            self.ctl.set_sound_pack(pack)
-        self.refresh_sounds()
+            self.use_pack(pack)
+        else:
+            self.refresh_sounds()
 
     def readable(self, refs):
-        """Prova a leggere i file importati (su Windows li converte già adesso) e dice
-        quali non si possono suonare. Vero se almeno uno va bene."""
+        """Prova a leggere i file importati (su Windows li converte già adesso, tutti
+        insieme) e dice quali non si possono suonare. Vero se almeno uno va bene."""
+        if not refs:
+            return False
         self.win.config(cursor="watch")
         self.win.update_idletasks()
+        sound.decode_all([sound.resolve(ref) for ref in refs])
         bad = [ref for ref in refs if not sound.check(ref)]
         self.win.config(cursor="")
         if bad:
@@ -372,12 +420,13 @@ class SettingsWindow:
             messagebox.showerror(t("settings_sounds"), str(e), parent=self.win)
             return
         if not self.readable(refs):
-            pass
+            self.refresh_sounds()
         elif paths[0].lower().endswith(".zip"):
-            self.ctl.set_sound_pack(pack)
+            self.use_pack(pack)
         else:
-            self.ctl.set_sound(kind, refs[0])
-        self.refresh_sounds()
+            self.change(**{f"sound_{kind}": refs[0]})
+            self.refresh_sounds()
+            self.preview(kind)
 
     def set_predict(self, key, on):
         """La stima della tendenza si accende solo dopo aver letto (una volta) cosa è e
@@ -801,5 +850,12 @@ class SettingsWindow:
         self.apply()
 
     def close(self):
+        if getattr(self, "pending", None):
+            answer = messagebox.askyesnocancel(t("settings_sounds"), t("sound_pending"),
+                                               parent=self.win)
+            if answer is None:
+                return
+            if answer:
+                self.apply_sounds()
         SettingsWindow.current = None
         self.win.destroy()

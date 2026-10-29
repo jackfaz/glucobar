@@ -353,6 +353,9 @@ STRINGS = {
         "repeat_high_menu": "Ripeti molto alto",
         "sound_settings": "Altre impostazioni degli avvisi…",
         "sound_unreadable": "Questi file non si possono riprodurre: {names}. Prova a convertirli in WAV o MP3.",
+        "predict_zone": "stima",
+        "sound_apply": "Applica",
+        "sound_pending": "Le modifiche ai suoni non sono ancora applicate. Applicarle adesso?",
     },
     "en": {
         "connecting": "connecting…",
@@ -690,6 +693,9 @@ STRINGS = {
         "repeat_high_menu": "Repeat very high",
         "sound_settings": "More alert settings…",
         "sound_unreadable": "These files can't be played: {names}. Try converting them to WAV or MP3.",
+        "predict_zone": "estimate",
+        "sound_apply": "Apply",
+        "sound_pending": "The sound changes aren't applied yet. Apply them now?",
     },
     "es": {
         "connecting": "conectando…",
@@ -1027,6 +1033,9 @@ STRINGS = {
         "repeat_high_menu": "Repetir muy alto",
         "sound_settings": "Más ajustes de avisos…",
         "sound_unreadable": "Estos archivos no se pueden reproducir: {names}. Prueba a convertirlos a WAV o MP3.",
+        "predict_zone": "estimación",
+        "sound_apply": "Aplicar",
+        "sound_pending": "Los cambios de sonido aún no se han aplicado. ¿Aplicarlos ahora?",
     },
     "fr": {
         "connecting": "connexion…",
@@ -1364,6 +1373,9 @@ STRINGS = {
         "repeat_high_menu": "Répéter très haut",
         "sound_settings": "Plus de réglages d'alertes…",
         "sound_unreadable": "Ces fichiers ne peuvent pas être lus : {names}. Essayez de les convertir en WAV ou MP3.",
+        "predict_zone": "estimation",
+        "sound_apply": "Appliquer",
+        "sound_pending": "Les modifications des sons ne sont pas encore appliquées. Les appliquer maintenant ?",
     },
     "de": {
         "connecting": "verbinde…",
@@ -1701,6 +1713,9 @@ STRINGS = {
         "repeat_high_menu": "Sehr hoch wiederholen",
         "sound_settings": "Weitere Warnungseinstellungen…",
         "sound_unreadable": "Diese Dateien können nicht abgespielt werden: {names}. Versuchen Sie, sie in WAV oder MP3 umzuwandeln.",
+        "predict_zone": "Schätzung",
+        "sound_apply": "Übernehmen",
+        "sound_pending": "Die Änderungen an den Tönen sind noch nicht übernommen. Jetzt übernehmen?",
     },
     "pt": {
         "connecting": "a ligar…",
@@ -2038,6 +2053,9 @@ STRINGS = {
         "repeat_high_menu": "Repetir muito alto",
         "sound_settings": "Mais definições de avisos…",
         "sound_unreadable": "Estes ficheiros não podem ser reproduzidos: {names}. Experimente convertê-los para WAV ou MP3.",
+        "predict_zone": "estimativa",
+        "sound_apply": "Aplicar",
+        "sound_pending": "As alterações aos sons ainda não foram aplicadas. Aplicá-las agora?",
     },
 }
 

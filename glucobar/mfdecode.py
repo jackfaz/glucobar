@@ -146,3 +146,29 @@ def _sample_bytes(sample):
 def _check(hr):
     if hr < 0:
         raise OSError(f"Media Foundation: 0x{hr & 0xFFFFFFFF:08X}")
+
+
+def convert(pairs):
+    """[sorgente, wav, sorgente, wav, ...] -> i WAV; 0 se sono riusciti tutti. Gira in un
+    processo a parte (vedi sound.decode_all)."""
+    import os
+    import wave
+    failed = 0
+    for src, out in zip(pairs[::2], pairs[1::2]):
+        try:
+            channels, rate, frames = decode(src)
+            with wave.open(out + ".tmp", "wb") as f:
+                f.setnchannels(channels)
+                f.setsampwidth(2)
+                f.setframerate(rate)
+                f.writeframes(frames)
+            os.replace(out + ".tmp", out)
+        except Exception as e:
+            failed += 1
+            print(f"{os.path.basename(src)}: {e}", file=__import__("sys").stderr)
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(convert(sys.argv[1:]))

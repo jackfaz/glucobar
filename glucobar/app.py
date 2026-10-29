@@ -128,10 +128,14 @@ def main(argv=None):
     parser.add_argument("--quit", action="store_true",
                         help="chiude GlucoBar se è aperto (usato da installer e disinstallazione)")
     parser.add_argument("--self-test", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--decode-sounds", nargs="+", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
 
     if args.self_test:
         return self_test()
+    if args.decode_sounds:   # Windows: suoni MP3/M4A in WAV, in un processo a parte
+        from . import mfdecode
+        return mfdecode.convert(args.decode_sounds)
     if args.forget:
         forget_everything()
         return 0

@@ -330,8 +330,11 @@ class DesktopView:
             return
         now = time.time()
         pred = self.prediction()
-        end = now + pred["points"][-1][0] * 60 if pred else now   # spazio per la stima
+        end = now + pred["points"][-1][0] * 60 if pred else now
         t0 = now - hours * 3600
+        # la stima ha una sua zona a destra, larga almeno un ottavo del grafico: con 12 ore
+        # i suoi 30 minuti sarebbero una striscia schiacciata contro il bordo
+        split = right - max((end - now) / (end - t0), 0.125 if pred else 0) * (right - left)
         lo_v = 40
         hi_v = max(300, min(400, max((p["mgdl"] for p in points), default=0) + 20))
 
@@ -340,8 +343,13 @@ class DesktopView:
             return bottom - (v - lo_v) / (hi_v - lo_v) * (bottom - top)
 
         def x(ts):
-            return left + (ts - t0) / (end - t0) * (right - left)
+            if ts <= now or end <= now:
+                return left + (ts - t0) / (now - t0) * (split - left)
+            return split + (ts - now) / (end - now) * (right - split)
 
+        if pred:   # sotto alla fascia del range, che resta visibile anche lì
+            cv.create_rectangle(split, top, right, bottom, fill=mix(pal.grid, pal.panel, 0.5),
+                                outline="")
         # fascia del range e soglie
         cv.create_rectangle(left, y(cfg["high"]), right, y(cfg["low"]), fill=pal.band, outline="")
         for v, col in ((cfg["low"], pal.low), (cfg["high"], pal.high)):
@@ -355,7 +363,7 @@ class DesktopView:
         step = 1 if hours <= 3 else 2 if hours <= 6 else 3
         tick = datetime.fromtimestamp(t0).replace(minute=0, second=0, microsecond=0)
         ts = tick.timestamp() + 3600
-        while ts < end:
+        while ts < now:
             hour = datetime.fromtimestamp(ts)
             if hour.hour % step == 0:
                 cv.create_line(x(ts), top, x(ts), bottom, fill=pal.grid)
@@ -365,7 +373,11 @@ class DesktopView:
 
         if pred:
             # la stima: una fascia tenue che si allarga e una linea tratteggiata, dopo
-            # l'ultima lettura (vedi stats.predict: non è una previsione vera)
+            # l'ultima lettura (vedi stats.predict: non è una previsione vera), nella sua
+            # zona separata da "adesso"
+            cv.create_line(split, top, split, bottom, fill=pal.dim, dash=(2, 3))
+            cv.create_text((split + right) / 2, top + 2, text=t("predict_zone"), anchor="n",
+                           fill=pal.dim, font=(FONT, f_tiny))
             t_now = pred["time"]
             upper = [(x(t_now), y(pred["from"]))] + [
                 (x(t_now + m * 60), y(hi)) for m, _v, _lo, hi in pred["points"]]
@@ -375,9 +387,6 @@ class DesktopView:
             line = [(x(t_now), y(pred["from"]))] + [
                 (x(t_now + m * 60), y(v)) for m, v, _lo, _hi in pred["points"]]
             cv.create_line(*[c for xy in line for c in xy], fill=pal.dim, width=1.5, dash=(4, 3))
-            last_x, last_y = line[-1]
-            cv.create_text(last_x - 2, last_y - 3, text="?", anchor="se", fill=pal.dim,
-                           font=(FONT, f_tiny, "bold"))
 
         if len(points) >= 2:
             coords = []

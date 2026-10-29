@@ -237,21 +237,46 @@ def decoded(path):
     com'è. Errore se Windows non sa leggere il file."""
     if sys.platform != "win32" or path.lower().endswith(".wav"):
         return path
+    out = _decoded_path(path)
+    if not os.path.exists(out):
+        decode_all([path])
+    if not os.path.exists(out):
+        raise OSError(f"Windows non sa leggere {os.path.basename(path)}")
+    return out
+
+
+def _decoded_path(path):
     import hashlib
     st = os.stat(path)
     key = hashlib.sha1(f"{path}|{st.st_size}|{st.st_mtime}".encode()).hexdigest()[:16]
-    out = os.path.join(CACHE_DIR, "decoded", key + ".wav")
-    if not os.path.exists(out):
-        from . import mfdecode
-        channels, rate, frames = mfdecode.decode(path)
-        os.makedirs(os.path.dirname(out), exist_ok=True)
-        with wave.open(out + ".tmp", "wb") as f:
-            f.setnchannels(channels)
-            f.setsampwidth(2)
-            f.setframerate(rate)
-            f.writeframes(frames)
-        os.replace(out + ".tmp", out)
-    return out
+    return os.path.join(CACHE_DIR, "decoded", key + ".wav")
+
+
+def decode_all(paths):
+    """Converte in WAV i file non ancora convertiti, tutti insieme, in un processo a parte
+    (GlucoBar stesso con --decode-sounds): un problema del decodificatore di Windows non
+    può chiudere GlucoBar, e la finestra non si blocca su un file rotto."""
+    jobs = []
+    for path in paths:
+        if sys.platform == "win32" and not path.lower().endswith(".wav"):
+            out = _decoded_path(path)
+            if not os.path.exists(out):
+                jobs += [path, out]
+    if not jobs:
+        return
+    os.makedirs(os.path.join(CACHE_DIR, "decoded"), exist_ok=True)
+    if getattr(sys, "frozen", False):
+        cmd = [sys.executable, "--decode-sounds", *jobs]
+    else:
+        cmd = [sys.executable, "-m", "glucobar.mfdecode", *jobs]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120,
+                                cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        if result.returncode:
+            log(f"conversione dei suoni: codice {result.returncode} {result.stderr[-300:]}")
+    except (OSError, subprocess.SubprocessError) as e:
+        log(f"conversione dei suoni non riuscita: {e}")
 
 
 def duration(path):
@@ -287,7 +312,7 @@ def _windows_volume(volume):
     """Volume dei suoni di GlucoBar (solo i suoi: Windows tiene un volume per programma)."""
     import ctypes
     level = int(0xFFFF * volume / 100)
-    ctypes.windll.winmm.waveOutSetVolume(None, level | (level << 16))
+    ctypes.windll.winmm.waveOutSetVolume(None, ctypes.c_uint32(level | (level << 16)))
 
 
 def play(ref=None, volume=100):

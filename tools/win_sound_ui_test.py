@@ -92,13 +92,14 @@ def main():
     add(1500, lambda: (done.append(dict(ctl.cfg)), window().close(), ctl.quit()))
 
     def run(i=0):
-        if i < len(steps):
+        if i < len(steps) and ctl.root:
             delay, fn = steps[i]
             try:
                 fn()
             except Exception:
                 errors.append(flat(traceback.format_exc()))
-            ctl.root.after(delay, run, i + 1)
+            if ctl.root:
+                ctl.root.after(delay, run, i + 1)
     ctl.root.after(4000, run)
     ctl.run()
     server.shutdown()

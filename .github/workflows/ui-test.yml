@@ -45,3 +45,7 @@ jobs:
           if ("${{ inputs.app_ref }}") { $app = "app\run_glucobar.py" }
           python tools/win_tray_test.py $app --strict
           if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Alert sounds test
+        if: always()
+        run: python tools/win_sound_test.py --strict

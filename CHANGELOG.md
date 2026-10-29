@@ -4,6 +4,27 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.10.0] - 2026-10-29
+
+### Added
+- **Reminders**: a Reminders window (right-click → *Reminders…*) for things like picking up
+  medicines, ordering sensors or long-acting insulin: every day, on some days of the week,
+  every few days, once, or a few days before the FreeStyle Libre sensor ends. The message
+  has *Done* and *In 15 / 60 min*. No doses, ever.
+- **Several people at once**: with LibreLinkUp, *Person → Also show …* puts other people
+  followed with the same account next to the main one on the taskbar, and alerts say whose
+  they are. A **nickname** for each person (*Settings → General → People*) appears next to
+  the value, with any sensor.
+- **Trend estimate (experimental)**, off by default: on the desktop panel and the hover
+  chart, where the value would go in the next 30 minutes if it kept its recent trend, with a
+  widening band, and an optional alert when the estimate goes below the low threshold. It
+  shows a disclaimer to accept before turning on: it is not a forecast and not a medical
+  device.
+- **Connect other devices** (*Settings → Connections*, off by default): a local web address
+  with the value as JSON, Nightscout-compatible addresses so displays made for Nightscout
+  work with GlucoBar, and an OBS overlay page; and MQTT publishing with Home Assistant
+  discovery. Local to this computer unless opened to the home network, optional access key.
+
 ## [0.9.8] - 2026-10-28
 
 ### Fixed
@@ -401,6 +422,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.10.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.10.0
 [0.9.8]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.8
 [0.9.7]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.7
 [0.9.6]: https://github.com/jackfaz/glucobar/releases/tag/v0.9.6

@@ -95,7 +95,13 @@ high, very high, low and old, backgrounds, text, chart and grid.
 - **Desktop panel always on top**, hidden while a video or a game is full screen, or kept
   over it like picture-in-picture, with adjustable opacity.
 - **Any taskbar**: on the left, right or top (Windows 10), auto-hidden, on a second monitor.
-- **More than one person** followed with the same LibreLinkUp account.
+- **More than one person** followed with the same LibreLinkUp account, side by side on the
+  taskbar, each with a nickname.
+- **Reminders** to pick up medicines, order sensors or take long-acting insulin.
+- **Trend estimate** (experimental, off by default): where the value is heading in the next
+  30 minutes.
+- **Connect other devices**: Home Assistant, ESP32 displays, Stream Deck or OBS can show the
+  value through a local address or MQTT.
 
 > **GlucoBar is not a medical device.** Do not use it to decide insulin doses or to treat a
 > hypo: always rely on your reader or the official app. It uses an unofficial API that Abbott
@@ -244,6 +250,59 @@ in GlucoBar instead: it works the same way.
   silence, then reopens with the same settings. Tick *Install new versions automatically* to
   skip the question. On the Mac it opens the download page.
 
+## Reminders
+
+Right-click any GlucoBar element → **Reminders…** to add reminders: every day, on some days
+of the week, every few days, once, or a few days before the FreeStyle Libre sensor ends.
+At the time you choose a message appears in the bottom right corner with **Done**, **In 15
+min** and **In 60 min**. If the PC was off at that time, it reminds you when it starts again
+(within 12 hours). GlucoBar only reminds you: it never suggests doses.
+
+## More than one person
+
+With LibreLinkUp you can follow several people with the same account (for example two
+children). Right-click → **Person** chooses the main one, shown on every element, and
+**Also show …** puts others next to it on the taskbar, each with their value, arrow and
+minutes. Alerts say whose they are. In *Settings → General → People* you can give everyone a
+nickname, which appears next to the value; it works with Dexcom and Nightscout too.
+
+## Trend estimate (experimental)
+
+*Settings → Values and alerts → Trend estimate* draws, after the last reading on the desktop
+panel and the hover chart, where the value would go in the next 30 minutes if it kept the
+trend of the last 30, with a band that widens with time. It can also warn you when the
+estimate goes below your low threshold. It is off by default and asks you to read what it is
+before it turns on:
+
+> It is a straight line through the last readings, **not a forecast and not a medical
+> device**. It knows nothing about meals, insulin, exercise, stress or illness, the data
+> arrive from the sharing service a few minutes late, and it is often wrong. Never use it to
+> decide doses, food or any other treatment.
+
+## Connect other devices
+
+*Settings → Connections* (off by default) lets other programs and devices read the value,
+without knowing your sensor password.
+
+**Local web address.** GlucoBar answers on `http://127.0.0.1:17580` (port configurable). Tick
+*Also for other devices on my home network* to use it from an ESP32, a phone or Home
+Assistant (Windows asks once to allow it through the firewall), and optionally set an access
+key, passed as `?token=…` or in the `api-secret` header.
+
+| Address | What you get |
+|---|---|
+| `/api/v1/current` | The current value as JSON: value, unit, trend, arrow, delta, age, state, colour |
+| `/api/v1/people` | Everyone shown in GlucoBar (`?person=` picks one in the other addresses) |
+| `/api/v1/history?hours=12` | The readings of the last hours |
+| `/api/v1/entries.json`, `/api/v1/status.json` | The same as a Nightscout site: displays and apps made for Nightscout (for example ESP32 or M5Stack monitors and LED clocks) work with GlucoBar as their "Nightscout URL" |
+| `/overlay` | A page for OBS (browser source) with the value on a transparent background |
+
+**MQTT.** GlucoBar publishes the value to a broker, for example Home Assistant's Mosquitto
+add-on: with *Home Assistant: create the sensors automatically* a **Glucose** sensor appears by
+itself (one per person), with trend, delta and state as attributes, ready for automations
+such as turning a light red. The MQTT password is kept in Windows Credential Manager
+(`GlucoBar:MQTT`).
+
 ## Terminal
 
 The installer adds the `glucobar` command to every new terminal:
@@ -265,7 +324,7 @@ If GlucoBar is running, it applies the new settings within two seconds.
 Silent install with your choices (handy for scripts and winget):
 
 ```text
-GlucoBar-Setup-0.9.8.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
+GlucoBar-Setup-0.10.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
 ```
 
 ## Settings
@@ -303,6 +362,11 @@ GlucoBar-Setup-0.9.8.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=
 | `update_check` | true | Check once a day whether a new version is out |
 | `auto_update` | false | Windows: install new versions without asking |
 | `sensor_life_days` | 14 | LibreLinkUp: how long your sensor lasts, for the end reminders (15 for Plus sensors) |
+| `predict` / `alert_soon` | false | Trend estimate on the charts / alert when it goes below `low` (experimental) |
+| `people_shown` / `nicknames` | none | Other LibreLinkUp people on the taskbar / nickname for each person |
+| `bridge_http` / `bridge_port` / `bridge_lan` / `bridge_token` | false / 17580 / false / none | Local web address (see *Connect other devices*) |
+| `mqtt` / `mqtt_host` / `mqtt_port` / `mqtt_user` / `mqtt_topic` / `mqtt_discovery` | false / none / 1883 / none / `glucobar` / true | MQTT publishing |
+| `reminders` | none | The reminders (edit them in the Reminders window) |
 
 Log file: `%APPDATA%\GlucoBar\glucobar.log`.
 
@@ -316,6 +380,8 @@ Log file: `%APPDATA%\GlucoBar\glucobar.log`.
 - Once a day it asks GitHub which is the latest GlucoBar version (a public request that sends
   no data about you or your readings), and downloads the installer from GitHub only when you
   install an update. Turn it off from the menu or with `glucobar set update_check=false`.
+- The local address and MQTT (*Settings → Connections*) are off by default. When on, the
+  local address answers only on this computer unless you open it to your home network.
 - *Request a sensor replacement…* only opens the manufacturer's page in your browser and
   copies the serial number to your clipboard: GlucoBar sends nothing itself.
 - Uninstalling asks whether to delete settings and the saved password too (also the first version's
@@ -353,12 +419,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.9.8 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.10.0 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow*, tick *release* to publish the version written in `glucobar/__init__.py`
-(pushing a tag like `v0.9.8` works too). The mode previews are made with
+(pushing a tag like `v0.10.0` works too). The mode previews are made with
 `tools/compose_previews.py`.
 
 Each build also installs the previous release, opens it and installs the new version over it

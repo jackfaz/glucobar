@@ -97,6 +97,8 @@ high, very high, low and old, backgrounds, text, chart and grid.
 - **Desktop panel always on top**, hidden while a video or a game is full screen, or kept
   over it like picture-in-picture, with adjustable opacity.
 - **Any taskbar**: on the left, right or top (Windows 10), auto-hidden, on a second monitor.
+- **Two sensors at once**, e.g. a Libre and a Dexcom: both values on the taskbar and in the
+  icon, two lines on the chart.
 - **More than one person** followed with the same LibreLinkUp account, side by side on the
   taskbar, each with a nickname.
 - **Reminders** to pick up medicines, order sensors or take long-acting insulin.
@@ -266,6 +268,20 @@ At the time you choose a message appears in the bottom right corner with **Done*
 min** and **In 60 min**. If the PC was off at that time, it reminds you when it starts again
 (within 12 hours). GlucoBar only reminds you: it never suggests doses.
 
+## Two sensors at once
+
+If you wear two sensors, for example a FreeStyle Libre and a Dexcom, *Settings → General →
+Second sensor → Add…* connects the second one too (it has to be a different kind from the
+first: Libre, Dexcom or Nightscout). Then:
+
+- the taskbar shows both values side by side, each with its arrow, minutes and name
+  ("Libre", "Dexcom", or a nickname you choose in *People*);
+- the icon next to the clock shows both values, one above the other;
+- the desktop panel and the hover chart draw the second sensor as a blue line, with a legend;
+- alerts work for both and say which sensor they are about; the local bridge publishes both.
+
+The big value, the statistics and the trend estimate are those of the first sensor.
+
 ## More than one person
 
 With LibreLinkUp you can follow several people with the same account (for example two
@@ -353,7 +369,7 @@ If GlucoBar is running, it applies the new settings within two seconds.
 Silent install with your choices (handy for scripts and winget):
 
 ```text
-GlucoBar-Setup-0.11.6.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
+GlucoBar-Setup-0.12.0.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG=en
 ```
 
 ## Settings
@@ -395,7 +411,8 @@ GlucoBar-Setup-0.11.6.exe /VERYSILENT /ELEMENTS=taskbar,tray /SENSOR=libre /LANG
 | `auto_update` | false | Windows: install new versions without asking |
 | `sensor_life_days` | 14 | LibreLinkUp: how long your sensor lasts, for the end reminders (15 for Plus sensors) |
 | `predict` / `alert_soon` | false | Trend estimate on the charts / alert when it goes below `low` (experimental) |
-| `people_shown` / `nicknames` | none | Other LibreLinkUp people on the taskbar / nickname for each person |
+| `people_shown` / `nicknames` | none | Other LibreLinkUp people on the taskbar / nickname for each person (`second` for the second sensor) |
+| `second_source` / `second` | none | Second sensor: `libre`, `dexcom` or `nightscout` (not the same as `source`), and its account (`email`, `dexcom_region`) |
 | `bridge_http` / `bridge_port` / `bridge_lan` / `bridge_token` | false / 17580 / false / none | Local web address (see *Connect other devices*) |
 | `mqtt` / `mqtt_host` / `mqtt_port` / `mqtt_user` / `mqtt_topic` / `mqtt_discovery` | false / none / 1883 / none / `glucobar` / true | MQTT publishing |
 | `reminders` | none | The reminders (edit them in the Reminders window) |
@@ -451,12 +468,12 @@ python -m unittest discover -s tests
 python run_glucobar.py --mode desktop          :: run without building
 pyinstaller --noconfirm --clean glucobar.spec
 python tools\previews_to_bmp.py
-iscc /DAppVersion=0.11.6 installer\glucobar.iss    :: needs Inno Setup 6
+iscc /DAppVersion=0.12.0 installer\glucobar.iss    :: needs Inno Setup 6
 ```
 
 Releases are built by GitHub Actions (`.github/workflows/build.yml`): in *Actions → Build installer →
 Run workflow*, tick *release* to publish the version written in `glucobar/__init__.py`
-(pushing a tag like `v0.11.6` works too). The mode previews are made with
+(pushing a tag like `v0.12.0` works too). The mode previews are made with
 `tools/compose_previews.py`.
 
 Each build also installs the previous release, opens it and installs the new version over it

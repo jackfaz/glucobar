@@ -87,7 +87,7 @@ def make_snapshot(ctl, now=None):
                              ctl.current, ctl.history, now))
     for other in ctl.others:
         people.append(person(cfg, ctl.person_key(other["id"]), other["label"], False,
-                             other["current"], None, now))
+                             other["current"], other.get("history"), now))
     return {"unit": cfg["unit"], "people": people, "error": ctl.error,
             "thresholds": {"low": cfg["low"], "high": cfg["high"], "very_high": cfg["very_high"]}}
 

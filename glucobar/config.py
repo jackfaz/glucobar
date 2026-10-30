@@ -120,6 +120,9 @@ DEFAULT_CONFIG = {
     # fine sensore e la richiesta di sostituzione
     "patient_id": None,
     "people_shown": [],         # altre persone mostrate insieme sulla barra (id LibreLinkUp)
+    # secondo sensore (es. Libre e Dexcom insieme): tipo e account, vedi sources.second_cfg
+    "second_source": None,
+    "second": {},
     "nicknames": {},            # soprannomi: id della persona (o "self") -> "Marco"
     "sensor_life_days": 14,     # 15 per i sensori Plus
     "sensor_sn": None,

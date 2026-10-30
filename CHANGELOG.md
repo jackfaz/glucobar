@@ -4,6 +4,17 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.12.0] - 2026-10-31
+
+### Added
+- **Two sensors at once**: if you wear two, for example a FreeStyle Libre and a Dexcom,
+  *Settings → General → Second sensor → Add…* connects the second one too (a different kind
+  from the first). Both values show side by side on the taskbar, the icon next to the clock
+  shows them one above the other, the desktop panel and the hover chart draw the second one
+  as a blue line with a legend, and on the Mac it sits next to the first in the menu bar.
+  Each is named after its sensor ("Libre", "Dexcom") or a nickname, alerts say which one
+  they are about, and the local bridge publishes both (thanks for the idea on Reddit).
+
 ## [0.11.6] - 2026-10-30
 
 ### Fixed
@@ -521,6 +532,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.12.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.12.0
 [0.11.6]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.6
 [0.11.5]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.5
 [0.11.4]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.4

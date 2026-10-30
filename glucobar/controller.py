@@ -23,7 +23,7 @@ from .config import (ELEMENTS, MIN_REFRESH, REFRESH_CHOICES, log, normalize_elem
                      peek_config, save_config)
 from .i18n import element_name, refresh_label, t
 from .menus import SEPARATOR, Item, menu_open, radio_items
-from .sources import fetch_safely, make_client
+from .sources import SECOND_KEYS, SOURCES, fetch_safely, make_client, make_second_client
 from .theme import COLOR_KEYS
 from .ui_common import apply_icon, ask_credentials, fmt_value
 
@@ -61,6 +61,8 @@ class Controller:
     def __init__(self, cfg):
         self.cfg = cfg
         self.client = make_client(cfg)
+        self.second_client = make_second_client(cfg)
+        self.second = None       # il secondo sensore: {"id", "label", "current", "history"}
         self.current = None
         self.history = []
         self.live = []           # valori "attuali" ricevuti di recente (vedi stats.with_live)
@@ -252,6 +254,8 @@ class Controller:
     def change_account(self):
         if ask_credentials(self.cfg, self.root):
             self.client = make_client(self.cfg)
+            if self.cfg.get("second_source") == self.cfg.get("source"):
+                self.set_second(None)   # una password per tipo di sensore: non due uguali
             self.current, self.history, self.error, self.live, self.readings = None, [], None, [], []
             self.refresh()
 
@@ -410,6 +414,34 @@ class Controller:
         self.render()
         self.refresh()
 
+    # ---- secondo sensore (es. Libre e Dexcom insieme) ----
+    def on_second_data(self, current, history, err):
+        if err and err != getattr(self, "_second_error", None):
+            log(f"secondo sensore: {err}")
+        self._second_error = err
+        if current:
+            self.second = {"id": "second", "label": self.person_label("second"),
+                           "current": current, "history": history or [current]}
+        elif self.second:   # errore: resta l'ultimo valore, che diventa grigio col tempo
+            self.second["label"] = self.person_label("second")
+
+    def set_second(self, source, sub=None):
+        """Aggiunge, cambia (source e account in `sub`) o toglie (source=None) il secondo
+        sensore."""
+        self.cfg["second_source"] = source
+        self.cfg["second"] = {k: v for k, v in (sub or {}).items() if k in SECOND_KEYS}
+        save_config(self.cfg)
+        log(f"secondo sensore: {source or 'nessuno'}")
+        self.second_client = make_second_client(self.cfg)
+        self.second = None
+        self.others = [o for o in self.others if o["id"] != "second"]
+        self.other_alerts.pop("second", None)
+        self.render()
+        self.refresh()
+
+    def sensor_name(self, source):
+        return t(f"short_{source}") if source in SOURCES else ""
+
     # ---- persone seguite (LibreLinkUp: più persone con lo stesso account) ----
     def person_key(self, pid=None):
         """Chiave dei soprannomi: l'id della persona (LibreLinkUp) o "self"."""
@@ -419,6 +451,11 @@ class Controller:
         """Il soprannome scelto o il nome; full=True: "Soprannome (Nome Cognome)"."""
         key = self.person_key(pid)
         nickname = ((self.cfg.get("nicknames") or {}).get(key) or "").strip()
+        if pid == "second":
+            return nickname or self.sensor_name(self.cfg.get("second_source"))
+        if not pid and not nickname and self.second_client:
+            # due sensori della stessa persona: si distinguono dal nome del sensore
+            return self.sensor_name(self.cfg.get("source", "libre"))
         names = dict(getattr(self.client, "patients", None) or [])
         name = names.get(pid or getattr(self.client, "patient_id", None), "")
         if full:
@@ -451,7 +488,7 @@ class Controller:
             shown.append(pid)
         self.cfg["people_shown"] = shown
         save_config(self.cfg)
-        self.others = [o for o in self.others if o["id"] in shown]
+        self.others = [o for o in self.others if o["id"] in shown or o["id"] == "second"]
         self.render()
         self.refresh()
 
@@ -616,15 +653,21 @@ class Controller:
     def _fetch_worker(self):
         current, history, err = fetch_safely(self.client)
         extras = dict(getattr(self.client, "extras", None) or {})
-        self.post(self._on_data, current, history, err, extras)
+        second = self.second_client
+        second_data = fetch_safely(second) if second else None
+        self.post(self._on_data, current, history, err, extras, second_data, second)
 
-    def _on_data(self, current, history, err, extras=None):
+    def _on_data(self, current, history, err, extras=None, second_data=None, second=None):
         self.busy = False
+        if second is not None and second is self.second_client:
+            self.on_second_data(*second_data)
         if extras is not None:
             primary = getattr(self.client, "patient_id", None)
             self.others = [{"id": pid, "label": self.person_label(pid), "current": extras[pid]}
                            for pid in self.cfg.get("people_shown") or []
                            if pid in extras and pid != primary]
+            if self.second:   # il secondo sensore si mostra come un'altra persona
+                self.others.append(self.second)
         if err and err != self.error:
             log(f"dati: {err}")
         elif current and not self.current:

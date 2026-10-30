@@ -192,18 +192,22 @@ def bind_right_click(widget, callback):
         widget.bind("<Button-3>", handler)
 
 
-def ask_credentials(cfg, parent=None):
+def ask_credentials(cfg, parent=None, sources=None, store=True):
     """Chiede sensore e account (per Dexcom anche la regione, per Nightscout indirizzo
     e token facoltativo). La password va nel Gestione credenziali, in una voce
-    diversa per ogni sensore."""
+    diversa per ogni sensore. `sources`: i sensori tra cui scegliere (per il secondo
+    sensore: non quello del primo); store=False: cfg aggiornato ma non salvato."""
     owns_root = parent is None
     if owns_root:
         parent = tk.Tk()
         parent.withdraw()
         apply_icon(parent)
     try:
-        source = choose(parent, t("sensor_title"), t("sensor_prompt"), source_options(),
-                        cfg.get("source", "libre"))
+        options = [(s, label) for s, label in source_options() if not sources or s in sources]
+        default = cfg.get("source", "libre")
+        if default not in [s for s, _label in options]:
+            default = options[0][0]
+        source = choose(parent, t("sensor_title"), t("sensor_prompt"), options, default)
         if not source:
             return False
         dexcom = source == "dexcom"
@@ -243,5 +247,6 @@ def ask_credentials(cfg, parent=None):
         credentials.set_password(cfg["email"], password, source)
     else:
         credentials.delete_password(source)   # Nightscout pubblico: niente token vecchi
-    save_config(cfg)
+    if store:
+        save_config(cfg)
     return True

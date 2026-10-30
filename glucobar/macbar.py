@@ -8,8 +8,8 @@ non lavorare dentro il menu mentre è aperto.
 
 import objc
 from AppKit import (NSAttributedString, NSColor, NSFont, NSFontAttributeName,
-                    NSForegroundColorAttributeName, NSMenu, NSMenuItem, NSStatusBar,
-                    NSVariableStatusItemLength)
+                    NSForegroundColorAttributeName, NSMenu, NSMenuItem,
+                    NSMutableAttributedString, NSStatusBar, NSVariableStatusItemLength)
 from Foundation import NSObject
 
 from .i18n import t
@@ -99,8 +99,16 @@ class MacMenuBar:
             if ctl.error:
                 tooltip += f"\n⚠ {ctl.error}"
         font = NSFont.monospacedDigitSystemFontOfSize_weight_(NSFont.systemFontSize(), SEMIBOLD)
-        title = NSAttributedString.alloc().initWithString_attributes_(
+        title = NSMutableAttributedString.alloc().initWithString_attributes_(
             text, {NSFontAttributeName: font, NSForegroundColorAttributeName: ns_color(color)})
+        second = getattr(ctl, "second", None)
+        if c and second:   # il secondo sensore accanto, col suo colore
+            m = second["current"]
+            other_color = pal.stale if is_stale(cfg, m) else pal.value(cfg, m["mgdl"])
+            title.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(
+                "  " + fmt_value(cfg, m["mgdl"]),
+                {NSFontAttributeName: font, NSForegroundColorAttributeName: ns_color(other_color)}))
+            tooltip += f"\n{second['label']}: {fmt_value(cfg, m['mgdl'])} {cfg['unit']}"
         button = self.item.button()
         button.setAttributedTitle_(title)
         button.setToolTip_(tooltip)

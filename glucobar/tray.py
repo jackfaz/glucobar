@@ -75,6 +75,23 @@ def make_icon(text, color):
     return img
 
 
+def make_icon_pair(top, top_color, bottom, bottom_color):
+    """Due valori uno sopra l'altro (due sensori, o due persone): a metà altezza ciascuno,
+    stretti in orizzontale come in make_icon. Leggibili da 20 pixel in su."""
+    font = load_font(ICON_SIZE * 2)
+    img = Image.new("RGBA", (ICON_SIZE, ICON_SIZE), (0, 0, 0, 0))
+    half = ICON_SIZE // 2
+    for row, (text, color) in enumerate(((top, top_color), (bottom, bottom_color))):
+        left, top_, right, bottom_ = font.getbbox(text)
+        glyphs = Image.new("RGBA", (right - left, bottom_ - top_), (0, 0, 0, 0))
+        ImageDraw.Draw(glyphs).text((-left, -top_), text, font=font, fill=color)
+        height = half - 2
+        width = min(ICON_SIZE, round(glyphs.width * height / glyphs.height))
+        glyphs = glyphs.resize((width, height), Image.LANCZOS)
+        img.paste(glyphs, ((ICON_SIZE - width) // 2, row * (half + 2)), glyphs)
+    return img
+
+
 def logo_icon():
     try:
         return Image.open(asset_path("glucobar.png")).resize((ICON_SIZE, ICON_SIZE))
@@ -152,7 +169,12 @@ class TrayIcon:
         arrow = beside_value(cfg, ctl.readings, c)
         pal = palette(cfg, light=taskbar_light())
         color = pal.stale if stale else pal.value(cfg, c["mgdl"])
-        self.icon.icon = make_icon(value, color)
+        if ctl.others:   # con un secondo sensore (o un'altra persona): i due valori
+            m = (ctl.second or ctl.others[0])["current"]
+            other_color = pal.stale if is_stale(cfg, m) else pal.value(cfg, m["mgdl"])
+            self.icon.icon = make_icon_pair(value, color, fmt_value(cfg, m["mgdl"]), other_color)
+        else:
+            self.icon.icon = make_icon(value, color)
         when = t("now") if age == 0 else t("min_ago", n=age)
         title = f"{value} {arrow} {cfg['unit']} · {when}"
         if stale:

@@ -121,13 +121,32 @@ class SettingsWindow:
     def tab_general(self, frame):
         cfg, ctl = self.cfg, self.ctl
         box = self.section(frame, t("settings_account"))
-        self.account_lbl = tk.Label(box, font=(FONT, 10), anchor="w", justify="left",
+        row = tk.Frame(box)
+        row.pack(fill="x")
+        self.account_lbl = tk.Label(row, font=(FONT, 10), anchor="w", justify="left",
                                     wraplength=330)
         self.account_lbl.pack(side="left")
-        tk.Button(box, text=t("menu_account"), font=(FONT, 9),
+        tk.Button(row, text=t("menu_account"), font=(FONT, 9),
                   command=self.change_account).pack(side="right")
 
-        self.people_section(frame)
+        # secondo sensore: chi porta due sensori (es. Libre e Dexcom) li vede insieme;
+        # nella stessa sezione, per non allungare la scheda
+        tk.Label(box, text=t("settings_second"), font=(FONT, 9), fg="#6b6f76",
+                 anchor="w").pack(fill="x", pady=(4, 0))
+        box = tk.Frame(box)
+        box.pack(fill="x")
+        self.second_lbl = tk.Label(box, font=(FONT, 10), anchor="w", justify="left",
+                                   wraplength=330)
+        self.second_lbl.pack(side="left")
+        self.second_remove = tk.Button(box, text=t("second_remove"), font=(FONT, 9),
+                                       command=lambda: self.set_second(None))
+        self.second_remove.pack(side="right", padx=(4, 0))
+        self.second_button = tk.Button(box, font=(FONT, 9), command=self.choose_second)
+        self.second_button.pack(side="right")
+
+        self.people_box = tk.Frame(frame)
+        self.people_box.pack(fill="x")
+        self.people_section(self.people_box)
 
         box = self.section(frame, t("menu_language"))
         names = ["Auto"] + list(LANGUAGES.values())
@@ -164,7 +183,11 @@ class SettingsWindow:
         grid.pack(fill="x")
         tk.Label(grid, text=t("settings_people_nickname"), font=(FONT, 9), fg="#6b6f76").grid(
             row=0, column=1, sticky="w")
-        for row, (pid, name) in enumerate(patients or [(None, t("settings_people_you"))], 1):
+        rows = list(patients or [(None, t("settings_people_you"))])
+        if ctl.second_client:
+            rows.append(("second", t("settings_second_row",
+                                     sensor=ctl.sensor_name(self.cfg.get("second_source")))))
+        for row, (pid, name) in enumerate(rows, 1):
             label = name + (f"  ({t('settings_people_main')})"
                             if len(patients) > 1 and pid == primary else "")
             tk.Label(grid, text=label, font=(FONT, 10), anchor="w").grid(
@@ -174,7 +197,7 @@ class SettingsWindow:
             entry.grid(row=row, column=1, sticky="w", pady=2)
             for event in ("<FocusOut>", "<Return>"):
                 entry.bind(event, lambda _e, p=pid, en=entry: ctl.set_nickname(p, en.get()))
-            if len(patients) > 1 and pid != primary:
+            if len(patients) > 1 and pid not in (primary, "second"):
                 self.var(tk.BooleanVar, False)
                 v = self.vars[-1]
                 v.set(pid in shown)
@@ -183,6 +206,26 @@ class SettingsWindow:
                     row=row, column=2, sticky="w", padx=(10, 0))
         tk.Label(box, text=t("settings_people_note"), font=(FONT, 9), fg="#6b6f76", anchor="w",
                  justify="left", wraplength=380).pack(fill="x", pady=(4, 0))
+
+    def choose_second(self):
+        """Sensore e account del secondo sensore (non dello stesso tipo del primo)."""
+        from .sources import SECOND_KEYS, SOURCES, second_cfg
+        from .ui_common import ask_credentials
+        allowed = [s for s in SOURCES if s != self.cfg.get("source", "libre")]
+        sub = second_cfg(self.cfg) if self.cfg.get("second_source") in allowed else {
+            "source": allowed[0], "email": "", "dexcom_region": "ous"}
+        self.win.attributes("-topmost", False)
+        ok = ask_credentials(sub, self.win, sources=allowed, store=False)
+        self.win.attributes("-topmost", True)
+        if ok:
+            self.set_second(sub["source"], {k: sub.get(k) for k in SECOND_KEYS})
+
+    def set_second(self, source, sub=None):
+        self.ctl.set_second(source, sub)
+        for child in self.people_box.winfo_children():   # una riga di soprannome in più o in meno
+            child.destroy()
+        self.people_section(self.people_box)
+        self.refresh()
 
     def change_account(self):
         self.win.attributes("-topmost", False)   # la finestra dell'account deve stare sopra
@@ -789,6 +832,16 @@ class SettingsWindow:
             box.config(text=self.ctl.alert_label(kind))
         sensor = t(f"sensor_{cfg.get('source', 'libre')}").split(" · ")[0]
         self.account_lbl.config(text=f"{sensor}\n{cfg.get('email') or '-'}")
+        second = cfg.get("second_source")
+        if second and self.ctl.second_client:
+            email = (cfg.get("second") or {}).get("email") or "-"
+            self.second_lbl.config(text=f"{t(f'sensor_{second}').split(' · ')[0]}\n{email}")
+            self.second_button.config(text=t("second_change"))
+            self.second_remove.pack(side="right", padx=(4, 0), before=self.second_button)
+        else:
+            self.second_lbl.config(text=t("second_none"))
+            self.second_button.config(text=t("second_add"))
+            self.second_remove.pack_forget()
 
     def choose(self, current, title):
         _rgb, color = colorchooser.askcolor(color=current, title=title, parent=self.win)

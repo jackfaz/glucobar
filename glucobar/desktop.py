@@ -318,14 +318,36 @@ class DesktopView:
             footer.append(t("desk_updated", time=datetime.fromtimestamp(self.ctl.updated_at)
                                                   .strftime("%H:%M")))
         foot_h = -f_tiny * 1.6
-        cv.create_text(pad, H - pad, text=" · ".join(footer), anchor="sw", fill=pal.dim,
-                       font=(FONT, f_tiny))
+        fid = cv.create_text(pad, H - pad, text=" · ".join(footer), anchor="sw", fill=pal.dim,
+                             font=(FONT, f_tiny))
+        second = self.second_points(hours)
+        if second:   # legenda: quale linea è quale sensore
+            x = W - pad - 14
+            for label, col in ((self.ctl.person_label("second"), self.second_color()),
+                               (self.ctl.person_label(), pal.line)):
+                tid = cv.create_text(x, H - pad, text=label, anchor="se", fill=pal.dim,
+                                     font=(FONT, f_tiny))
+                x0 = cv.bbox(tid)[0]
+                y0 = (cv.bbox(tid)[1] + cv.bbox(tid)[3]) / 2
+                cv.create_line(x0 - 16, y0, x0 - 4, y0, fill=col, width=2)
+                x = x0 - 26
+            if x < cv.bbox(fid)[2]:   # niente spazio: la legenda sopra il piè di pagina
+                foot_h += -f_tiny * 1.4
+                cv.move(fid, 0, f_tiny * 1.4)
         self.draw_grip(W, H)
 
         # --- grafico ---
         axis_w = -f_tiny * 3
         self.draw_chart(points, pad + axis_w, top + pad * 0.5, W - pad,
                         H - pad - foot_h - (-f_tiny * 1.5), hours, f_tiny)
+
+    def second_points(self, hours):
+        """Le letture del secondo sensore (es. Dexcom insieme a Libre), se c'è."""
+        second = getattr(self.ctl, "second", None)
+        return stats.recent(second["history"], hours) if second else []
+
+    def second_color(self):
+        return "#2f6fd6" if self.c.light else "#5aa9ff"
 
     def prediction(self):
         """La stima della tendenza, se accesa (vedi stats.predict)."""
@@ -347,7 +369,8 @@ class DesktopView:
         # i suoi 30 minuti sarebbero una striscia schiacciata contro il bordo
         split = right - max((end - now) / (end - t0), 0.125 if pred else 0) * (right - left)
         lo_v = 40
-        hi_v = max(300, min(400, max((p["mgdl"] for p in points), default=0) + 20))
+        second = self.second_points(hours)
+        hi_v = max(300, min(400, max((p["mgdl"] for p in points + second), default=0) + 20))
 
         def y(v):
             v = min(max(v, lo_v), hi_v)
@@ -392,6 +415,14 @@ class DesktopView:
                 (x(t_now + m * 60), y(v)) for m, v, _lo, _hi in pred["points"]]
             cv.create_line(*[c for xy in line for c in xy], fill=pal.dim, width=1.5, dash=(4, 3))
 
+        if len(second) >= 2:   # il secondo sensore: una linea di un altro colore, sotto
+            coords = [c for p in second for c in (x(p["time"]), y(p["mgdl"]))]
+            cv.create_line(*coords, fill=self.second_color(), width=1.5, smooth=True)
+            last = second[-1]
+            r2 = max(2, (bottom - top) / 70)
+            cv.create_oval(x(last["time"]) - 1.6 * r2, y(last["mgdl"]) - 1.6 * r2,
+                           x(last["time"]) + 1.6 * r2, y(last["mgdl"]) + 1.6 * r2,
+                           fill=self.second_color(), outline="")
         if len(points) >= 2:
             coords = []
             for p in points:

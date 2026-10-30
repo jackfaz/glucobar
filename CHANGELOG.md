@@ -4,6 +4,12 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.11.5] - 2026-10-30
+
+### Changed
+- Same as 0.11.4, built again: Windows Defender flagged the 0.11.4 installer as a false
+  positive, so 0.11.4 stayed a pre-release.
+
 ## [0.11.4] - 2026-10-30
 
 ### Fixed
@@ -502,6 +508,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.11.5]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.5
 [0.11.4]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.4
 [0.11.3]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.3
 [0.11.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.2

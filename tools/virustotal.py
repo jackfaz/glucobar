@@ -1,6 +1,6 @@
 """Carica un file su VirusTotal e stampa il link alla scansione.
 
-Uso: python tools/virustotal.py [--wait] dist-installer/GlucoBar-Setup-0.11.4.exe
+Uso: python tools/virustotal.py [--wait] dist-installer/GlucoBar-Setup-0.11.5.exe
 Serve la chiave API gratuita di VirusTotal nella variabile VT_API_KEY (in GitHub
 Actions: il secret VT_API_KEY). Senza chiave non fa nulla e non stampa nessun link.
 Il link usa l'impronta SHA-256 del file: chiunque può controllare che il file

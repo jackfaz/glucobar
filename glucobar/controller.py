@@ -16,7 +16,7 @@ import tkinter as tk
 import traceback
 import webbrowser
 
-from . import alerts, i18n, instance, reminders, sensor, support, theme, updates
+from . import alerts, i18n, instance, reminders, sensor, stats, support, theme, updates
 from .alerts import ALARMS, REPEAT_CHOICES, AlertWatch
 
 from .config import (ELEMENTS, MIN_REFRESH, REFRESH_CHOICES, log, normalize_elements,
@@ -63,6 +63,7 @@ class Controller:
         self.client = make_client(cfg)
         self.current = None
         self.history = []
+        self.live = []           # valori "attuali" ricevuti di recente (vedi stats.with_live)
         self.others = []     # altre persone mostrate insieme: [{"id", "label", "current"}]
         self.other_alerts = {}   # id -> AlertWatch delle altre persone
         self.silenced = set()    # (persona, avviso) zittiti fino alla fine dell'episodio
@@ -250,7 +251,7 @@ class Controller:
     def change_account(self):
         if ask_credentials(self.cfg, self.root):
             self.client = make_client(self.cfg)
-            self.current, self.history, self.error = None, [], None
+            self.current, self.history, self.error, self.live = None, [], None, []
             self.refresh()
 
     def quit(self):
@@ -404,7 +405,7 @@ class Controller:
         self.cfg.update(sensor_sn=None, sensor_activated=None, sensor_notified=[])
         save_config(self.cfg)
         self.client.patient_id = patient_id
-        self.current, self.history, self.error = None, [], None
+        self.current, self.history, self.error, self.live = None, [], None, []
         self.render()
         self.refresh()
 
@@ -574,7 +575,7 @@ class Controller:
             i18n.set_language(self.cfg["language"])
         if ACCOUNT_KEYS & set(changed):
             self.client = make_client(self.cfg)
-            self.current, self.history, self.error = None, [], None
+            self.current, self.history, self.error, self.live = None, [], None, []
             self.refresh()
         if "language" in changed or REBUILD_KEYS & set(changed):
             self._theme_key = self.theme_key()
@@ -629,7 +630,8 @@ class Controller:
             log(f"primo dato ricevuto: {current['mgdl']} mg/dL")
         self.error = err
         if current:
-            self.current, self.history = current, history
+            self.live = stats.keep_live(self.live, current)
+            self.current, self.history = current, stats.with_live(history, self.live)
             self.updated_at = time.time()
         self.render()
         self.check_alerts()

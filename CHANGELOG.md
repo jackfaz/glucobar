@@ -4,6 +4,17 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.11.4] - 2026-10-30
+
+### Fixed
+- **Delta with LibreLinkUp**: it compared the current reading with the last point of the
+  LibreLinkUp history, which has one point every 15 minutes and holds the sensor's
+  "historic" values, a little different from the real-time ones. So it could show a negative
+  number while the reading was going up (thanks for the report on Reddit). GlucoBar now keeps
+  the real-time readings it receives and compares with the one from about 5 minutes before,
+  as Nightscout and Dexcom do. Right after starting, until it has a few minutes of its own
+  readings, it still uses the history.
+
 ## [0.11.3] - 2026-10-30
 
 ### Fixed
@@ -491,6 +502,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.11.4]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.4
 [0.11.3]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.3
 [0.11.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.2
 [0.11.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.1

@@ -42,16 +42,37 @@ def change(points, current, minutes=15, tolerance=6):
 
 
 def delta(history, current, oldest=20):
-    """Il "delta" dei CGM: variazione rispetto alla lettura precedente, riportata a
-    5 minuti come fa Nightscout (Dexcom legge ogni 5 minuti; LibreLinkUp nello storico
-    ha un punto ogni 15). None se non c'è una lettura precedente negli ultimi `oldest`
-    minuti."""
+    """Il "delta" dei CGM: variazione rispetto alla lettura di circa 5 minuti prima,
+    riportata a 5 minuti come fa Nightscout (Dexcom legge ogni 5 minuti; con LibreLinkUp
+    ci sono i valori attuali ricevuti ogni minuto, vedi with_live, e lo storico con un
+    punto ogni 15). None se non c'è una lettura precedente negli ultimi `oldest` minuti."""
     before = [m for m in history if m["mgdl"]
               and 60 <= current["time"] - m["time"] <= oldest * 60]
     if not before:
         return None
-    previous = max(before, key=lambda m: m["time"])
+    previous = min(before, key=lambda m: abs(current["time"] - m["time"] - 300))
     return (current["mgdl"] - previous["mgdl"]) * 300 / (current["time"] - previous["time"])
+
+
+def keep_live(live, current, minutes=30):
+    """I valori attuali ricevuti negli ultimi `minutes` minuti, con quello nuovo."""
+    start = current["time"] - minutes * 60
+    return [m for m in live if start <= m["time"] < current["time"]] + [current]
+
+
+def with_live(history, live):
+    """Lo storico con i valori attuali ricevuti dopo il suo ultimo punto. LibreLinkUp
+    nello storico ha un punto ogni 15 minuti, e sono valori "storici" del sensore, un po'
+    diversi da quelli in tempo reale: il delta va calcolato tra valori in tempo reale
+    (fino alla 0.11.3 confrontava il valore attuale con l'ultimo punto dello storico, e
+    poteva essere negativo mentre l'app saliva)."""
+    if not live:
+        return history
+    current = live[-1]
+    past = [m for m in history if m is not current and m["time"] < current["time"]]
+    last = max((m["time"] for m in past), default=0)
+    extra = [m for m in live[:-1] if m["time"] > last]
+    return sorted(past + extra, key=lambda m: m["time"]) + [current]
 
 
 def sensor_days(connection, now=None):

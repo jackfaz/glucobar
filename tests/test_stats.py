@@ -49,6 +49,23 @@ class DeltaTest(unittest.TestCase):
         self.assertIsNone(stats.delta([{"mgdl": 120, "time": now - 3600}, current], current))
         self.assertIsNone(stats.delta([current], current))
 
+    def test_libre_uses_live_readings(self):
+        """Il caso segnalato: l'ultimo punto dello storico (valore "storico", 14 minuti
+        prima) è più alto dei valori in tempo reale; il valore attuale sale di 4 rispetto
+        a 5 minuti prima, ma il delta veniva negativo."""
+        now = 1_800_000_000
+        graph = [{"mgdl": 130, "time": now - 29 * 60}, {"mgdl": 140, "time": now - 14 * 60}]
+        live = []
+        for minutes_ago, value in ((6, 118), (5, 120), (3, 122), (1, 123), (0, 124)):
+            current = {"mgdl": value, "time": now - minutes_ago * 60}
+            live = stats.keep_live(live, current)
+            history = stats.with_live(graph + [current], live)
+        self.assertEqual(stats.delta(history, current), 4)
+        self.assertEqual([p["mgdl"] for p in history], [130, 140, 118, 120, 122, 123, 124])
+        self.assertLess(stats.delta(graph + [current], current), 0)   # come prima: sbagliato
+        # lo stesso valore ricevuto due volte non si ripete
+        self.assertEqual(len(stats.keep_live(live, current)), len(live))
+
     def test_format(self):
         from glucobar.config import DEFAULT_CONFIG
         from glucobar.ui_common import fmt_delta

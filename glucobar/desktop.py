@@ -244,26 +244,25 @@ class DesktopView:
             delta = stats.change(points, c)
             if delta is not None:
                 parts.append(t("desk_change", delta=self.fmt_delta(delta)))
+            estimate = None
             if self.prediction():
                 end = self.prediction()["points"][-1]
-                parts.append(t("predict_sub", v=fmt_value(cfg, end[1]), n=end[0]))
-            sub, sub_color = " · ".join(parts), pal.error if stale else pal.dim
+                estimate = t("predict_sub", v=fmt_value(cfg, end[1]), n=end[0])
+            sub_color = pal.error if stale else pal.dim
         else:
-            color, value, arrow = pal.dim, "--", ""
-            sub, sub_color = t("connecting"), pal.dim
+            color, value, arrow, parts, estimate = pal.dim, "--", "", [t("connecting")], None
+            sub_color = pal.dim
         if error:
-            sub, sub_color = "⚠ " + error, pal.error
+            parts, estimate, sub_color = ["⚠ " + error], None, pal.error
 
         vid = cv.create_text(pad, pad - head_h * 0.08, text=value, anchor="nw", fill=color,
                              font=(FONT, f_big, "bold"))
         value_right = cv.bbox(vid)[2]
         aid = cv.create_text(value_right + 8, pad + head_h * 0.02, text=arrow, anchor="nw",
                              fill=color, font=(FONT, int(f_big * 0.75), "bold"))
-        sid = cv.create_text(pad, pad + head_h * 0.74, text=sub, anchor="nw", fill=sub_color,
-                             font=(FONT, f_small), width=W - 2 * pad)
-        head_right = max(value_right, cv.bbox(aid)[2] if arrow else 0, cv.bbox(sid)[2])
+        value_end = max(value_right, cv.bbox(aid)[2] if arrow else 0)
 
-        # --- tabella: a destra se c'è spazio, altrimenti sotto il valore ---
+        # --- tabella: a destra se c'è spazio accanto al valore, altrimenti sotto ---
         rows = []
         if summary:
             f = lambda v: fmt_value(cfg, v)  # noqa: E731
@@ -281,8 +280,20 @@ class DesktopView:
         col_w = (max((normal.measure(r[0]) for r in rows), default=0) + pad +
                  max((bold.measure(r[1]) for r in rows), default=0))
         table_w = 2 * col_w + pad
-        top = max(pad + head_h, cv.bbox(sid)[3] + 2)   # il sottotitolo può andare a capo
-        if rows and W - head_right - 3 * pad >= table_w:
+        beside = bool(rows) and W - value_end - 3 * pad >= table_w
+        # il sottotitolo (con la stima è lungo) va a capo prima della tabella, invece di
+        # spingerla sotto il valore
+        sub_w = W - 3 * pad - table_w if beside else W - 2 * pad
+        # la stima nel sottotitolo solo se ci sta su una riga (il grafico la mostra
+        # comunque); a capo solo tra una parte e l'altra, non a metà di "2 min fa"
+        small = tkfont.Font(root=self.root, family=FONT, size=f_small)
+        if estimate and small.measure(" · ".join(parts + [estimate])) <= sub_w:
+            parts = parts + [estimate]
+        sub = " · ".join(p.replace(" ", "\u00a0") for p in parts)
+        sid = cv.create_text(pad, pad + head_h * 0.74, text=sub, anchor="nw", fill=sub_color,
+                             font=(FONT, f_small), width=sub_w)
+        top = max(pad + head_h, cv.bbox(sid)[3] + 2)
+        if beside:
             x0, y0, line_h = W - pad - table_w, pad + 2, head_h * 0.3
             for i, (label, val, col) in enumerate(rows):
                 x = x0 + (i % 2) * (col_w + pad)
@@ -347,9 +358,6 @@ class DesktopView:
                 return left + (ts - t0) / (now - t0) * (split - left)
             return split + (ts - now) / (end - now) * (right - split)
 
-        if pred:   # sotto alla fascia del range, che resta visibile anche lì
-            cv.create_rectangle(split, top, right, bottom, fill=mix(pal.grid, pal.panel, 0.5),
-                                outline="")
         # fascia del range e soglie
         cv.create_rectangle(left, y(cfg["high"]), right, y(cfg["low"]), fill=pal.band, outline="")
         for v, col in ((cfg["low"], pal.low), (cfg["high"], pal.high)):
@@ -373,11 +381,7 @@ class DesktopView:
 
         if pred:
             # la stima: una fascia tenue che si allarga e una linea tratteggiata, dopo
-            # l'ultima lettura (vedi stats.predict: non è una previsione vera), nella sua
-            # zona separata da "adesso"
-            cv.create_line(split, top, split, bottom, fill=pal.dim, dash=(2, 3))
-            cv.create_text((split + right) / 2, top + 2, text=t("predict_zone"), anchor="n",
-                           fill=pal.dim, font=(FONT, f_tiny))
+            # l'ultima lettura (vedi stats.predict: non è una previsione vera)
             t_now = pred["time"]
             upper = [(x(t_now), y(pred["from"]))] + [
                 (x(t_now + m * 60), y(hi)) for m, _v, _lo, hi in pred["points"]]

@@ -4,6 +4,16 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.11.3] - 2026-10-30
+
+### Fixed
+- **Desktop panel and hover chart back to their layout**: with the trend estimate on, the
+  line under the value got so long that average, time in range, min, max, below and above
+  moved from the top right to a line under the value, squeezing the chart. They are back at
+  the top right; the estimate shows in that line only when it fits, and always on the chart.
+- The estimate on the chart no longer has a grey box and an *estimate* label: just the
+  dotted line and its faint band after the last reading, as in 0.10.
+
 ## [0.11.2] - 2026-10-29
 
 ### Changed
@@ -481,6 +491,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.11.3]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.3
 [0.11.2]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.2
 [0.11.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.1
 [0.11.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.0

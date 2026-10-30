@@ -39,32 +39,30 @@ class StatsTest(unittest.TestCase):
 
 
 class DeltaTest(unittest.TestCase):
-    def test_delta_is_per_five_minutes(self):
+    def test_delta_is_the_change_from_the_previous_reading(self):
         now = 1_800_000_000
         current = {"mgdl": 150, "time": now}
-        dexcom = [{"mgdl": 145, "time": now - 300}, {"mgdl": 140, "time": now - 600}, current]
+        dexcom = [{"mgdl": 140, "time": now - 600}, {"mgdl": 145, "time": now - 300}, current]
         self.assertEqual(stats.delta(dexcom, current), 5)
-        libre = [{"mgdl": 120, "time": now - 900}, current]   # storico ogni 15 minuti
-        self.assertEqual(stats.delta(libre, current), 10)
-        self.assertIsNone(stats.delta([{"mgdl": 120, "time": now - 3600}, current], current))
+        self.assertEqual(stats.delta_per_5min(dexcom, current), 5)
+        # niente lettura negli ultimi 7 minuti: niente delta (non un numero inventato)
+        self.assertIsNone(stats.delta([{"mgdl": 120, "time": now - 900}, current], current))
         self.assertIsNone(stats.delta([current], current))
 
-    def test_libre_uses_live_readings(self):
-        """Il caso segnalato: l'ultimo punto dello storico (valore "storico", 14 minuti
-        prima) è più alto dei valori in tempo reale; il valore attuale sale di 4 rispetto
-        a 5 minuti prima, ma il delta veniva negativo."""
+    def test_libre_reported_sequence(self):
+        """La sequenza segnalata su Reddit (LibreLinkUp, un valore al minuto): 100, 105,
+        109, 112, 114, 114, 112 mostrava -2, +2, +14, +17, +9, +3. Con un punto "storico"
+        dello storico arrivato a metà, più alto dei valori in tempo reale."""
         now = 1_800_000_000
-        graph = [{"mgdl": 130, "time": now - 29 * 60}, {"mgdl": 140, "time": now - 14 * 60}]
-        live = []
-        for minutes_ago, value in ((6, 118), (5, 120), (3, 122), (1, 123), (0, 124)):
-            current = {"mgdl": value, "time": now - minutes_ago * 60}
+        graph = [{"mgdl": 96, "time": now - 20 * 60}, {"mgdl": 99, "time": now - 7 * 60}]
+        live, shown = [], []
+        for minute, value in enumerate((100, 105, 109, 112, 114, 114, 112)):
+            current = {"mgdl": value, "time": now - (6 - minute) * 60}
+            points = graph + [{"mgdl": 111, "time": now - 3 * 60}] if minute >= 4 else graph
             live = stats.keep_live(live, current)
-            history = stats.with_live(graph + [current], live)
-        self.assertEqual(stats.delta(history, current), 4)
-        self.assertEqual([p["mgdl"] for p in history], [130, 140, 118, 120, 122, 123, 124])
-        self.assertLess(stats.delta(graph + [current], current), 0)   # come prima: sbagliato
-        # lo stesso valore ricevuto due volte non si ripete
-        self.assertEqual(len(stats.keep_live(live, current)), len(live))
+            history = stats.with_live(points + [current], live)
+            shown.append(stats.delta(history, current))
+        self.assertEqual(shown, [1, 5, 4, 3, 2, 0, -2])   # il primo: rispetto allo storico
 
     def test_format(self):
         from glucobar.config import DEFAULT_CONFIG

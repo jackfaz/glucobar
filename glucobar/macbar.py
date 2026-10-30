@@ -88,7 +88,7 @@ class MacMenuBar:
             tooltip = "GlucoBar: " + (ctl.error or t("connecting"))
         else:
             stale = is_stale(cfg, c)
-            beside = beside_value(cfg, ctl.history, c)
+            beside = beside_value(cfg, ctl.readings, c)
             text = fmt_value(cfg, c["mgdl"]) + (" " + beside if beside else "")
             pal = palette(cfg, light=taskbar_light())
             color = pal.stale if stale else pal.value(cfg, c["mgdl"])

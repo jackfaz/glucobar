@@ -236,7 +236,7 @@ class DesktopView:
             stale = is_stale(cfg, c)
             color = pal.stale if stale else pal.value(cfg, c["mgdl"])
             value = fmt_value(cfg, c["mgdl"])
-            arrow = beside_value(cfg, self.ctl.history, c)
+            arrow = beside_value(cfg, self.ctl.readings, c)
             age = age_minutes(c)
             parts = [cfg["unit"], t("now") if age == 0 else t("min_ago", n=age)]
             if self.ctl.display_name():

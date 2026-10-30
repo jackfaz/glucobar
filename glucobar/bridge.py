@@ -60,7 +60,7 @@ def person(cfg, key, name, primary, current, history=None, now=None):
     mgdl = current["mgdl"]
     stale = (now - current["time"]) / 60 >= cfg["stale_minutes"]
     pal = palette(cfg, light=False)
-    delta = stats.delta(history or [], current)
+    delta = stats.delta_per_5min(history or [], current)
     trend = current.get("trend")
     data = {
         "id": key, "name": name, "primary": primary,

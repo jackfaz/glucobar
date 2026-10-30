@@ -154,12 +154,12 @@ class WindowView:
         color = pal.stale if stale else pal.value(self.cfg, c["mgdl"])
         value = fmt_value(self.cfg, c["mgdl"])
         self.value_lbl.config(text=value, fg=color)
-        self.arrow_lbl.config(text=beside_value(self.cfg, self.ctl.history, c), fg=color)
+        self.arrow_lbl.config(text=beside_value(self.cfg, self.ctl.readings, c), fg=color)
         when = t("now") if age == 0 else t("min_ago", n=age)
         info = f"{self.cfg['unit']} · {when}"
         if self.ctl.display_name():
             info = f"{self.ctl.display_name()} · {info}"
-        delta = stats.delta(self.ctl.history, c) \
+        delta = stats.delta(self.ctl.readings, c) \
             if self.cfg.get("show_delta") and not delta_beside(self.cfg) else None
         if delta is not None and not stale:
             info += " · " + fmt_delta(self.cfg, delta)

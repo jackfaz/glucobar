@@ -633,13 +633,13 @@ class TaskbarView:
         stale = is_stale(self.cfg, c)
         color = self.c.stale if stale else self.c.value(self.cfg, c["mgdl"])
         self.value_lbl.config(text=fmt_value(self.cfg, c["mgdl"]), fg=color)
-        beside = beside_value(self.cfg, self.ctl.history, c)
+        beside = beside_value(self.cfg, self.ctl.readings, c)
         self.arrow_lbl.config(text=" " + beside if beside else "", fg=color)
         info = t("now") if age == 0 else t("min_short", n=age)
         name = self.ctl.display_name() if self.ctl.others else ""
         if name:
             info = f"{name} · {info}"
-        delta = stats.delta(self.ctl.history, c) \
+        delta = stats.delta(self.ctl.readings, c) \
             if self.cfg.get("show_delta") and not delta_beside(self.cfg) else None
         if delta is not None and not stale:
             info += " " + fmt_delta(self.cfg, delta)

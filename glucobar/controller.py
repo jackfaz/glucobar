@@ -64,6 +64,7 @@ class Controller:
         self.current = None
         self.history = []
         self.live = []           # valori "attuali" ricevuti di recente (vedi stats.with_live)
+        self.readings = []       # storico + valori attuali: solo per il delta
         self.others = []     # altre persone mostrate insieme: [{"id", "label", "current"}]
         self.other_alerts = {}   # id -> AlertWatch delle altre persone
         self.silenced = set()    # (persona, avviso) zittiti fino alla fine dell'episodio
@@ -251,7 +252,7 @@ class Controller:
     def change_account(self):
         if ask_credentials(self.cfg, self.root):
             self.client = make_client(self.cfg)
-            self.current, self.history, self.error, self.live = None, [], None, []
+            self.current, self.history, self.error, self.live, self.readings = None, [], None, [], []
             self.refresh()
 
     def quit(self):
@@ -405,7 +406,7 @@ class Controller:
         self.cfg.update(sensor_sn=None, sensor_activated=None, sensor_notified=[])
         save_config(self.cfg)
         self.client.patient_id = patient_id
-        self.current, self.history, self.error, self.live = None, [], None, []
+        self.current, self.history, self.error, self.live, self.readings = None, [], None, [], []
         self.render()
         self.refresh()
 
@@ -575,7 +576,7 @@ class Controller:
             i18n.set_language(self.cfg["language"])
         if ACCOUNT_KEYS & set(changed):
             self.client = make_client(self.cfg)
-            self.current, self.history, self.error, self.live = None, [], None, []
+            self.current, self.history, self.error, self.live, self.readings = None, [], None, [], []
             self.refresh()
         if "language" in changed or REBUILD_KEYS & set(changed):
             self._theme_key = self.theme_key()
@@ -631,7 +632,10 @@ class Controller:
         self.error = err
         if current:
             self.live = stats.keep_live(self.live, current)
-            self.current, self.history = current, stats.with_live(history, self.live)
+            # il grafico e le statistiche restano sullo storico (un punto ogni 15 minuti con
+            # LibreLinkUp); il delta usa anche i valori al minuto
+            self.current, self.history = current, history
+            self.readings = stats.with_live(history, self.live)
             self.updated_at = time.time()
         self.render()
         self.check_alerts()

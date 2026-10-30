@@ -41,13 +41,30 @@ def change(points, current, minutes=15, tolerance=6):
     return current["mgdl"] - best["mgdl"]
 
 
-def delta(history, current, oldest=20):
-    """Il "delta" dei CGM: variazione rispetto alla lettura di circa 5 minuti prima,
-    riportata a 5 minuti come fa Nightscout (Dexcom legge ogni 5 minuti; con LibreLinkUp
-    ci sono i valori attuali ricevuti ogni minuto, vedi with_live, e lo storico con un
-    punto ogni 15). None se non c'è una lettura precedente negli ultimi `oldest` minuti."""
+def delta(history, current, oldest=7):
+    """Il "delta": il valore attuale meno la lettura precedente, come lo mostrano le app
+    dei sensori. Con Dexcom e Nightscout la precedente è di 5 minuti prima; con
+    LibreLinkUp, che ha un valore nuovo ogni minuto, è quella del minuto prima (vedi
+    with_live). None se non c'è una lettura negli ultimi `oldest` minuti: meglio niente
+    che un numero sbagliato.
+
+    Fino alla 0.11.5 la variazione veniva riportata a 5 minuti: con letture a un minuto
+    di distanza un +2 diventava +10, e un punto "storico" di LibreLinkUp poteva dare un
+    +9 a valore fermo."""
     before = [m for m in history if m["mgdl"]
-              and 60 <= current["time"] - m["time"] <= oldest * 60]
+              and 30 <= current["time"] - m["time"] <= oldest * 60]
+    if not before:
+        return None
+    previous = max(before, key=lambda m: m["time"])
+    return current["mgdl"] - previous["mgdl"]
+
+
+def delta_per_5min(history, current):
+    """La variazione riportata a 5 minuti, come il "delta" di Nightscout (per le app e i
+    display collegati al ponte locale): rispetto alla lettura più vicina a 5 minuti
+    prima, tra 3 e 10 minuti."""
+    before = [m for m in history if m["mgdl"]
+              and 180 <= current["time"] - m["time"] <= 600]
     if not before:
         return None
     previous = min(before, key=lambda m: abs(current["time"] - m["time"] - 300))
@@ -61,18 +78,16 @@ def keep_live(live, current, minutes=30):
 
 
 def with_live(history, live):
-    """Lo storico con i valori attuali ricevuti dopo il suo ultimo punto. LibreLinkUp
-    nello storico ha un punto ogni 15 minuti, e sono valori "storici" del sensore, un po'
-    diversi da quelli in tempo reale: il delta va calcolato tra valori in tempo reale
-    (fino alla 0.11.3 confrontava il valore attuale con l'ultimo punto dello storico, e
-    poteva essere negativo mentre l'app saliva)."""
+    """Lo storico con, per il tratto più recente, i valori in tempo reale ricevuti da
+    GlucoBar. LibreLinkUp nello storico ha un punto ogni 15 minuti con i valori
+    "storici" del sensore, un po' diversi da quelli in tempo reale: da quando ci sono
+    valori in tempo reale si usano solo quelli, così il delta confronta valori dello
+    stesso tipo."""
     if not live:
         return history
-    current = live[-1]
-    past = [m for m in history if m is not current and m["time"] < current["time"]]
-    last = max((m["time"] for m in past), default=0)
-    extra = [m for m in live[:-1] if m["time"] > last]
-    return sorted(past + extra, key=lambda m: m["time"]) + [current]
+    start = live[0]["time"] - 30
+    past = [m for m in history if m["time"] < start]
+    return sorted(past, key=lambda m: m["time"]) + list(live)
 
 
 def sensor_days(connection, now=None):

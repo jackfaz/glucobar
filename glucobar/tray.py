@@ -149,7 +149,7 @@ class TrayIcon:
         age = age_minutes(c)
         stale = is_stale(cfg, c)
         value = fmt_value(cfg, c["mgdl"])
-        arrow = beside_value(cfg, ctl.history, c)
+        arrow = beside_value(cfg, ctl.readings, c)
         pal = palette(cfg, light=taskbar_light())
         color = pal.stale if stale else pal.value(cfg, c["mgdl"])
         self.icon.icon = make_icon(value, color)

@@ -4,6 +4,19 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.11.6] - 2026-10-30
+
+### Fixed
+- **Delta, properly this time**: it is now simply the current reading minus the previous
+  one, as the sensor apps show it: with LibreLinkUp, which has a new reading every minute,
+  the one from a minute before; with Dexcom and Nightscout, the one from 5 minutes before.
+  Until 0.11.5 the change was scaled to 5 minutes, so with readings a minute apart a +2
+  could become +10 or more, and when LibreLinkUp added a "historic" point the delta could
+  show +9 with the value not moving (thanks again for the detailed report on Reddit). When
+  there is no reading from the last 7 minutes, no delta is shown rather than a wrong one.
+- The chart, average and time in range use the history as before: the readings received
+  every minute only serve the delta.
+
 ## [0.11.5] - 2026-10-30
 
 ### Changed
@@ -508,6 +521,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.11.6]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.6
 [0.11.5]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.5
 [0.11.4]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.4
 [0.11.3]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.3

@@ -80,7 +80,13 @@ def wait(analysis_id, key, timeout=900):
     """Aspetta la fine dell'analisi; restituisce (statistiche, {antivirus: nome})."""
     deadline = time.monotonic() + timeout
     while True:
-        attrs = request(f"{API}/analyses/{analysis_id}", key)["data"]["attributes"]
+        try:
+            attrs = request(f"{API}/analyses/{analysis_id}", key)["data"]["attributes"]
+        except urllib.error.HTTPError as e:
+            # subito dopo il caricamento l'analisi può non esistere ancora (404)
+            if e.code != 404 or time.monotonic() > deadline:
+                raise RuntimeError(f"analisi {analysis_id}: {e}") from e
+            attrs = {}
         if attrs.get("status") == "completed" or time.monotonic() > deadline:
             break
         time.sleep(30)
@@ -106,7 +112,10 @@ if __name__ == "__main__":
         print("VT_API_KEY non impostata: scansione VirusTotal saltata", file=sys.stderr)
         sys.exit(0)
     try:
-        analysis = upload(path, key)
+        try:
+            analysis = upload(path, key)
+        except Exception as e:
+            raise RuntimeError(f"caricamento: {e}") from e
         stats, flagged = wait(analysis, key) if should_wait else (None, None)
     except Exception as e:
         # VirusTotal irraggiungibile: la release esce lo stesso, senza il link alla scansione

@@ -44,6 +44,21 @@ class ToolsTest(unittest.TestCase):
         self.assertEqual(done.exception.code, 0)
         urlopen.assert_not_called()
 
+    def test_request_retries_when_busy(self):
+        import io
+        import urllib.error
+        busy = urllib.error.HTTPError("u", 429, "Too Many Requests", {}, None)
+        ok = mock.MagicMock()
+        ok.__enter__.return_value = io.BytesIO(b'{"data": 1}')
+        with mock.patch("urllib.request.urlopen", side_effect=[busy, ok]), \
+                mock.patch("time.sleep") as sleep:
+            self.assertEqual(virustotal.request("https://x/u", "key"), {"data": 1})
+        sleep.assert_called_once()
+        denied = urllib.error.HTTPError("u", 401, "Unauthorized", {}, None)
+        with mock.patch("urllib.request.urlopen", side_effect=denied), \
+                self.assertRaises(urllib.error.HTTPError):
+            virustotal.request("https://x/u", "key")
+
     def test_wait_reports_flagging_engines(self):
         analysis = {"data": {"attributes": {
             "status": "completed",

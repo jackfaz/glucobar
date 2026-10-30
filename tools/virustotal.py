@@ -15,6 +15,7 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.request
 import uuid
 
@@ -46,13 +47,24 @@ def multipart(path):
     return body, f"multipart/form-data; boundary={boundary}"
 
 
-def request(url, key, body=None, content_type=None):
+def request(url, key, body=None, content_type=None, tries=4):
+    """Una richiesta all'API; riprova se VirusTotal è occupato (429, limite di 4
+    richieste al minuto) o ha un problema suo (5xx, rete)."""
     headers = {"x-apikey": key, "accept": "application/json"}
     if content_type:
         headers["content-type"] = content_type
-    with urllib.request.urlopen(urllib.request.Request(url, body, headers),
-                                timeout=300) as r:
-        return json.load(r)
+    for attempt in range(tries):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, body, headers),
+                                        timeout=300) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            if e.code != 429 and e.code < 500 or attempt == tries - 1:
+                raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            if attempt == tries - 1:
+                raise
+        time.sleep(30 * (attempt + 1))
 
 
 def upload(path, key):
@@ -93,10 +105,15 @@ if __name__ == "__main__":
     if not key:
         print("VT_API_KEY non impostata: scansione VirusTotal saltata", file=sys.stderr)
         sys.exit(0)
-    analysis = upload(path, key)
+    try:
+        analysis = upload(path, key)
+        stats, flagged = wait(analysis, key) if should_wait else (None, None)
+    except Exception as e:
+        # VirusTotal irraggiungibile: la release esce lo stesso, senza il link alla scansione
+        print(f"::warning title=VirusTotal non disponibile::{e!r}", file=sys.stderr)
+        sys.exit(0)
     print(report_url(path))
     if should_wait:
-        stats, flagged = wait(analysis, key)
         lines = summary(stats, flagged)
         for line in lines:
             print(line, file=sys.stderr)

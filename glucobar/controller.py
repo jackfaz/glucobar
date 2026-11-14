@@ -70,6 +70,7 @@ class Controller:
         self.others = []     # altre persone mostrate insieme: [{"id", "label", "current"}]
         self.other_alerts = {}   # id -> AlertWatch delle altre persone
         self.silenced = set()    # (persona, avviso) zittiti fino alla fine dell'episodio
+        self.pending_notes = []  # messaggi rimandati finché un gioco è a schermo intero
         self._last_sound = {}    # avviso -> quando ha suonato l'ultima volta
         self._alarm_sounding = False
         self.error = None
@@ -570,12 +571,31 @@ class Controller:
         # l'installer chiede a GlucoBar di chiudersi (vedi instance.py) e lo riapre
 
     def notify(self, title, text, actions=(), timeout=15):
+        from .taskbar import fullscreen_app
+        busy = fullscreen_app()
+        if busy:
+            # un riquadro sopra un gioco a schermo intero lo farebbe ridurre a icona: si
+            # mostra appena si esce (il suono degli avvisi invece suona subito)
+            log(f"messaggio rimandato (schermo intero: {busy}): {title}")
+            self.pending_notes = (self.pending_notes + [(title, text, actions, timeout)])[-10:]
+            return
+        self.show_note(title, text, actions, timeout)
+
+    def show_note(self, title, text, actions=(), timeout=15):
         from .notify import Toast
         log(f"messaggio: {title}")
         try:
             Toast(self, title, text, actions, timeout)
         except tk.TclError:
             log("messaggio non mostrato:\n" + traceback.format_exc())
+
+    def show_pending_notes(self):
+        """I messaggi rimandati durante lo schermo intero, appena finisce."""
+        from .taskbar import fullscreen_app
+        if self.pending_notes and not fullscreen_app():
+            notes, self.pending_notes = self.pending_notes, []
+            for note in notes:
+                self.show_note(*note)
 
     def _watch_quit(self):
         if not self.root:
@@ -928,6 +948,7 @@ class Controller:
         if self.error:
             wait = max(wait, 60)   # dopo un errore (password, rete) non insistere troppo
         self.repeat_alarm()
+        self.show_pending_notes()
         if now - self._last_fetch >= wait:
             self.refresh()
         elif now - self._last_render >= 15:

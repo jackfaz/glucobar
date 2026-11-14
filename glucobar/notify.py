@@ -70,6 +70,27 @@ class Toast:
         Toast.open.append(self)
         if not actions:
             win.after(timeout * 1000, self.close)
+        if sys.platform == "win32":
+            self._no_focus()
+
+    def _no_focus(self):
+        """Il riquadro non prende lo stato attivo: chi sta scrivendo continua a scrivere,
+        e chi usa un programma a tutto schermo non lo vede ridurre a icona. Windows lo
+        ridà al programma che lo aveva, e i clic sul riquadro non lo tolgono più."""
+        import ctypes
+        user32 = ctypes.windll.user32
+        user32.GetForegroundWindow.restype = ctypes.c_void_p
+        before = user32.GetForegroundWindow()
+        try:
+            self.win.update_idletasks()
+            self.win.update()   # adesso il riquadro c'è davvero
+            hwnd = user32.GetParent(self.win.winfo_id())
+            style = user32.GetWindowLongW(hwnd, -20)   # GWL_EXSTYLE
+            user32.SetWindowLongW(hwnd, -20, style | 0x08000000 | 0x80)   # NOACTIVATE, TOOLWINDOW
+            if before and user32.GetForegroundWindow() != before:
+                user32.SetForegroundWindow(ctypes.c_void_p(before))
+        except (tk.TclError, OSError):
+            pass
 
     def _run(self, fn):
         def run():

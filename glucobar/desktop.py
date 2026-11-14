@@ -22,9 +22,8 @@ from .taskbar import IS_WIN
 if IS_WIN:
     from ctypes import wintypes
 
-    from .taskbar import DESKTOP_CLASSES, GWL_EXSTYLE, HWND_TOPMOST, SWP_NOACTIVATE, \
-        SWP_NOMOVE, SWP_NOSIZE, WS_EX_TOOLWINDOW, class_name, monitor_rect, user32, \
-        window_rect
+    from .taskbar import GWL_EXSTYLE, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, \
+        WS_EX_TOOLWINDOW, monitor_rect, user32
     HWND_BOTTOM = wintypes.HWND(1)
 
 HOURS_CHOICES = (3, 6, 12)  # LibreLinkUp fornisce circa 12 ore di storico, Dexcom 24
@@ -114,12 +113,8 @@ class DesktopView:
 
     def fullscreen_app(self):
         """C'è un'app a schermo intero (video, presentazione, gioco) sul nostro monitor?"""
-        fg = user32.GetForegroundWindow()
-        if not fg or fg == self.own_hwnd() or class_name(fg) in DESKTOP_CLASSES:
-            return False
-        left, top, right, bottom = window_rect(fg)
-        ml, mt, mr, mb = monitor_rect(self.own_hwnd())
-        return left <= ml and top <= mt and right >= mr and bottom >= mb
+        from .taskbar import fullscreen_app
+        return bool(fullscreen_app(monitor_rect(self.own_hwnd()), (self.own_hwnd(),)))
 
     def _in_grip(self, e):
         return (e.x >= self.canvas.winfo_width() - self.GRIP and

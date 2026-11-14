@@ -407,6 +407,56 @@ def resize_small_window(app):
             f"scala salvata {read_config().get('window_scale')}"), ok
 
 
+def small_window_and_messages_in_fullscreen(app):
+    """Con un'app a schermo intero: la finestrella si nasconde (restava davanti a un
+    gioco, cliccabile) e un avviso non apre il suo riquadro, che toglierebbe lo schermo
+    intero al gioco; il riquadro arriva quando l'app si chiude."""
+    hwnd = small_window_hwnd(app.pid)
+    if not hwnd:
+        return "finestrella a schermo intero: finestrella non trovata", False
+    other = fullscreen_notepad()
+    hidden = not user32.IsWindowVisible(ctypes.c_void_p(hwnd))
+    # un avviso adesso: molto alto sopra 130 (il valore è 142)
+    write_config(alert_high=True, very_high=130, alerts_note_shown=True)
+    time.sleep(6)   # GlucoBar rilegge le impostazioni ogni 2 secondi
+    user32.GetForegroundWindow.restype = ctypes.c_void_p
+    still_front = user32.GetForegroundWindow() == other
+    with open(LOG, encoding="utf-8") as f:
+        log = f.read()
+    held = "messaggio rimandato" in log and "messaggio: GlucoBar alert" not in log
+    user32.PostMessageW(ctypes.c_void_p(other), 0x0010, 0, 0)   # WM_CLOSE
+    time.sleep(3)
+    back = bool(user32.IsWindowVisible(ctypes.c_void_p(hwnd)))
+    with open(LOG, encoding="utf-8") as f:
+        shown = "messaggio: GlucoBar alert" in f.read()
+    write_config(alert_high=False, very_high=250)
+    ok = hidden and back and still_front and held and shown
+    return (f"a schermo intero: finestrella nascosta {'sì' if hidden else 'NO'}, di nuovo "
+            f"visibile {'sì' if back else 'NO'}; avviso rimandato {'sì' if held else 'NO'}, "
+            f"app ancora in primo piano {'sì' if still_front else 'NO'}, avviso mostrato "
+            f"dopo {'sì' if shown else 'NO'}"), ok
+
+
+def value_moved_by_windows(app):
+    """Windows sposta le finestre quando collega i monitor (all'accensione): il valore
+    deve tornare da solo sulla barra."""
+    rect = value_rect()
+    point = wintypes.POINT((rect[0] + rect[2]) // 2, (rect[1] + rect[3]) // 2)
+    user32.WindowFromPoint.restype = ctypes.c_void_p
+    user32.GetAncestor.restype = ctypes.c_void_p
+    hwnd = user32.GetAncestor(ctypes.c_void_p(user32.WindowFromPoint(point)), 2)   # GA_ROOT
+    user32.SetWindowPos(ctypes.c_void_p(hwnd), None, 200, 200, 0, 0, 0x0001 | 0x0004 | 0x0010)
+    moved = wintypes.RECT()
+    user32.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(moved))
+    time.sleep(2)
+    after = wintypes.RECT()
+    user32.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(after))
+    back = (after.left, after.top) == rect[:2]
+    return (f"valore spostato da fuori in ({moved.left}, {moved.top}), dopo 2 s in "
+            f"({after.left}, {after.top}): {'tornato al suo posto' if back else 'NON tornato'}"
+            ), back and (moved.left, moved.top) == (200, 200)
+
+
 def hide_small_window_from_its_menu(app):
     """Nel menu della finestrella: Show → Small window. Basta un clic per chiuderla?"""
     tries = []
@@ -572,7 +622,8 @@ def main(exe, strict):
         panel_result, panel_ok = panel_on_top_check(app)
         results.append(panel_result)
         problems += not panel_ok
-        for check in (panel_extra_checks, resize_small_window, hide_small_window_from_its_menu):
+        for check in (panel_extra_checks, resize_small_window, value_moved_by_windows,
+                      small_window_and_messages_in_fullscreen, hide_small_window_from_its_menu):
             result, ok = check(app)
             results.append(result)
             problems += not ok

@@ -2,12 +2,13 @@
 Si sposta trascinandola e si ridimensiona dall'angolo in basso a destra: testo e grafico
 crescono insieme, nelle stesse proporzioni."""
 
+import sys
 import time
 import tkinter as tk
 
 from .config import save_config
 from .i18n import t
-from .menus import popup
+from .menus import menu_open, popup
 from .theme import palette
 from . import stats
 from .ui_common import (FONT, age_minutes, beside_value, bind_right_click, delta_beside,
@@ -66,9 +67,32 @@ class WindowView:
                                ("<B1-Motion>", self._resize_move),
                                ("<ButtonRelease-1>", self._resize_end)):
             self.grip.bind(event, lambda e, h=handler: h(e) or "break")
+        self.hidden = False   # nascosta perché un gioco o un video è a schermo intero
+        if sys.platform == "win32":
+            self.root.after(1000, self._avoid_fullscreen)
 
     def destroy(self):
         self.root.destroy()
+
+    def _avoid_fullscreen(self):
+        """Ogni secondo: sempre in primo piano, ma non sopra un gioco o un video a schermo
+        intero sul suo monitor, dove resterebbe davanti e cliccabile."""
+        try:
+            if not self.root.winfo_exists():
+                return
+            from .taskbar import fullscreen_app, monitor_rect, user32
+            hwnd = user32.GetParent(self.root.winfo_id())
+            busy = fullscreen_app(monitor_rect(hwnd), (hwnd,)) and not menu_open()
+            if busy and not self.hidden:
+                self.hidden = True
+                self.root.withdraw()
+            elif not busy and self.hidden:
+                self.hidden = False
+                self.root.deiconify()
+                self.root.attributes("-topmost", True)
+        except tk.TclError:
+            return
+        self.root.after(1000, self._avoid_fullscreen)
 
     # ---- dimensioni ----
     def _clamp(self, k):

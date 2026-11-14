@@ -89,6 +89,10 @@ if IS_WIN:
 
 # Finestre del desktop: se sono in primo piano non è "schermo intero"
 DESKTOP_CLASSES = {"Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd"}
+# Menu Start, ricerca, centro notifiche e impostazioni rapide di Windows 10 e 11: coprono
+# tutto il monitor ma non sono "app a schermo intero" (nascondevano il valore per un attimo)
+SHELL_POPUPS = {"Windows.UI.Core.CoreWindow", "XamlExplorerHostIslandWindow", "XamlWindow",
+                "Shell_InputSwitchTopLevelWindow", "ForegroundStaging"}
 
 
 def enable_dpi_awareness():
@@ -137,6 +141,49 @@ def all_taskbars():
         others.append(h)
     others.sort(key=lambda w: window_rect(w)[0])
     return bars + others
+
+
+QUNS_BUSY, QUNS_D3D, QUNS_PRESENTATION = 2, 3, 4
+
+
+def notification_state():
+    """Lo stato con cui Windows decide se mostrare le sue notifiche
+    (SHQueryUserNotificationState): 2 = app a schermo intero, 3 = gioco Direct3D a schermo
+    intero, 4 = presentazione; 0 se non si sa."""
+    state = ctypes.c_int(0)
+    try:
+        if ctypes.windll.shell32.SHQueryUserNotificationState(ctypes.byref(state)) == 0:
+            return state.value
+    except (AttributeError, OSError):
+        pass
+    return 0
+
+
+def fullscreen_app(screen=None, ignore=()):
+    """Classe della finestra a schermo intero (gioco, video, presentazione) sul monitor
+    `screen` (None: su qualsiasi monitor), o None. Conta la finestra in primo piano che
+    copre tutto il suo monitor (con un pixel di tolleranza, per le finestre "senza bordi"
+    dei giochi), e anche quello che dice Windows: un gioco a schermo intero esclusivo può
+    avere una finestra più piccola del monitor, perché cambia la risoluzione."""
+    if not IS_WIN:
+        return None
+    fg = user32.GetForegroundWindow()
+    if not fg or fg in ignore:
+        return None
+    name = class_name(fg)
+    if name in DESKTOP_CLASSES or name in SHELL_POPUPS or name.startswith("Tk"):
+        # il desktop, i pannelli di Windows, o GlucoBar stesso
+        return None
+    monitor = monitor_rect(fg)
+    same = screen is None or tuple(monitor) == tuple(screen)
+    left, top, right, bottom = window_rect(fg)
+    ml, mt, mr, mb = monitor
+    if same and left <= ml + 1 and top <= mt + 1 and right >= mr - 1 and bottom >= mb - 1:
+        return name or "?"
+    state = notification_state()
+    if state in (QUNS_D3D, QUNS_PRESENTATION) or (state == QUNS_BUSY and same):
+        return name or "?"
+    return None
 
 
 def class_name(hwnd):
@@ -216,6 +263,7 @@ class TaskbarView:
         self.cfg = ctl.cfg
         self.alive = True
         self.hidden = False
+        self._fixes = 0   # volte di fila che si è rimesso a posto il valore spostato da Windows
         self.last_geometry = None
         self.screen = None   # rettangolo del monitor della barra usata
         self.edge = "bottom"  # bordo dello schermo su cui sta la barra
@@ -491,12 +539,23 @@ class TaskbarView:
                 y = (start[3] if start else top) + int(h * 0.25)
             x, y = left + (width - w) // 2, y + offset
         geometry = f"{w}x{h}+{x}+{y}"
+        if geometry == self.last_geometry and IS_WIN and not self.hidden:
+            # Windows sposta le finestre quando collega o cambia i monitor (all'accensione,
+            # con più schermi): se il valore non è dove l'avevamo messo, lo si rimette
+            real = window_rect(self.own_hwnd())
+            off = max(abs(a - b) for a, b in zip(real, (x, y, x + w, y + h)))
+            if off > 2 and real[2] > real[0] and self._fixes < 5:   # 5: mai all'infinito
+                self._fixes += 1
+                log(f"valore spostato da Windows in {real}: lo rimetto al suo posto")
+                self.last_geometry = None
+            elif off <= 2:
+                self._fixes = 0
         if geometry != self.last_geometry:
             self.root.geometry(geometry)
             if self.hit:
                 self.hit.geometry(geometry)
             self.last_geometry = geometry
-            log(f"barra={geo['bar']} bordo={edge} -> valore in {geometry}")
+            log(f"barra={geo['bar']} bordo={edge} icone={tray} -> valore in {geometry}")
             self._checks = 0   # ricontrolla subito dove è finita davvero
         return geo["visible"]
 
@@ -513,16 +572,7 @@ class TaskbarView:
         """Classe della finestra a schermo intero sul monitor della barra, o None."""
         if not IS_WIN:
             return None
-        fg = user32.GetForegroundWindow()
-        ours = (self.own_hwnd(), self._hit_hwnd)
-        if not fg or fg in ours or class_name(fg) in DESKTOP_CLASSES:
-            return None
-        # Schermo intero sullo stesso monitor della barra usata
-        l, t_, r, b = window_rect(fg)
-        ml, mt, mr, mb = self.screen or monitor_rect(fg)
-        if l <= ml and t_ <= mt and r >= mr and b >= mb:
-            return class_name(fg) or "?"
-        return None
+        return fullscreen_app(self.screen, (self.own_hwnd(), self._hit_hwnd))
 
     def _keep_on_taskbar(self):
         if not self.alive:

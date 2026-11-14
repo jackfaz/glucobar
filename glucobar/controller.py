@@ -635,6 +635,9 @@ class Controller:
             self.client = make_client(self.cfg)
             self.current, self.history, self.error, self.live, self.readings = None, [], None, [], []
             self.refresh()
+        if {"low", "very_high", "stale_minutes", "alert_low", "alert_high", "alert_stale",
+                "alert_soon"} & set(changed) and self.current:
+            self.check_alerts()   # soglie o avvisi cambiati: vale subito, non al dato dopo
         if "language" in changed or REBUILD_KEYS & set(changed):
             self._theme_key = self.theme_key()
             self.rebuild_views()

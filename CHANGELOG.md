@@ -4,6 +4,24 @@ All notable changes to GlucoBar are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [0.12.1] - 2026-11-14
+
+### Fixed
+- **Games and full-screen apps**:
+  - GlucoBar's messages (alerts, reminders, sensor) no longer open over a game or a
+    full-screen video, where they could take the focus and minimize it: they wait and
+    show up as soon as you leave full screen. The alert sound still plays right away.
+  - Messages never take the focus anymore: whatever you are typing in keeps it.
+  - The small window hides while a game or video is full screen on its monitor (it stayed
+    in front, and clickable); it comes back afterwards.
+  - Full screen is recognised more reliably: besides a window as big as the monitor,
+    GlucoBar now also asks Windows, which knows about exclusive full-screen games that
+    change the resolution. The Windows 11 Start menu, search and quick settings no longer
+    count as full screen.
+- **Position on the taskbar**: when Windows moves the value (for example while it connects
+  the monitors at startup), GlucoBar notices and puts it back next to the clock.
+- Changing thresholds or alerts now applies right away instead of at the next reading.
+
 ## [0.12.0] - 2026-10-31
 
 ### Added
@@ -532,6 +550,7 @@ uses [Semantic Versioning](https://semver.org/).
 - Italian and English interface.
 - Inno Setup installer and GitHub Actions build.
 
+[0.12.1]: https://github.com/jackfaz/glucobar/releases/tag/v0.12.1
 [0.12.0]: https://github.com/jackfaz/glucobar/releases/tag/v0.12.0
 [0.11.6]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.6
 [0.11.5]: https://github.com/jackfaz/glucobar/releases/tag/v0.11.5
